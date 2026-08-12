@@ -6,8 +6,17 @@ import type { Libro } from '../types';
 
 const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+function parseGenesisReference(raw: string) {
+  const q = normalize(raw.trim()).replace(/\s+/g, ' ');
+  const match = q.match(/^(?:gen|genesi)\s*(\d{1,2})(?:[,:.]\s*\d+)?/);
+  if (!match) return null;
+  const chapter = Number(match[1]);
+  return chapter >= 1 && chapter <= 50 ? chapter : null;
+}
+
 export default function StudyHome({ libri }: { libri: Libro[] }) {
   const [query, setQuery] = useState('');
+  const chapterHit = useMemo(() => parseGenesisReference(query), [query]);
   const results = useMemo(() => {
     const q = normalize(query.trim());
     if (!q) return [];
@@ -26,15 +35,18 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
 
         <div id="cerca" className="relative mx-auto mt-10 max-w-2xl text-left">
           <label htmlFor="global-search" className="sr-only">Cerca nella Bibbia</label>
-          <input id="global-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cerca libro, capitolo, riferimento, tema o fonte…" className="w-full rounded-xl border border-papyrus-line bg-paper-card px-5 py-4 text-lg text-ink shadow-sm outline-none transition focus:border-bronze focus:ring-2 focus:ring-bronze/20" />
+          <input id="global-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cerca libro o riferimento, es. Gen 1…" autoComplete="off" className="w-full rounded-xl border border-papyrus-line bg-paper-card px-5 py-4 text-lg text-ink shadow-sm outline-none transition focus:border-bronze focus:ring-2 focus:ring-bronze/20" />
           {query && (
-            <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-papyrus-line bg-paper-card shadow-xl">
-              {results.length ? results.map((libro) => (
-                <Link key={libro.id} href={libro.titolo.toLowerCase() === 'genesi' ? '/bibbia/genesi' : '#bibbia'} className="flex items-center justify-between border-b border-papyrus-line/60 px-5 py-4 last:border-0 hover:bg-papyrus-deep/40">
+            <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-papyrus-line bg-paper-card shadow-xl" role="listbox" aria-label="Risultati di ricerca">
+              {chapterHit && <Link href={`/bibbia/genesi/${chapterHit}`} className="flex items-center justify-between border-b border-papyrus-line/60 px-5 py-4 hover:bg-papyrus-deep/40"><span><span className="block text-[10px] uppercase tracking-widest text-bronze">Passo</span><strong className="font-serif text-xl">Genesi {chapterHit}</strong></span><span className="text-sm text-ink-faint">Gen {chapterHit} →</span></Link>}
+              {results.map((libro) => {
+                const isGenesis = normalize(libro.titolo) === 'genesi';
+                return <Link key={libro.id} href={isGenesis ? '/bibbia/genesi' : '#bibbia'} className="flex items-center justify-between border-b border-papyrus-line/60 px-5 py-4 last:border-0 hover:bg-papyrus-deep/40">
                   <span><span className="block text-[10px] uppercase tracking-widest text-bronze">Libro</span><strong className="font-serif text-xl">{libro.titolo}</strong></span>
-                  <span className="text-sm text-ink-faint">{libro.capitoli ?? '—'} capitoli →</span>
-                </Link>
-              )) : <p className="px-5 py-5 text-ink-soft">Nessun risultato. La ricerca per riferimenti e temi arriverà nel passo successivo.</p>}
+                  <span className="text-sm text-ink-faint">{libro.capitoli ?? '—'} capitoli {isGenesis ? '→' : ''}</span>
+                </Link>;
+              })}
+              {!chapterHit && !results.length && <p className="px-5 py-5 text-ink-soft">Nessun risultato nel vertical slice. In questa fase riconosciamo libri e riferimenti di Genesi; temi e fonti arriveranno dopo.</p>}
             </div>
           )}
           <div className="mt-3 flex flex-wrap justify-center gap-x-4 gap-y-2 text-sm text-ink-faint">
@@ -66,15 +78,15 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
         </div>
         <div className="divide-y divide-papyrus-line">
           {pentateuco.map((libro, index) => {
-            const isGenesis = libro.titolo.toLowerCase() === 'genesi';
-            return <Link key={libro.id} href={isGenesis ? '/bibbia/genesi' : '#'} aria-disabled={!isGenesis} className={`grid grid-cols-[3rem_1fr_auto] items-center gap-4 py-5 ${isGenesis ? 'group' : 'opacity-55'}`}>
+            const isGenesis = normalize(libro.titolo) === 'genesi';
+            return <div key={libro.id} className={`grid grid-cols-[3rem_1fr_auto] items-center gap-4 py-5 ${isGenesis ? 'group' : 'opacity-55'}`}>
               <span className="font-mono text-xs text-ink-faint">{String(index + 1).padStart(2, '0')}</span>
-              <span><strong className="font-serif text-2xl group-hover:text-bronze">{libro.titolo}</strong>{libro.titoloEbraico && <span className="ml-3 text-sm text-ink-faint">{libro.titoloEbraico}</span>}</span>
+              <span><strong className="font-serif text-2xl group-hover:text-bronze">{isGenesis ? <Link href="/bibbia/genesi">{libro.titolo}</Link> : libro.titolo}</strong>{libro.titoloEbraico && <span className="ml-3 text-sm text-ink-faint">{libro.titoloEbraico}</span>}</span>
               <span className="text-sm text-ink-faint">{libro.capitoli ?? '—'} cap. {isGenesis ? '→' : ''}</span>
-            </Link>;
+            </div>;
           })}
         </div>
-        <p className="mt-6 text-sm text-ink-faint">In questo primo vertical slice Genesi è navigabile; gli altri libri restano visibili per verificare la futura architettura canonica.</p>
+        <p className="mt-6 text-sm text-ink-faint">In questo vertical slice Genesi è navigabile; gli altri libri restano visibili per verificare la futura architettura canonica senza creare link fittizi.</p>
       </section>
     </main>
   );
