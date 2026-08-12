@@ -43,6 +43,7 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
 
   const pentateuco = libri.filter((l) => l.categoriaId === 'pentateuco');
   const storici = libri.filter((l) => l.categoriaId === 'storici');
+  const sapienziali = libri.filter((l) => ['sapienziali', 'sapienziali-poetici'].includes(l.categoriaId || ''));
 
   return <main>
     <section className="relative overflow-hidden border-b border-papyrus-line">
@@ -56,21 +57,21 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
 
           <div id="cerca" className="relative mt-9 max-w-2xl">
             <label htmlFor="global-search" className="sr-only">Cerca nella Bibbia</label>
-            <input id="global-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cerca libro o riferimento, es. Gs 24…" autoComplete="off" className="w-full rounded-xl border border-papyrus-line bg-paper-card px-5 py-4 pr-14 text-lg text-ink shadow-sm outline-none transition focus:border-bronze focus:ring-2 focus:ring-bronze/20" />
+            <input id="global-search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Cerca libro o riferimento, es. Sal 23…" autoComplete="off" className="w-full rounded-xl border border-papyrus-line bg-paper-card px-5 py-4 pr-14 text-lg text-ink shadow-sm outline-none transition focus:border-bronze focus:ring-2 focus:ring-bronze/20" />
             <span className="pointer-events-none absolute right-5 top-1/2 -translate-y-1/2 text-xl text-bronze" aria-hidden="true">⌕</span>
             {query && <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-papyrus-line bg-paper-card shadow-xl" role="listbox" aria-label="Risultati di ricerca">
               {referenceHit && <Link href={`/bibbia/${referenceHit.slug}/${referenceHit.chapter}`} className="flex items-center justify-between border-b border-papyrus-line/60 px-5 py-4 hover:bg-papyrus-deep/40"><span><span className="block text-[10px] uppercase tracking-widest text-bronze">Passo</span><strong className="font-serif text-xl">{referenceHit.label}</strong></span><span className="text-sm text-ink-faint">Apri →</span></Link>}
               {results.map((libro) => { const slug = slugFromBookId(libro.id); return <Link key={libro.id} href={`/bibbia/${slug}`} className="flex items-center justify-between border-b border-papyrus-line/60 px-5 py-4 last:border-0 hover:bg-papyrus-deep/40"><span><span className="block text-[10px] uppercase tracking-widest text-bronze">Libro</span><strong className="font-serif text-xl">{libro.titolo}</strong></span><span className="text-sm text-ink-faint">{libro.capitoli ?? '—'} capitoli →</span></Link>; })}
               {!referenceHit && !results.length && <p className="px-5 py-5 text-ink-soft">Nessun libro o riferimento riconosciuto. La ricerca per temi e fonti arriverà nella fase successiva.</p>}
             </div>}
-            <div className="mt-3 flex flex-wrap gap-2 text-sm text-ink-faint"><span>Prova:</span><Link href="/bibbia/genesi/1" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Gen 1</Link><Link href="/bibbia/giosue/24" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Gs 24</Link><Link href="/bibbia/2-samuele/7" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">2Sam 7</Link><span className="rounded-full border border-papyrus-line px-3 py-1">Alleanza</span></div>
+            <div className="mt-3 flex flex-wrap gap-2 text-sm text-ink-faint"><span>Prova:</span><Link href="/bibbia/genesi/1" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Gen 1</Link><Link href="/bibbia/giosue/24" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Gs 24</Link><Link href="/bibbia/salmi/23" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Sal 23</Link><Link href="/bibbia/giobbe/3" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Gb 3</Link></div>
           </div>
         </div>
 
         <aside className="rounded-[1.6rem] border border-papyrus-line bg-paper-card/75 p-7 shadow-[0_18px_70px_rgba(11,42,74,0.08)] backdrop-blur dark:shadow-black/20 md:p-9">
           <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze">Metodo Biblia Fontes</p><h2 className="mt-3 font-serif text-3xl font-bold">Un testo, tre profondità</h2>
           <div className="mt-7 space-y-5">{[['Essenziale','Che cosa sto leggendo?'],['Studio','Come posso comprenderlo nel suo contesto?'],['Critica','Come si ricostruisce la sua formazione?']].map(([title, desc], i) => <div key={title} className="grid grid-cols-[2.25rem_1fr] gap-4 border-t border-papyrus-line pt-4"><span className="font-mono text-sm text-bronze">0{i+1}</span><div><h3 className="font-serif text-xl font-semibold">{title}</h3><p className="mt-1 leading-6 text-ink-soft">{desc}</p></div></div>)}</div>
-          <Link href="/bibbia/giosue/24" className="mt-8 inline-flex min-h-11 items-center rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-papyrus transition hover:opacity-90">Prova Giosuè 24 →</Link>
+          <Link href="/bibbia/salmi/23" className="mt-8 inline-flex min-h-11 items-center rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-papyrus transition hover:opacity-90">Prova Salmo 23 →</Link>
         </aside>
       </div>
     </section>
@@ -80,7 +81,8 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
     <section id="bibbia" className="border-y border-papyrus-line bg-paper-card/35"><div className="mx-auto max-w-[1100px] px-5 py-14 md:px-8 md:py-16">
       <CanonSection title="Pentateuco" subtitle="Antico Testamento" books={pentateuco} />
       <div className="border-t border-papyrus-line"><CanonSection title="Libri storici" subtitle="Storia, memoria e interpretazione" books={storici} offset={pentateuco.length} /></div>
-      <p className="mt-8 text-sm leading-6 text-ink-faint">Pentateuco e Libri Storici sono ora navigabili attraverso lo stesso motore. Le differenze metodologiche emergono dai dati Sanity e non da pagine speciali duplicate.</p>
+      <div className="border-t border-papyrus-line"><CanonSection title="Sapienziali e poetici" subtitle="Poesia, sapienza e voce" books={sapienziali} offset={pentateuco.length + storici.length} /></div>
+      <p className="mt-8 text-sm leading-6 text-ink-faint">Pentateuco, Libri Storici e Sapienziali/Poetici sono ora navigabili attraverso lo stesso motore. Ogni famiglia conserva una propria lente metodologica senza duplicare l’architettura.</p>
     </div></section>
   </main>;
 }
