@@ -37,6 +37,12 @@ function formationFromDate(datazione: any) {
   return [datazione.etichettaInizio, datazione.etichettaFine].filter(Boolean).join(' — ') || datazione.etichetta || datazione.nota || (datazione.inizio || datazione.fine ? `${datazione.inizio ?? '…'} – ${datazione.fine ?? '…'}` : 'Datazione e formazione discusse');
 }
 
+function periodFromDate(datazione: any) {
+  if (!datazione || typeof datazione !== 'object') return undefined;
+  if (datazione.inizio || datazione.fine) return `Intervallo registrato nel dataset: ${datazione.inizio ?? '…'} – ${datazione.fine ?? '…'}`;
+  return undefined;
+}
+
 function originalTitleProps(value?: string) {
   if (!value) return {};
   const hasHebrew = /[\u0590-\u05FF]/.test(value);
@@ -44,6 +50,24 @@ function originalTitleProps(value?: string) {
   if (hasHebrew) return { lang: 'he', dir: 'rtl' as const };
   if (hasGreek) return { lang: 'grc' };
   return {};
+}
+
+function familyLens(categoryId?: string) {
+  if (categoryId === 'storici') return {
+    title: 'Lente storico-letteraria',
+    intro: 'Nei Libri Storici distinguiamo racconto, memoria, storiografia e redazione senza confondere l’evento narrato con la data di composizione.',
+    items: ['Contesto politico e sociale', 'Memoria e tradizioni', 'D / Dtr quando pertinente', 'Fonti, redazioni e paralleli'],
+  };
+  if (categoryId === 'pentateuco') return {
+    title: 'Lente compositiva',
+    intro: 'Nel Pentateuco la lettura mette in relazione macro-unità, tradizioni, legislazione, redazione e forma finale.',
+    items: ['Macro-unità letterarie', 'Tradizioni P / H / D e altre', 'Redazione pentateucale', 'Storia testuale'],
+  };
+  return {
+    title: 'Lente di studio',
+    intro: 'La pagina mantiene una struttura comune e lascia ai dati del libro il compito di far emergere le categorie critiche pertinenti.',
+    items: ['Struttura', 'Contesto', 'Formazione', 'Testo e bibliografia'],
+  };
 }
 
 export default async function DynamicBookPage({ params }: { params: Promise<{ libro: string }> }) {
@@ -59,10 +83,12 @@ export default async function DynamicBookPage({ params }: { params: Promise<{ li
   const abbr = bookAbbreviation(slug, libro.titolo);
   const firstChapter = capitoli?.[0]?.numero || 1;
   const formationLabel = formationFromDate(libro.datazione);
+  const periodLabel = periodFromDate(libro.datazione);
   const macro = Array.isArray(libro.macroSezioni) ? libro.macroSezioni : [];
   const worldLabel = textFromUnknown(libro.mondoDelTesto) || textFromUnknown(libro.profiloLetterario?.strutturaGenerale) || 'Periodo e mondo rappresentato dal testo';
   const contextLabel = textFromUnknown(libro.mondoDietroIlTesto) || textFromUnknown(libro.mondoAttornoAlTesto) || 'Contesti storici pertinenti al libro';
   const originalProps = originalTitleProps(libro.titoloEbraico);
+  const lens = familyLens(libro.categoriaId);
 
   return <AppShell><main>
     <section className="border-b border-papyrus-line bg-paper-card/35">
@@ -98,7 +124,7 @@ export default async function DynamicBookPage({ params }: { params: Promise<{ li
     </section>}
 
     <section id="cronologia" className="border-y border-papyrus-line bg-paper-card/35">
-      <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><BookTimeline formationLabel={formationLabel} worldNarratedLabel={worldLabel} contextLabel={contextLabel} note={typeof libro.datazione === 'object' ? libro.datazione?.nota || formationLabel : formationLabel} /></div>
+      <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><BookTimeline formationLabel={formationLabel} worldNarratedLabel={worldLabel} contextLabel={contextLabel} periodLabel={periodLabel} note={typeof libro.datazione === 'object' ? libro.datazione?.nota || formationLabel : formationLabel} /></div>
     </section>
 
     <section className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
@@ -109,11 +135,18 @@ export default async function DynamicBookPage({ params }: { params: Promise<{ li
           {!capitoli.length && <p className="mt-5 rounded-xl border border-papyrus-line bg-paper-card/50 p-5 text-ink-soft">Nessun capitolo collegato a questo libro nel dataset corrente.</p>}
         </div>
 
-        <aside className="h-fit rounded-2xl border border-papyrus-line bg-paper-card p-6 lg:sticky lg:top-24">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Metodo di lettura</p>
-          <h2 className="mt-2 font-serif text-2xl font-bold">Tre livelli, una sola pagina</h2>
-          <div className="mt-6 space-y-5"><div><strong>Essenziale</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Sintesi e orientamento rapido.</p></div><div><strong>Studio</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Struttura, contesto e cronologia.</p></div><div><strong>Critica</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Livelli critici, motivazioni, testo e bibliografia.</p></div></div>
-          {capitoli.length > 0 && <Link href={`/bibbia/${slug}/${firstChapter}`} className="mt-7 inline-flex min-h-11 items-center rounded-full border border-bronze px-4 py-2 text-sm text-bronze hover:bg-bronze hover:text-papyrus">Apri {abbr} {firstChapter} →</Link>}
+        <aside className="h-fit space-y-5 lg:sticky lg:top-24">
+          <div className="rounded-2xl border border-papyrus-line bg-paper-card p-6">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">{lens.title}</p>
+            <p className="mt-3 text-sm leading-6 text-ink-soft">{lens.intro}</p>
+            <ul className="mt-5 space-y-2 text-sm text-ink">{lens.items.map((item) => <li key={item} className="flex gap-2"><span className="text-bronze" aria-hidden="true">—</span><span>{item}</span></li>)}</ul>
+          </div>
+          <div className="rounded-2xl border border-papyrus-line bg-paper-card p-6">
+            <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Metodo di lettura</p>
+            <h2 className="mt-2 font-serif text-2xl font-bold">Tre livelli, una sola pagina</h2>
+            <div className="mt-6 space-y-5"><div><strong>Essenziale</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Sintesi e orientamento rapido.</p></div><div><strong>Studio</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Struttura, contesto e cronologia.</p></div><div><strong>Critica</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Livelli critici, motivazioni, testo e bibliografia.</p></div></div>
+            {capitoli.length > 0 && <Link href={`/bibbia/${slug}/${firstChapter}`} className="mt-7 inline-flex min-h-11 items-center rounded-full border border-bronze px-4 py-2 text-sm text-bronze hover:bg-bronze hover:text-papyrus">Apri {abbr} {firstChapter} →</Link>}
+          </div>
         </aside>
       </div>
     </section>
