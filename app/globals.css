@@ -2,39 +2,40 @@
 
 @import "tailwindcss";
 
-/* Abilita la modalità scura basata sulla classe .dark */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* TEMA CHIARO (Variabili CSS base) */
 :root {
-  --papyrus: #EAE0C7;
-  --papyrus-deep: #DDCEA6;
-  --papyrus-line: #C9B98F;
-  --ink: #221C17;
-  --ink-soft: #544A3C;
-  --ink-faint: #8A7C64;
-  --bronze: #8C6A3F;
-  --bronze-light: #B5915C;
+  --papyrus: #F4EFE4;
+  --papyrus-deep: #E8DECA;
+  --papyrus-line: #CFC0A2;
+  --ink: #201B17;
+  --ink-soft: #51483D;
+  --ink-faint: #786D5E;
+  --bronze: #866333;
+  --bronze-light: #B38B50;
   --seal: #7A2E2E;
-  --paper-card: #F3ECD9;
+  --paper-card: #FBF8F0;
+  --reading-scale: 1;
 }
 
-/* TEMA SCURO (Variabili CSS sovrascritte) */
+/* Dark mode deliberately avoids pure black: long scholarly reading is easier on a deep blue-black surface. */
 .dark {
-  --papyrus: #121212;
-  --papyrus-deep: #0a0a0a;
-  --papyrus-line: #333333;
-  --ink: #E8E8E8;
-  --ink-soft: #B0B0B0;
-  --ink-faint: #888888;
-  --bronze: #D6B27A;
-  --bronze-light: #B5915C;
-  --seal: #FF6B6B;
-  --paper-card: #1E1E1E;
+  --papyrus: #0E1821;
+  --papyrus-deep: #132431;
+  --papyrus-line: #2B3C48;
+  --ink: #F1EBDD;
+  --ink-soft: #CEC4B4;
+  --ink-faint: #9E9588;
+  --bronze: #D3A85F;
+  --bronze-light: #E3BF7D;
+  --seal: #D77A72;
+  --paper-card: #14232D;
 }
 
-/* REGISTRAZIONE TAILWIND v4 (@theme inline) 
-   Mappa le variabili sopra definite nei colori di Tailwind */
+html[data-font-scale='normal'] { --reading-scale: 1; }
+html[data-font-scale='large'] { --reading-scale: 1.12; }
+html[data-font-scale='xlarge'] { --reading-scale: 1.25; }
+
 @theme inline {
   --font-serif: 'Cormorant Garamond', serif;
   --font-sans: 'Crimson Pro', serif;
@@ -52,14 +53,39 @@
   --color-paper-card: var(--paper-card);
 }
 
-/* Stili base del Body */
+html {
+  color-scheme: light;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
 body {
   background-color: var(--papyrus);
   color: var(--ink);
   font-family: var(--font-sans);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  font-size: calc(1rem * var(--reading-scale));
+  line-height: 1.62;
+  transition: background-color 0.25s ease, color 0.25s ease, font-size 0.15s ease;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-serif);
+}
+
+/* Long-form text can opt into this class without enlarging compact UI controls. */
+.reading-text {
+  font-size: calc(1.08rem * var(--reading-scale));
+  line-height: 1.78;
+  max-width: 72ch;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
