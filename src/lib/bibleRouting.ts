@@ -4,6 +4,7 @@ export const categoryLabels: Record<string, string> = {
   sapienziali: 'Sapienziali e poetici',
   'sapienziali-poetici': 'Sapienziali e poetici',
   profetici: 'Profeti',
+  profeti: 'Profeti',
   vangeli: 'Vangeli',
   atti: 'Atti degli Apostoli',
   paoline: 'Lettere Paoline',
@@ -39,6 +40,8 @@ export const referenceAliases: Record<string, string[]> = {
   qoelet: ['qo', 'qoelet', 'qoèlet', 'ecclesiaste'], qohelet: ['qo', 'qohelet', 'qoelet', 'ecclesiaste'],
   'cantico-dei-cantici': ['ct', 'cantico', 'cantico dei cantici'], cantico: ['ct', 'cantico', 'cantico dei cantici'],
   sapienza: ['sap', 'sapienza'], siracide: ['sir', 'siracide', 'ecclesiastico'], ecclesiastico: ['sir', 'siracide', 'ecclesiastico'],
+  isaia: ['is', 'isaia'], geremia: ['ger', 'geremia'], lamentazioni: ['lam', 'lamentazioni'], baruc: ['bar', 'baruc'], ezechiele: ['ez', 'ezechiele'], daniele: ['dn', 'dan', 'daniele'],
+  osea: ['os', 'osea'], gioele: ['gl', 'gioele'], amos: ['am', 'amos'], abdia: ['abd', 'abdia'], giona: ['gio', 'giona'], michea: ['mi', 'michea'], naum: ['na', 'naum'], abacuc: ['ab', 'abacuc'], sofia: ['sof', 'sofonia', 'sofia'], aggeo: ['ag', 'aggeo'], zaccaria: ['zc', 'zaccaria'], malachia: ['ml', 'malachia'],
 };
 
 export function bookIdFromSlug(slug: string) {
