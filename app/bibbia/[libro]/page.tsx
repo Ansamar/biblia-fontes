@@ -63,6 +63,11 @@ function familyLens(categoryId?: string) {
     intro: 'Nei Sapienziali e Poetici la lettura privilegia forma, voce, genere, raccolte e sviluppo della tradizione, senza ridurre poesia e sapienza a semplici contenitori dottrinali.',
     items: ['Genere e forma poetica', 'Voce parlante e situazione', 'Raccolte, sezioni e superscrizioni', 'Tradizione sapienziale e storia della formazione'],
   };
+  if (['profetici', 'profeti'].includes(categoryId || '')) return {
+    title: 'Lente profetica',
+    intro: 'Nei Profeti distinguiamo il contesto storico degli oracoli, la loro raccolta e rielaborazione, le macro-redazioni del libro e la successiva trasmissione testuale.',
+    items: ['Orizzonte storico e destinatari', 'Oracoli, visioni e forme profetiche', 'Raccolte e redazioni', 'Macro-corpora e trasmissione testuale'],
+  };
   if (categoryId === 'pentateuco') return {
     title: 'Lente compositiva',
     intro: 'Nel Pentateuco la lettura mette in relazione macro-unità, tradizioni, legislazione, redazione e forma finale.',
