@@ -1,0 +1,25 @@
+'use client';
+
+import { useState } from 'react';
+import DepthSelector, { type StudyDepth } from './DepthSelector';
+
+export default function ChapterStudy({ chapter }: { chapter: any }) {
+  const [depth, setDepth] = useState<StudyDepth>('study');
+  const layers = chapter.attribuzioniFonti ?? [];
+  return <>
+    <div className="mt-7"><p className="mb-3 font-mono text-[10px] uppercase tracking-widest text-bronze">Livello di lettura</p><DepthSelector onChange={setDepth} /></div>
+    <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px]">
+      <article className="min-w-0">
+        <section className="border-y border-papyrus-line py-10"><div className="flex items-baseline justify-between gap-4"><div><p className="font-mono text-xs text-bronze">Gen 1,1–2,4a</p><h2 className="mt-2 font-serif text-3xl font-bold">Testo / riferimento</h2></div><button className="text-sm text-bronze" type="button" disabled title="Confronto testuale in preparazione">MT ↔ LXX</button></div><div className="mt-8 rounded-xl border border-dashed border-papyrus-line bg-paper-card/50 p-8 text-center"><p className="font-serif text-xl text-ink">Il Reader è pronto anche senza un testo biblico integrale.</p><p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-ink-soft">In questa fase mostriamo riferimento e strumenti di studio. Il testo autorizzato potrà essere collegato successivamente senza cambiare la pagina.</p></div></section>
+
+        <section className="py-10"><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">In breve</p><h2 className="mt-2 font-serif text-3xl font-bold">{chapter.titolo || 'La creazione'}</h2><p className="mt-5 max-w-3xl text-lg leading-8 text-ink-soft">{chapter.sintesi || 'Genesi 1 presenta la creazione come un processo ordinato che culmina nel settimo giorno, con una forte organizzazione letteraria e teologica.'}</p></section>
+
+        {depth !== 'essential' && <section className="border-t border-papyrus-line py-10"><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Studio</p><h2 className="mt-2 font-serif text-3xl font-bold">Struttura e contesto</h2><p className="mt-5 whitespace-pre-line leading-7 text-ink-soft">{chapter.struttura || chapter.analisiLetteraria?.strutturaPoetica || 'La struttura dettagliata sarà visualizzata qui a partire dai dati del capitolo.'}</p><div className="mt-8 grid gap-6 md:grid-cols-2"><div><h3 className="font-serif text-xl font-bold">Contesto storico-culturale</h3><p className="mt-2 text-sm leading-6 text-ink-soft">{chapter.contestoStorico || 'La lettura storico-critica distingue il mondo rappresentato dal racconto dal contesto culturale e dalla storia della composizione.'}</p></div><div><h3 className="font-serif text-xl font-bold">Tradizione</h3><p className="mt-2 text-sm leading-6 text-ink-soft">{chapter.tradizione || 'Il capitolo dialoga con tradizioni cosmogoniche dell’Antico Vicino Oriente, rielaborandole in una propria prospettiva teologica.'}</p></div></div></section>}
+
+        {depth === 'critical' && <section className="border-t border-papyrus-line py-10"><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Critica</p><h2 className="mt-2 font-serif text-3xl font-bold">Livelli critici / attribuzioni</h2><div className="mt-7 divide-y divide-papyrus-line border-y border-papyrus-line">{layers.length ? layers.map((layer:any, i:number) => <div key={layer._key || i} className="py-6"><div className="flex flex-wrap items-center gap-3"><strong className="font-serif text-xl">{layer.fonte?.sigla || layer.fonte?.nome || 'Livello critico'}</strong><span className="rounded-full border border-papyrus-line px-2.5 py-1 text-[11px] text-ink-soft">{layer.certezza || 'grado da verificare'}</span></div><p className="mt-2 text-sm leading-6 text-ink-soft">{layer.descrizione || layer.motivazione || 'Attribuzione registrata nel modello critico.'}</p>{layer.motivazione && layer.descrizione && <details className="mt-3"><summary className="cursor-pointer text-sm text-bronze">Perché questa attribuzione?</summary><p className="mt-2 text-sm leading-6 text-ink-soft">{layer.motivazione}</p></details>}</div>) : <p className="py-6 text-sm text-ink-soft">Nessuna attribuzione critica strutturata disponibile per questo capitolo.</p>}</div></section>}
+      </article>
+
+      <aside className="h-fit lg:sticky lg:top-24"><div className="border-l border-papyrus-line pl-6"><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Approfondisci</p><nav className="mt-4 space-y-1 text-sm"><a href="#" className="block py-2 font-semibold text-ink">In breve</a><span className="block py-2 text-ink-soft">Struttura</span>{depth !== 'essential' && <><span className="block py-2 text-ink-soft">Contesto</span><span className="block py-2 text-ink-soft">Cronologia</span></>}{depth === 'critical' && <><span className="block py-2 text-ink-soft">Livelli critici</span><span className="block py-2 text-ink-soft">MT ↔ LXX</span></>}<span className="block py-2 text-ink-soft">Bibliografia</span></nav></div></aside>
+    </div>
+  </>;
+}
