@@ -1,5 +1,8 @@
 type BookTimelineProps = {
   formationLabel?: string;
+  worldNarratedLabel?: string;
+  contextLabel?: string;
+  note?: string;
 };
 
 const markers = [
@@ -10,7 +13,7 @@ const markers = [
   { label: '400 a.C.', x: '84%' },
 ];
 
-export default function BookTimeline({ formationLabel }: BookTimelineProps) {
+export default function BookTimeline({ formationLabel, worldNarratedLabel, contextLabel, note }: BookTimelineProps) {
   return (
     <section aria-labelledby="timeline-title" className="rounded-2xl border border-papyrus-line bg-paper-card p-5 md:p-6">
       <div className="flex items-start justify-between gap-4">
@@ -31,12 +34,12 @@ export default function BookTimeline({ formationLabel }: BookTimelineProps) {
         <div className="space-y-5">
           <div className="grid grid-cols-[108px_1fr] items-center gap-4">
             <span className="text-xs font-medium text-ink">Mondo narrato</span>
-            <div className="relative h-5 rounded-full bg-papyrus-deep/60"><div className="absolute inset-y-1 left-[5%] right-[12%] rounded-full border border-dashed border-ink-faint/70" /><span className="absolute inset-0 flex items-center justify-center text-[10px] text-ink-faint">tempo primordiale → patriarchi</span></div>
+            <div className="relative min-h-7 rounded-full bg-papyrus-deep/60 px-3 py-1"><div className="absolute inset-y-1 left-[5%] right-[12%] rounded-full border border-dashed border-ink-faint/70" /><span className="relative z-10 flex min-h-5 items-center justify-center text-center text-[10px] text-ink-faint">{worldNarratedLabel || 'tempo primordiale → patriarchi'}</span></div>
           </div>
 
           <div className="grid grid-cols-[108px_1fr] items-center gap-4">
             <span className="text-xs font-medium text-ink">Contesti</span>
-            <div className="relative h-5"><span className="absolute left-[27%] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-bronze" title="Età del ferro e monarchie levantine"/><span className="absolute left-[58%] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-bronze" title="Crisi assiro-babilonesi"/><span className="absolute left-[73%] top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-bronze" title="Esilio e periodo persiano"/><div className="absolute inset-x-0 top-1/2 border-t border-papyrus-line" /></div>
+            <div className="relative min-h-7"><div className="absolute inset-x-0 top-1/2 border-t border-papyrus-line" /><span className="relative z-10 mx-auto flex min-h-7 max-w-[78%] items-center justify-center bg-paper-card px-3 text-center text-[10px] text-ink-faint">{contextLabel || 'monarchie levantine · crisi assiro-babilonesi · esilio e periodo persiano'}</span></div>
           </div>
 
           <div className="grid grid-cols-[108px_1fr] items-center gap-4">
@@ -46,7 +49,7 @@ export default function BookTimeline({ formationLabel }: BookTimelineProps) {
         </div>
       </div>
 
-      <p className="mt-6 border-t border-papyrus-line pt-4 text-xs leading-5 text-ink-faint">{formationLabel || 'La datazione della formazione del Pentateuco è pluristratificata e discussa: le fasce visualizzano intervalli di plausibilità, non date puntuali.'}</p>
+      <p className="mt-6 border-t border-papyrus-line pt-4 text-xs leading-5 text-ink-faint">{note || formationLabel || 'Le fasce visualizzano intervalli di plausibilità, non date puntuali.'}</p>
     </section>
   );
 }
