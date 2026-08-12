@@ -26,8 +26,11 @@ export const bookAbbreviations: Record<string, string> = {
   'cantico-dei-cantici': 'Ct', cantico: 'Ct', sapienza: 'Sap', siracide: 'Sir', ecclesiastico: 'Sir',
   isaia: 'Is', geremia: 'Ger', lamentazioni: 'Lam', baruc: 'Bar', ezechiele: 'Ez', daniele: 'Dn',
   osea: 'Os', gioele: 'Gl', amos: 'Am', abdia: 'Abd', giona: 'Gio', michea: 'Mi', naum: 'Na', abacuc: 'Ab', sofia: 'Sof', aggeo: 'Ag', zaccaria: 'Zc', malachia: 'Ml',
-  matteo: 'Mt', marco: 'Mc', luca: 'Lc', giovanni: 'Gv', atti: 'At', romani: 'Rm',
-  apocalisse: 'Ap', ebrei: 'Eb', giacomo: 'Gc',
+  matteo: 'Mt', marco: 'Mc', luca: 'Lc', giovanni: 'Gv', atti: 'At',
+  romani: 'Rm', '1-corinzi': '1Cor', '2-corinzi': '2Cor', galati: 'Gal', efesini: 'Ef', filippesi: 'Fil', colossesi: 'Col',
+  '1-tessalonicesi': '1Ts', '2-tessalonicesi': '2Ts', '1-timoteo': '1Tm', '2-timoteo': '2Tm', tito: 'Tt', filemone: 'Fm',
+  ebrei: 'Eb', giacomo: 'Gc', '1-pietro': '1Pt', '2-pietro': '2Pt', '1-giovanni': '1Gv', '2-giovanni': '2Gv', '3-giovanni': '3Gv', giuda: 'Gd',
+  apocalisse: 'Ap',
 };
 
 export const referenceAliases: Record<string, string[]> = {
@@ -42,6 +45,15 @@ export const referenceAliases: Record<string, string[]> = {
   sapienza: ['sap', 'sapienza'], siracide: ['sir', 'siracide', 'ecclesiastico'], ecclesiastico: ['sir', 'siracide', 'ecclesiastico'],
   isaia: ['is', 'isaia'], geremia: ['ger', 'geremia'], lamentazioni: ['lam', 'lamentazioni'], baruc: ['bar', 'baruc'], ezechiele: ['ez', 'ezechiele'], daniele: ['dn', 'dan', 'daniele'],
   osea: ['os', 'osea'], gioele: ['gl', 'gioele'], amos: ['am', 'amos'], abdia: ['abd', 'abdia'], giona: ['gio', 'giona'], michea: ['mi', 'michea'], naum: ['na', 'naum'], abacuc: ['ab', 'abacuc'], sofia: ['sof', 'sofonia', 'sofia'], aggeo: ['ag', 'aggeo'], zaccaria: ['zc', 'zaccaria'], malachia: ['ml', 'malachia'],
+  matteo: ['mt', 'matteo'], marco: ['mc', 'marco'], luca: ['lc', 'luca'], giovanni: ['gv', 'giovanni'], atti: ['at', 'atti', 'atti degli apostoli'],
+  romani: ['rm', 'rom', 'romani'], '1-corinzi': ['1cor', '1 cor', '1corinzi', '1 corinzi'], '2-corinzi': ['2cor', '2 cor', '2corinzi', '2 corinzi'],
+  galati: ['gal', 'galati'], efesini: ['ef', 'efesini'], filippesi: ['fil', 'filippesi'], colossesi: ['col', 'colossesi'],
+  '1-tessalonicesi': ['1ts', '1 ts', '1tessalonicesi', '1 tessalonicesi'], '2-tessalonicesi': ['2ts', '2 ts', '2tessalonicesi', '2 tessalonicesi'],
+  '1-timoteo': ['1tm', '1 tm', '1timoteo', '1 timoteo'], '2-timoteo': ['2tm', '2 tm', '2timoteo', '2 timoteo'],
+  tito: ['tt', 'tito'], filemone: ['fm', 'filemone'], ebrei: ['eb', 'ebrei'], giacomo: ['gc', 'giacomo'],
+  '1-pietro': ['1pt', '1 pt', '1pietro', '1 pietro'], '2-pietro': ['2pt', '2 pt', '2pietro', '2 pietro'],
+  '1-giovanni': ['1gv', '1 gv', '1giovanni', '1 giovanni'], '2-giovanni': ['2gv', '2 gv', '2giovanni', '2 giovanni'], '3-giovanni': ['3gv', '3 gv', '3giovanni', '3 giovanni'],
+  giuda: ['gd', 'giuda'], apocalisse: ['ap', 'apocalisse'],
 };
 
 export function bookIdFromSlug(slug: string) {
