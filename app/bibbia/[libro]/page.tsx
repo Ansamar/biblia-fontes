@@ -58,6 +58,11 @@ function familyLens(categoryId?: string) {
     intro: 'Nei Libri Storici distinguiamo racconto, memoria, storiografia e redazione senza confondere l’evento narrato con la data di composizione.',
     items: ['Contesto politico e sociale', 'Memoria e tradizioni', 'D / Dtr quando pertinente', 'Fonti, redazioni e paralleli'],
   };
+  if (['sapienziali', 'sapienziali-poetici'].includes(categoryId || '')) return {
+    title: 'Lente poetico-sapienziale',
+    intro: 'Nei Sapienziali e Poetici la lettura privilegia forma, voce, genere, raccolte e sviluppo della tradizione, senza ridurre poesia e sapienza a semplici contenitori dottrinali.',
+    items: ['Genere e forma poetica', 'Voce parlante e situazione', 'Raccolte, sezioni e superscrizioni', 'Tradizione sapienziale e storia della formazione'],
+  };
   if (categoryId === 'pentateuco') return {
     title: 'Lente compositiva',
     intro: 'Nel Pentateuco la lettura mette in relazione macro-unità, tradizioni, legislazione, redazione e forma finale.',
