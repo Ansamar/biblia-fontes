@@ -1,5 +1,6 @@
 import { client } from '../src/sanity/client';
-import HomePage from '../src/components/HomePage';
+import AppShell from '../src/components/AppShell';
+import StudyHome from '../src/components/StudyHome';
 import type { Libro } from '../src/types';
 
 const query = `*[_type == "libro"] | order(ordine asc, titolo asc) {
@@ -9,32 +10,15 @@ const query = `*[_type == "libro"] | order(ordine asc, titolo asc) {
   categoriaId,
   ordine,
   capitoli,
-  lingua,
-  
-  // NUOVI CAMPI SCARICATI DA SANITY
-  profiloLetterario,
-  macroSezioni,
-  
-  datazione,
-  descrizione,
-  metodiAnalisi,
-  mondoDietroIlTesto,
-  eventiNarrati,
-  mondoDelTesto,
-  redazione[]{
-    ..., 
-    "fonte": fonte->{sigla, nome}
-  },
-  mondoAttornoAlTesto,
-  contestoStorico
+  lingua
 }`;
 
 export default async function Home() {
   const libri: Libro[] = await client.fetch(query);
 
   return (
-    <main>
-      <HomePage initialLibri={libri} />
-    </main>
+    <AppShell>
+      <StudyHome libri={libri} />
+    </AppShell>
   );
 }
