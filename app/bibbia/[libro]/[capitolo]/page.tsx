@@ -37,6 +37,6 @@ export default async function DynamicChapterPage({ params }: { params: Promise<{
 
     <header className="mt-9"><div className="flex flex-wrap items-end justify-between gap-6"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze">{libro.titolo} · Capitolo {numero}</p><h1 className="mt-3 font-serif text-5xl font-bold md:text-6xl">{chapter.titolo || `Capitolo ${numero}`}</h1></div><div className="flex gap-4 text-sm">{numero > 1 && <Link href={`/bibbia/${slug}/${numero-1}`} className="text-ink-soft hover:text-bronze">← {abbr} {numero-1}</Link>}{numero < total && <Link href={`/bibbia/${slug}/${numero+1}`} className="text-ink-soft hover:text-bronze">{abbr} {numero+1} →</Link>}</div></div></header>
 
-    <UniversalChapterStudy chapter={chapter} reference={reference} categoryId={libro.categoriaId} worldNarratedLabel={chapter.eventiNarrati || libro.mondoDelTesto} />
+    <UniversalChapterStudy chapter={chapter} reference={reference} worldNarratedLabel={chapter.eventiNarrati || libro.mondoDelTesto} />
   </main></AppShell>;
 }
