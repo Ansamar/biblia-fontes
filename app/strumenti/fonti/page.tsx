@@ -1,10 +1,17 @@
 import AppShell from '../../../src/components/AppShell';
+import SourcesModelsMap from '../../../src/components/SourcesModelsMap';
 import { client } from '../../../src/sanity/client';
 
-const query = `*[_type == "fonteBiblica"] | order(sigla asc){_id, sigla, nome, descrizione, tipo, periodo, datazione, note}`;
-function text(v:any){ if(v==null)return ''; if(typeof v==='string'||typeof v==='number')return String(v); if(Array.isArray(v))return v.map(text).filter(Boolean).join(' · '); return v.etichetta||v.descrizione||v.nota||v.nome||''; }
+const query = `{
+  "sources": *[_type == "fonteBiblica"] | order(sigla asc){_id, sigla, nome, descrizione, tipo, periodo, datazione, note},
+  "usages": *[_type == "capitolo" && defined(attribuzioniFonti)]{
+    _id, numero, titolo,
+    "libro": libro->{_id, titolo, categoriaId},
+    "sourceIds": attribuzioniFonti[].fonte._ref
+  }
+}`;
 
 export default async function SourcesPage(){
- const sources=await client.fetch(query);
- return <AppShell><main><section className="border-b border-papyrus-line bg-paper-card/35"><div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><p className="font-mono text-[10px] uppercase tracking-[.22em] text-bronze">Strumento 02 · Composizione</p><h1 className="mt-4 font-serif text-5xl font-bold md:text-7xl">Fonti & modelli</h1><p className="reading-text mt-6 max-w-3xl text-ink-soft">Un atlante dei modelli critici registrati nel CMS. Le sigle sono strumenti interpretativi: la UI distingue deliberatamente modello, ipotesi e dato testuale.</p></div></section><section className="mx-auto max-w-[1180px] px-5 py-12 md:px-8"><div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">{(sources||[]).map((s:any)=><article key={s._id} className="rounded-2xl border border-papyrus-line bg-paper-card p-6"><div className="flex items-start justify-between gap-4"><span className="font-mono text-sm font-bold text-bronze">{s.sigla||'—'}</span>{s.tipo&&<span className="rounded-full border border-papyrus-line px-2.5 py-1 text-[10px] uppercase tracking-wider text-ink-faint">{text(s.tipo)}</span>}</div><h2 className="mt-5 font-serif text-2xl font-bold">{s.nome||s._id}</h2>{text(s.descrizione)&&<p className="mt-3 text-sm leading-6 text-ink-soft">{text(s.descrizione)}</p>}<div className="mt-5 border-t border-papyrus-line pt-4 text-xs leading-5 text-ink-faint">{text(s.periodo)||text(s.datazione)||text(s.note)||'Dettagli disponibili nelle attribuzioni dei capitoli.'}</div></article>)}</div>{!sources?.length&&<p className="rounded-xl border border-papyrus-line p-6 text-ink-soft">Nessun documento fonteBiblica disponibile nel dataset corrente.</p>}</section></main></AppShell>;
+ const data=await client.fetch(query);
+ return <AppShell><main><section className="border-b border-papyrus-line bg-paper-card/35"><div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><p className="font-mono text-[10px] uppercase tracking-[.22em] text-bronze">Strumento 02 · Composizione</p><h1 className="mt-4 font-serif text-5xl font-bold md:text-7xl">Mappa Fonti & modelli</h1><p className="reading-text mt-6 max-w-3xl text-ink-soft">Non un catalogo astratto di sigle: questa vista parte dai documenti <code>fonteBiblica</code> e mostra soltanto i collegamenti realmente presenti nelle attribuzioni dei capitoli. Seleziona un modello e attraversa direttamente il corpus.</p></div></section><section className="mx-auto max-w-[1180px] px-5 py-10 md:px-8 md:py-14"><SourcesModelsMap sources={data?.sources||[]} usages={(data?.usages||[]).map((u:any)=>({...u,sourceIds:(u.sourceIds||[]).filter(Boolean)}))}/></section></main></AppShell>;
 }
