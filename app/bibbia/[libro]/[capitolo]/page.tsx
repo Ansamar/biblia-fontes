@@ -15,14 +15,21 @@ const query = `{
     bibliografia
   },
   "testoBiblico": *[_type == "testoBiblicoCapitolo" && libro._ref == $bookId && numero == $numero][0]{
-    numero, numeroAlternativo, edizione, lingua,
-    versetti[]{numero, testo, metatesto, marcatoreAlfabetico, riferimentoAlternativo}
+    numero, numeroAlternativo, edizione, lingua, tradizione,
+    versetti[]{
+      numero,
+      testo,
+      metatesto,
+      marcatoreAlfabetico,
+      riferimentoAlternativo,
+      statoTestuale,
+      notaEditoriale
+    }
   }
 }`;
 
 export default async function DynamicChapterPage({ params }: { params: Promise<{ libro: string; capitolo: string }> }) {
   const { libro: slug, capitolo } = await params;
-  if (slug === 'genesi') notFound();
   const numero = Number(capitolo);
   if (!Number.isInteger(numero) || numero < 1) notFound();
 
