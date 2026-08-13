@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import DepthSelector, { type StudyDepth } from './DepthSelector';
 import TextWitnessCompare from './TextWitnessCompare';
+import BiblicalTextReader, { type BiblicalTextUnit } from './BiblicalTextReader';
 
 function certaintyLabel(value?: string) {
   if (!value) return 'Da verificare';
@@ -19,22 +20,8 @@ function certaintySymbol(value?: string) {
 function textFromUnknown(value: any, fallback = ''): string {
   if (value == null) return fallback;
   if (typeof value === 'string' || typeof value === 'number') return String(value);
-  if (Array.isArray(value)) {
-    const parts = value.map((item) => textFromUnknown(item)).filter(Boolean);
-    return parts.join(' · ') || fallback;
-  }
-  if (typeof value === 'object') {
-    return (
-      value.descrizione ||
-      value.motivazione ||
-      value.etichetta ||
-      value.citazione ||
-      value.titolo ||
-      value.nome ||
-      value.nota ||
-      fallback
-    );
-  }
+  if (Array.isArray(value)) return value.map((item) => textFromUnknown(item)).filter(Boolean).join(' · ') || fallback;
+  if (typeof value === 'object') return value.descrizione || value.motivazione || value.etichetta || value.citazione || value.titolo || value.nome || value.nota || fallback;
   return fallback;
 }
 
@@ -42,7 +29,7 @@ function bibliographyText(item: any) {
   return textFromUnknown(item, 'Riferimento bibliografico');
 }
 
-export default function UniversalChapterStudy({ chapter, reference, worldNarratedLabel }: { chapter: any; reference: string; worldNarratedLabel?: string }) {
+export default function UniversalChapterStudy({ chapter, reference, worldNarratedLabel, biblicalText }: { chapter: any; reference: string; worldNarratedLabel?: string; biblicalText?: BiblicalTextUnit | null }) {
   const [depth, setDepth] = useState<StudyDepth>('study');
   const layers = Array.isArray(chapter.attribuzioniFonti) ? chapter.attribuzioniFonti : [];
   const bibliography = Array.isArray(chapter.bibliografia) ? chapter.bibliografia : [];
@@ -80,8 +67,8 @@ export default function UniversalChapterStudy({ chapter, reference, worldNarrate
     <div className="mt-10 grid gap-10 lg:grid-cols-[minmax(0,1fr)_280px]">
       <article className="min-w-0">
         <section id="testo" className="scroll-mt-24 overflow-hidden rounded-2xl border border-papyrus-line bg-paper-card shadow-sm">
-          <header className="border-b border-papyrus-line px-6 py-5 md:px-8"><div className="flex flex-wrap items-end justify-between gap-5"><div><p className="font-mono text-xs text-bronze">{reference}</p><h2 className="mt-2 font-serif text-3xl font-bold">Reader</h2><p className="mt-2 max-w-xl text-sm leading-6 text-ink-faint">Il riferimento resta stabile anche quando collegheremo un testo autorizzato o altri testimoni.</p></div><TextWitnessCompare reference={reference} /></div></header>
-          <div className="px-6 py-10 md:px-10 md:py-14"><div className="reading-text mx-auto"><p className="font-serif text-[1.55em] font-semibold leading-tight text-ink">{chapter.titolo || `Capitolo ${chapter.numero}`}</p><p className="mt-4 text-[0.9em] text-ink-soft">Il testo biblico integrale non è ancora collegato. Sintesi, apparato, cronologia e bibliografia restano pienamente consultabili.</p><div className="mt-8 border-l-2 border-bronze pl-5 text-[0.82em] leading-7 text-ink-faint"><strong className="text-ink">Riferimento di studio:</strong> {reference}</div></div></div>
+          <header className="border-b border-papyrus-line px-6 py-5 md:px-8"><div className="flex flex-wrap items-end justify-between gap-5"><div><p className="font-mono text-xs text-bronze">{reference}</p><h2 className="mt-2 font-serif text-3xl font-bold">Reader</h2><p className="mt-2 max-w-xl text-sm leading-6 text-ink-faint">{biblicalText ? 'Testo strutturato per versetti. Il numero tra parentesi quadre è un elemento di navigazione, non parte del testo.' : 'Il riferimento resta stabile anche quando collegheremo un testo autorizzato o altri testimoni.'}</p></div><TextWitnessCompare reference={reference} /></div></header>
+          <div className="px-6 py-10 md:px-10 md:py-14">{biblicalText ? <BiblicalTextReader text={biblicalText} critical={depth === 'critical'} /> : <div className="reading-text mx-auto"><p className="font-serif text-[1.55em] font-semibold leading-tight text-ink">{chapter.titolo || `Capitolo ${chapter.numero}`}</p><p className="mt-4 text-[0.9em] text-ink-soft">Il testo biblico integrale non è ancora collegato. Sintesi, apparato, cronologia e bibliografia restano pienamente consultabili.</p><div className="mt-8 border-l-2 border-bronze pl-5 text-[0.82em] leading-7 text-ink-faint"><strong className="text-ink">Riferimento di studio:</strong> {reference}</div></div>}</div>
         </section>
 
         <section id="in-breve" className="scroll-mt-24 py-12"><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">In breve</p><h2 className="mt-2 font-serif text-3xl font-bold">Che cosa sto leggendo?</h2><p className="reading-text mt-5 text-ink-soft">{textFromUnknown(chapter.sintesi, 'Sintesi didattica in preparazione.')}</p></section>
