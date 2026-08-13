@@ -1,29 +1,47 @@
 'use client';
 
+export type AlternateSystem = 'LXX_VG' | 'MT' | 'ALTRO' | string;
+
 export type BiblicalVerse = {
   numero: number;
   testo: string;
   metatesto?: { testo: string; stile?: string };
   marcatoreAlfabetico?: string;
-  riferimentoAlternativo?: { salmo?: number; capitolo?: number; versetto: number; sistema?: string };
+  riferimentoAlternativo?: { salmo?: number; capitolo?: number; versetto: number; sistema?: AlternateSystem };
 };
+
+export type AlternateChapterNumber = number | { sistema?: AlternateSystem; numero: number };
 
 export type BiblicalTextUnit = {
   numero: number;
-  numeroAlternativo?: number;
+  numeroAlternativo?: AlternateChapterNumber;
   sistemaAlternativo?: string;
   edizione?: string;
   lingua?: string;
+  tradizione?: string;
   versetti: BiblicalVerse[];
 };
 
-function alternateSystem(text: BiblicalTextUnit) {
-  return text.sistemaAlternativo || 'LXX/Vg';
+function systemLabel(system?: AlternateSystem) {
+  if (!system || system === 'LXX_VG') return 'LXX/Vg';
+  if (system === 'MT') return 'MT';
+  return system;
+}
+
+function alternateChapter(text: BiblicalTextUnit) {
+  if (text.numeroAlternativo == null) return null;
+  if (typeof text.numeroAlternativo === 'number') {
+    return { numero: text.numeroAlternativo, sistema: text.sistemaAlternativo || 'LXX_VG' };
+  }
+  return {
+    numero: text.numeroAlternativo.numero,
+    sistema: text.numeroAlternativo.sistema || text.sistemaAlternativo || 'LXX_VG',
+  };
 }
 
 export default function BiblicalTextReader({ text, critical = false }: { text: BiblicalTextUnit; critical?: boolean }) {
-  const system = alternateSystem(text);
-  const hasAlternate = text.numeroAlternativo != null || text.versetti.some((verse) => verse.riferimentoAlternativo);
+  const chapterAlt = alternateChapter(text);
+  const hasAlternate = chapterAlt != null || text.versetti.some((verse) => verse.riferimentoAlternativo);
 
   return <div className="reading-text mx-auto max-w-[760px]">
     <div className="mb-7 border-b border-papyrus-line pb-5">
@@ -35,7 +53,7 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
       {hasAlternate && <div className="mt-4 rounded-xl border border-papyrus-line bg-papyrus/55 p-4">
         <div className="flex flex-wrap items-center gap-2">
           <span className="rounded-full border border-bronze/50 bg-paper-card px-3 py-1 font-mono text-[10px] font-semibold uppercase tracking-wider text-bronze">Numerazione parallela</span>
-          {text.numeroAlternativo != null && <span className="text-sm font-medium text-ink">{system}: Salmo {text.numeroAlternativo}</span>}
+          {chapterAlt && <span className="text-sm font-medium text-ink">{systemLabel(chapterAlt.sistema)}: Salmo {chapterAlt.numero}</span>}
         </div>
         <details className="mt-3 text-sm leading-6 text-ink-soft">
           <summary className="cursor-pointer font-medium text-bronze">Perché due numerazioni?</summary>
@@ -47,8 +65,9 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
     <div className="space-y-5 font-serif text-[1.22em] leading-[1.75] text-ink">
       {text.versetti.map((verse) => {
         const alt = verse.riferimentoAlternativo;
+        const verseSystem = systemLabel(alt?.sistema || chapterAlt?.sistema);
         const altBook = alt?.salmo != null ? `Sal ${alt.salmo}` : alt?.capitolo != null ? `cap. ${alt.capitolo}` : null;
-        const altLabel = alt ? `${system} → ${altBook ? `${altBook},` : ''}${alt.versetto}` : null;
+        const altLabel = alt ? `${verseSystem} → ${altBook ? `${altBook},` : ''}${alt.versetto}` : null;
 
         return <div key={verse.numero} id={`v${verse.numero}`} className="scroll-mt-28">
           {verse.metatesto?.testo && <p className="mb-3 text-[0.86em] italic leading-7 text-ink-soft">{verse.metatesto.testo}</p>}
