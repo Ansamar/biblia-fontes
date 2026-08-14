@@ -1,106 +1,310 @@
-import type { Libro } from '../types';
+import type {
+  Libro,
+  MetodoAnalisi,
+  StratoRedazione,
+  EventoFocus,
+} from '../types';
+
+const metodi = (...nomi: string[]): MetodoAnalisi[] =>
+  nomi.map((metodo) => ({ metodo }));
+
+const fase = (
+  etichetta: string,
+  inizio: number,
+  fine: number,
+  certezza: string,
+  descrizione?: string,
+): StratoRedazione => ({
+  etichetta,
+  inizio,
+  fine,
+  datazione:
+    inizio === fine
+      ? `${Math.abs(inizio)} ${inizio < 0 ? 'a.C.' : 'd.C.'}`
+      : `${Math.abs(inizio)}–${Math.abs(fine)} ${
+          fine < 0 ? 'a.C.' : 'd.C.'
+        }`,
+  certezza,
+  descrizione,
+});
+
+const evento = (
+  etichetta: string,
+  inizio: number,
+  certezza: string,
+  descrizione?: string,
+): EventoFocus => ({
+  etichetta,
+  inizio,
+  certezza,
+  descrizione,
+});
 
 export const sapienziali: Libro[] = [
   {
     id: 'giobbe',
     titolo: 'Giobbe',
     categoriaId: 'sapienziali',
-    datazioneIniziale: [-550],
-    datazioneFinale: [-350],
-    descrizione: 'Il dramma della sofferenza innocente.',
-    metodiPrincipali: ['redazione', 'forme'],
+    descrizione:
+      'Grande poema sapienziale sulla sofferenza innocente, sulla giustizia e sul limite della comprensione umana.',
+    datazione: {
+      datazioneIniziale: -550,
+      datazioneFinale: -350,
+      etichettaInizio: 'ca. 550 a.C.',
+      etichettaFine: 'ca. 350 a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi('redazione', 'forme', 'tradizione'),
     eventiNarrati: [],
     redazione: [
-      { id: 'str1', etichetta: 'Dialoghi Poetici', inizio: [-550], fine: [-450], colore: '#7D8C6B', certezza: 'media' },
-      { id: 'str2', etichetta: 'Cornice Narrativa', inizio: [-450], fine: [-350], colore: '#2A2420', certezza: 'media' }
+      fase(
+        'Dialoghi poetici',
+        -550,
+        -450,
+        'dibattuta',
+        'Nucleo poetico costituito dai dialoghi fra Giobbe e i suoi interlocutori.',
+      ),
+      fase(
+        'Cornice narrativa e forma finale',
+        -450,
+        -350,
+        'dibattuta',
+        'Rielaborazione della cornice narrativa e integrazione della forma canonica.',
+      ),
     ],
-    contestoStorico: []
+    contestoStorico: [],
   },
+
   {
     id: 'salmi',
     titolo: 'Salmi',
     categoriaId: 'sapienziali',
-    datazioneIniziale: [-1000],
-    datazioneFinale: [-150],
-    descrizione: 'Il libro di preghiere e inni di Israele.',
-    metodiPrincipali: ['forme', 'tradizione'],
-    eventiNarrati: [{ id: 'ev1', anno: [-1000], etichetta: 'Era di Davide', certezza: 'media' }],
-    redazione: [
-      { id: 'str1', etichetta: 'Salmi Pre-esilici', inizio: [-1000], fine: [-586], colore: '#7D8C6B', certezza: 'media' },
-      { id: 'str2', etichetta: 'Salmi Post-esilici', inizio: [-538], fine: [-150], colore: '#5A4B81', certezza: 'alta' }
+    descrizione:
+      'Raccolta canonica di preghiere, inni, suppliche, canti regali, sapienziali e liturgici.',
+    datazione: {
+      datazioneIniziale: -1000,
+      datazioneFinale: -150,
+      etichettaInizio: 'tradizioni dal I millennio a.C.',
+      etichettaFine: 'forma finale ca. II sec. a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi(
+      'forme',
+      'tradizione',
+      'redazione',
+      'testuale',
+    ),
+    eventiNarrati: [
+      evento(
+        'Tradizioni davidiche',
+        -1000,
+        'tradizionale',
+        'La tradizione canonica collega numerosi salmi alla figura di Davide, senza implicare necessariamente una datazione diretta all’epoca davidica.',
+      ),
     ],
-    contestoStorico: []
+    redazione: [
+      fase(
+        'Tradizioni e raccolte pre-esiliche',
+        -1000,
+        -586,
+        'dibattuta',
+      ),
+      fase(
+        'Raccolte e redazione post-esilica',
+        -538,
+        -150,
+        'plausibile',
+      ),
+    ],
+    contestoStorico: [
+      evento('Esilio babilonese', -586, 'storico'),
+      evento(
+        'Periodo persiano e ricostruzione del culto',
+        -538,
+        'storico',
+      ),
+    ],
   },
+
   {
     id: 'proverbi',
     titolo: 'Proverbi',
     categoriaId: 'sapienziali',
-    datazioneIniziale: [-950],
-    datazioneFinale: [-300],
-    descrizione: 'Raccolta di massime sapienziali.',
-    metodiPrincipali: ['forme', 'fonti'],
+    descrizione:
+      'Raccolta stratificata di massime, istruzioni e composizioni sapienziali provenienti da tradizioni differenti.',
+    datazione: {
+      datazioneIniziale: -950,
+      datazioneFinale: -300,
+      etichettaInizio: 'tradizioni antiche',
+      etichettaFine: 'forma finale ca. IV–III sec. a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi(
+      'forme',
+      'fonti',
+      'tradizione',
+      'redazione',
+    ),
     eventiNarrati: [],
     redazione: [
-      { id: 'str1', etichetta: 'Raccolte Salomoniche', inizio: [-950], fine: [-700], colore: '#7D8C6B', certezza: 'media' },
-      { id: 'str2', etichetta: 'Redazione Finale', inizio: [-500], fine: [-300], colore: '#2A2420', certezza: 'alta' }
+      fase(
+        'Raccolte attribuite alla tradizione salomonica',
+        -950,
+        -700,
+        'tradizionale',
+      ),
+      fase(
+        'Raccolte e redazione finale',
+        -500,
+        -300,
+        'plausibile',
+      ),
     ],
-    contestoStorico: []
+    contestoStorico: [],
   },
+
   {
     id: 'qoelet',
-    titolo: 'Qoelet',
+    titolo: 'Qoèlet',
     categoriaId: 'sapienziali',
-    datazioneIniziale: [-280],
-    datazioneFinale: [-220],
-    descrizione: 'La meditazione scettica sulla vanità.',
-    metodiPrincipali: ['redazione', 'tradizione'],
+    descrizione:
+      'Meditazione sapienziale sulla precarietà dell’esistenza, sul tempo, sul lavoro e sui limiti della conoscenza.',
+    datazione: {
+      datazioneIniziale: -280,
+      datazioneFinale: -220,
+      etichettaInizio: 'ca. 280 a.C.',
+      etichettaFine: 'ca. 220 a.C.',
+      certezza: 'plausibile',
+    },
+    metodiAnalisi: metodi(
+      'redazione',
+      'tradizione',
+      'forme',
+    ),
     eventiNarrati: [],
     redazione: [
-      { id: 'str1', etichetta: 'Composizione', inizio: [-280], fine: [-220], colore: '#7D8C6B', certezza: 'alta' }
+      fase(
+        'Composizione',
+        -280,
+        -220,
+        'plausibile',
+      ),
     ],
-    contestoStorico: []
+    contestoStorico: [
+      evento(
+        'Periodo ellenistico',
+        -250,
+        'storico',
+      ),
+    ],
   },
+
   {
     id: 'cantico',
     titolo: 'Cantico dei Cantici',
     categoriaId: 'sapienziali',
-    datazioneIniziale: [-350],
-    datazioneFinale: [-250],
-    descrizione: 'Poesia d\'amore attribuita a Salomone.',
-    metodiPrincipali: ['forme', 'tradizione'],
+    descrizione:
+      'Raccolta poetica di canti d’amore, tradizionalmente associata a Salomone e successivamente riletta in senso teologico.',
+    datazione: {
+      datazioneIniziale: -350,
+      datazioneFinale: -250,
+      etichettaInizio: 'ca. IV sec. a.C.',
+      etichettaFine: 'ca. III sec. a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi(
+      'forme',
+      'tradizione',
+      'redazione',
+    ),
     eventiNarrati: [],
     redazione: [
-      { id: 'str1', etichetta: 'Composizione', inizio: [-350], fine: [-250], colore: '#7D8C6B', certezza: 'media' }
+      fase(
+        'Composizione e raccolta poetica',
+        -350,
+        -250,
+        'dibattuta',
+      ),
     ],
-    contestoStorico: []
+    contestoStorico: [],
   },
+
   {
     id: 'sapienza',
     titolo: 'Sapienza',
     categoriaId: 'sapienziali',
-    datazioneIniziale: [-80],
-    datazioneFinale: [-40],
-    descrizione: 'Composizione greca di ispirazione salomonica.',
-    metodiPrincipali: ['redazione', 'forme'],
+    descrizione:
+      'Opera sapienziale greca di ambiente giudeo-ellenistico, tradizionalmente posta sotto l’autorità letteraria di Salomone.',
+    datazione: {
+      datazioneIniziale: -80,
+      datazioneFinale: -40,
+      etichettaInizio: 'ca. 80 a.C.',
+      etichettaFine: 'ca. 40 a.C.',
+      certezza: 'plausibile',
+    },
+    metodiAnalisi: metodi(
+      'redazione',
+      'forme',
+      'tradizione',
+    ),
     eventiNarrati: [],
     redazione: [
-      { id: 'str1', etichetta: 'Composizione', inizio: [-80], fine: [-40], colore: '#A68A5B', certezza: 'alta' }
+      fase(
+        'Composizione greca',
+        -80,
+        -40,
+        'plausibile',
+        'Composizione in ambiente giudeo-ellenistico, probabilmente alessandrino.',
+      ),
     ],
-    contestoStorico: []
+    contestoStorico: [
+      evento(
+        'Giudaismo ellenistico',
+        -60,
+        'storico',
+      ),
+    ],
   },
+
   {
     id: 'siracide',
     titolo: 'Siracide',
     categoriaId: 'sapienziali',
-    datazioneIniziale: [-190],
-    datazioneFinale: [-175],
-    descrizione: 'Sapienza di Ben Sira.',
-    metodiPrincipali: ['redazione', 'tradizione'],
+    descrizione:
+      'Grande opera sapienziale di Ben Sira, composta originariamente in ebraico e successivamente tradotta in greco.',
+    datazione: {
+      datazioneIniziale: -190,
+      datazioneFinale: -130,
+      etichettaInizio: 'ca. 190–175 a.C.',
+      etichettaFine: 'traduzione greca ca. 132 a.C.',
+      certezza: 'plausibile',
+    },
+    metodiAnalisi: metodi(
+      'redazione',
+      'tradizione',
+      'testuale',
+    ),
     eventiNarrati: [],
     redazione: [
-      { id: 'str1', etichetta: 'Composizione Ebraica', inizio: [-190], fine: [-175], colore: '#7D8C6B', certezza: 'alta' },
-      { id: 'str2', etichetta: 'Traduzione Greca', inizio: [-132], fine: [-130], colore: '#A68A5B', certezza: 'alta' }
+      fase(
+        'Composizione ebraica',
+        -190,
+        -175,
+        'plausibile',
+      ),
+      fase(
+        'Traduzione greca',
+        -132,
+        -130,
+        'plausibile',
+      ),
     ],
-    contestoStorico: []
-  }
+    contestoStorico: [
+      evento(
+        'Giudaismo ellenistico',
+        -180,
+        'storico',
+      ),
+    ],
+  },
 ];

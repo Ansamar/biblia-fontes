@@ -79,3 +79,8 @@ export interface Libro {
   mondoAttornoAlTesto?: string;
   contestoStorico?: EventoFocus[];
 }
+export interface Categoria {
+  id: string;
+  etichetta: string;
+  colore: string;
+}

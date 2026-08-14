@@ -1,160 +1,367 @@
-import type { Libro } from '../types';
+import type {
+  Libro,
+  MetodoAnalisi,
+  StratoRedazione,
+  EventoFocus,
+} from '../types';
+
+const metodi = (...nomi: string[]): MetodoAnalisi[] =>
+  nomi.map((metodo) => ({ metodo }));
+
+const fase = (
+  etichetta: string,
+  inizio: number,
+  fine: number,
+  certezza: string,
+  descrizione?: string,
+): StratoRedazione => ({
+  etichetta,
+  inizio,
+  fine,
+  datazione:
+    inizio === fine
+      ? `${Math.abs(inizio)} ${inizio < 0 ? 'a.C.' : 'd.C.'}`
+      : `${Math.abs(inizio)}–${Math.abs(fine)} ${
+          fine < 0 ? 'a.C.' : 'd.C.'
+        }`,
+  certezza,
+  descrizione,
+});
+
+const evento = (
+  etichetta: string,
+  inizio: number,
+  certezza: string,
+  descrizione?: string,
+): EventoFocus => ({
+  etichetta,
+  inizio,
+  certezza,
+  descrizione,
+});
 
 export const torah: Libro[] = [
   {
     id: 'genesi',
     titolo: 'Genesi',
     categoriaId: 'torah',
-    datazioneIniziale: [-950],
-    datazioneFinale: [-400],
-    descrizione: 'Il libro delle origini: dalla creazione del mondo ai patriarchi.',
-    metodiPrincipali: ['fonti', 'forme', 'tradizione'],
+    descrizione:
+      'Il libro delle origini: dalla creazione del mondo alle tradizioni patriarcali e alla discesa in Egitto.',
+    datazione: {
+      datazioneIniziale: -950,
+      datazioneFinale: -400,
+      etichettaInizio: 'tradizioni dal I millennio a.C.',
+      etichettaFine: 'forma finale ca. V-IV sec. a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi(
+      'fonti',
+      'forme',
+      'tradizione',
+      'redazione',
+      'testuale',
+    ),
     eventiNarrati: [
-      { 
-        id: 'ev1', 
-        anno: [-2000], 
-        etichetta: 'Patriarchi (Abramo)', 
-        certezza: 'bassa', 
-        descrizione: 'La tradizione biblica colloca Abramo, Isacco e Giacobbe nell\'età del Bronzo Medio. Sebbene non ci siano prove archeologiche dirette dei patriarchi, i costumi giuridici e i nomi raccontati riflettono l\'ambiente del II millennio a.C.' 
-      },
-      { 
-        id: 'ev2', 
-        anno: [-1700], 
-        etichetta: 'Giuseppe in Egitto', 
-        certezza: 'bassa', 
-        descrizione: 'Racconto di ascesa di uno straniero a corte. Presenta echi della storia di figure semitiche in Egitto (come gli Hyksos), ma manca di conferme storiche dirette.' 
-      },
-      { 
-        id: 'ev3', 
-        anno: [-1250], 
-        etichetta: 'Esodo (Mosè)', 
-        certezza: 'bassa', 
-        descrizione: 'L\'evento fondativo di Israele. Nessuna fonte egizia menziona un esodo di massa o le dieci piaghe, ma la stele di Merneptah (1208 a.C.) attesta che Israele era già presente in Canaan in quest\'epoca.' 
-      }
+      evento(
+        'Tradizioni patriarcali',
+        -2000,
+        'ricostruzione',
+        'La collocazione dei patriarchi nel II millennio a.C. appartiene alla ricostruzione storica tradizionale; non esistono attestazioni archeologiche dirette di Abramo, Isacco o Giacobbe.',
+      ),
+      evento(
+        'Tradizione di Giuseppe in Egitto',
+        -1700,
+        'ricostruzione',
+        'Il racconto presenta motivi compatibili con ambienti egiziani e con la presenza di gruppi semitici, ma non consente un’identificazione storica diretta.',
+      ),
+      evento(
+        'Tradizione dell’Esodo',
+        -1250,
+        'ricostruzione',
+        'L’Esodo costituisce un evento fondativo della memoria d’Israele; la ricostruzione storica resta discussa.',
+      ),
     ],
     redazione: [
-      { 
-        id: 'str1', 
-        etichetta: 'Fonte J', 
-        inizio: [-950], 
-        fine: [-850], 
-        colore: '#B0532C', 
-        certezza: 'media', 
-        descrizione: 'La fonte Jahwista (J) prende il nome dall\'uso del nome proprio di Dio (YHWH). Si ritiene sia stata composta nel Regno del Sud (Giuda) intorno al X-IX sec a.C. Usa un linguaggio antropomorfico.' 
-      },
-      { 
-        id: 'str2', 
-        etichetta: 'Fonte E', 
-        inizio: [-850], 
-        fine: [-750], 
-        colore: '#7D8C6B', 
-        certezza: 'bassa', 
-        descrizione: 'La fonte Elohista (E) usa il termine generico "Elohim" per Dio. Originaria del Regno del Nord (Israele), enfatizza i sogni e i profeti.' 
-      },
-      { 
-        id: 'str3', 
-        etichetta: 'Fonte P', 
-        inizio: [-550], 
-        fine: [-450], 
-        colore: '#5A4B81', 
-        certezza: 'alta', 
-        descrizione: 'La fonte Sacerdotale (P) riflette la teologia del post-esilio. Ha uno stile sobrio, ripetitivo e liturgico. Sottolinea l\'ordine della creazione e le genealogie.' 
-      },
-      { 
-        id: 'str4', 
-        etichetta: 'Redazione Finale', 
-        inizio: [-450], 
-        fine: [-400], 
-        colore: '#2A2420', 
-        certezza: 'alta', 
-        descrizione: 'Un redatore (spesso identificato come Ezra) ha intrecciato le fonti J, E, D e P in un unico rotolo continuo, dando alla Genesi la forma in cui la leggiamo oggi.' 
-      }
+      fase(
+        'Tradizioni narrative non sacerdotali',
+        -950,
+        -700,
+        'dibattuta',
+        'Il modello critico contemporaneo tende a distinguere tradizioni narrative e strati non sacerdotali senza assumere necessariamente la ricostruzione documentaria classica J/E come certa.',
+      ),
+      fase(
+        'Tradizione sacerdotale (P)',
+        -550,
+        -450,
+        'plausibile',
+        'Materiali sacerdotali caratterizzati da genealogie, ordinamento, culto e attenzione alla struttura della creazione e dell’alleanza.',
+      ),
+      fase(
+        'Redazione e forma finale del Pentateuco',
+        -450,
+        -400,
+        'dibattuta',
+        'Processo di integrazione e raccordo delle differenti tradizioni nella forma pentateucale.',
+      ),
     ],
     contestoStorico: [
-      { 
-        id: 'ctx1', 
-        anno: [-1800], 
-        etichetta: 'Archivi di Ebla', 
-        certezza: 'alta', 
-        descrizione: 'Gli scavi di Tell Mardikh in Siria hanno riportato alla luce tavolette cuneiformi contenenti nomi semitici come Abramo, Ismaele, Israele.' 
-      },
-      { 
-        id: 'ctx2', 
-        anno: [-1600], 
-        etichetta: 'Poema di Gilgamesh', 
-        certezza: 'alta', 
-        descrizione: 'La versione babilonese del diluvio universale (Tavola XI), antecedente alla stesura biblica, dimostra che il mito del diluvio era diffuso in Mesopotamia.' 
-      },
-      { 
-        id: 'ctx3', 
-        anno: [-1208], 
-        etichetta: 'Stele di Merneptah', 
-        certezza: 'alta', 
-        descrizione: 'La prima menzione extrabiblica di "Israele". Il faraone Merneptah si vanta di aver sconfitto questo popolo, dimostrando che Israele era già insediato in Canaan.' 
-      }
-    ]
+      evento(
+        'Tradizioni del Vicino Oriente antico',
+        -1800,
+        'storico',
+        'Il mondo culturale della Genesi presenta numerosi punti di confronto con tradizioni mesopotamiche e levantine del Vicino Oriente antico.',
+      ),
+      evento(
+        'Tradizioni mesopotamiche sul diluvio',
+        -1600,
+        'storico',
+        'Il racconto biblico del diluvio può essere confrontato con tradizioni mesopotamiche più antiche, fra cui Atrahasis e l’epopea di Gilgamesh.',
+      ),
+      evento(
+        'Stele di Merneptah',
+        -1208,
+        'storico',
+        'La stele di Merneptah contiene una delle più antiche attestazioni extrabibliche del nome Israele in Canaan.',
+      ),
+    ],
   },
+
   {
     id: 'esodo',
     titolo: 'Esodo',
     categoriaId: 'torah',
-    datazioneIniziale: [-950],
-    datazioneFinale: [-400],
-    descrizione: 'L\'uscita dall\'Egitto, l\'alleanza del Sinai e la donazione della Legge.',
-    metodiPrincipali: ['fonti', 'forme'],
+    descrizione:
+      'Il racconto dell’uscita dall’Egitto, dell’alleanza del Sinai e della costituzione di Israele come popolo dell’alleanza.',
+    datazione: {
+      datazioneIniziale: -950,
+      datazioneFinale: -400,
+      etichettaInizio: 'tradizioni dal I millennio a.C.',
+      etichettaFine: 'forma finale ca. V-IV sec. a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi(
+      'fonti',
+      'forme',
+      'tradizione',
+      'redazione',
+      'testuale',
+    ),
     eventiNarrati: [
-      { id: 'ev1', anno: [-1250], etichetta: 'Esodo dall\'Egitto', certezza: 'bassa', descrizione: 'Nessuna fonte egizia menziona un esodo di massa.' }
+      evento(
+        'Tradizione dell’uscita dall’Egitto',
+        -1250,
+        'ricostruzione',
+        'La memoria dell’Esodo è centrale per l’identità d’Israele, ma non è documentato dalle fonti egizie come un unico esodo di massa.',
+      ),
+      evento(
+        'Tradizione del Sinai',
+        -1250,
+        'tradizionale',
+        'La narrazione collega la liberazione dall’Egitto all’alleanza, alla legge e alla costituzione religiosa d’Israele.',
+      ),
     ],
     redazione: [
-      { id: 'str1', etichetta: 'Fonte J', inizio: [-950], fine: [-850], colore: '#B0532C', certezza: 'media' },
-      { id: 'str2', etichetta: 'Fonte P', inizio: [-550], fine: [-450], colore: '#5A4B81', certezza: 'alta' }
+      fase(
+        'Tradizioni narrative non sacerdotali',
+        -950,
+        -700,
+        'dibattuta',
+      ),
+      fase(
+        'Tradizione sacerdotale (P)',
+        -550,
+        -450,
+        'plausibile',
+      ),
+      fase(
+        'Redazione pentateucale',
+        -450,
+        -400,
+        'dibattuta',
+      ),
     ],
-    contestoStorico: []
+    contestoStorico: [
+      evento(
+        'Egitto del Nuovo Regno',
+        -1250,
+        'storico',
+        'Le tradizioni dell’Esodo vengono normalmente confrontate con il quadro storico dell’Egitto e del Levante nella tarda età del bronzo.',
+      ),
+    ],
   },
+
   {
     id: 'levitico',
     titolo: 'Levitico',
     categoriaId: 'torah',
-    datazioneIniziale: [-550],
-    datazioneFinale: [-450],
-    descrizione: 'Il manuale liturgico e di santità dei sacerdoti.',
-    metodiPrincipali: ['redazione', 'forme'],
+    descrizione:
+      'Raccolta legislativa e cultuale centrata su santità, sacrificio, impurità, sacerdozio e vita comunitaria.',
+    datazione: {
+      datazioneIniziale: -550,
+      datazioneFinale: -400,
+      etichettaInizio: 'ca. VI sec. a.C.',
+      etichettaFine: 'forma finale ca. V-IV sec. a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi(
+      'redazione',
+      'forme',
+      'tradizione',
+      'fonti',
+      'testuale',
+    ),
     eventiNarrati: [],
     redazione: [
-      { id: 'str1', etichetta: 'Fonte P', inizio: [-550], fine: [-450], colore: '#5A4B81', certezza: 'alta' }
+      fase(
+        'Tradizione sacerdotale (P)',
+        -550,
+        -450,
+        'plausibile',
+        'Il Levitico appartiene in larga misura all’orizzonte sacerdotale del Pentateuco.',
+      ),
+      fase(
+        'Codice di Santità (H)',
+        -500,
+        -430,
+        'dibattuta',
+        'Lev 17–26 viene spesso distinto come complesso letterario specifico, comunemente denominato Codice di Santità.',
+      ),
+      fase(
+        'Redazione finale',
+        -450,
+        -400,
+        'dibattuta',
+      ),
     ],
-    contestoStorico: []
+    contestoStorico: [
+      evento(
+        'Periodo esilico e post-esilico',
+        -500,
+        'storico',
+        'Le forme sacerdotali vengono studiate nel quadro della riorganizzazione cultuale e comunitaria d’Israele.',
+      ),
+    ],
   },
+
   {
     id: 'numeri',
     titolo: 'Numeri',
     categoriaId: 'torah',
-    datazioneIniziale: [-950],
-    datazioneFinale: [-400],
-    descrizione: 'Il censimento e il viaggio nel deserto verso la Terra Promessa.',
-    metodiPrincipali: ['fonti', 'tradizione'],
-    eventiNarrati: [],
-    redazione: [
-      { id: 'str1', etichetta: 'Fonte J', inizio: [-950], fine: [-850], colore: '#B0532C', certezza: 'media' },
-      { id: 'str2', etichetta: 'Fonte P', inizio: [-550], fine: [-450], colore: '#5A4B81', certezza: 'alta' }
+    descrizione:
+      'Narrazioni, censimenti e materiali legislativi sul cammino nel deserto e sulla preparazione all’ingresso nella terra.',
+    datazione: {
+      datazioneIniziale: -900,
+      datazioneFinale: -400,
+      etichettaInizio: 'tradizioni antiche',
+      etichettaFine: 'forma finale ca. V-IV sec. a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi(
+      'fonti',
+      'tradizione',
+      'redazione',
+      'forme',
+      'testuale',
+    ),
+    eventiNarrati: [
+      evento(
+        'Peregrinazione nel deserto',
+        -1250,
+        'tradizionale',
+        'La narrazione colloca Israele nel deserto fra il Sinai e le pianure di Moab.',
+      ),
     ],
-    contestoStorico: []
+    redazione: [
+      fase(
+        'Tradizioni narrative non sacerdotali',
+        -900,
+        -700,
+        'dibattuta',
+      ),
+      fase(
+        'Tradizione sacerdotale (P)',
+        -550,
+        -450,
+        'plausibile',
+      ),
+      fase(
+        'Materiali di santità e rielaborazioni sacerdotali',
+        -500,
+        -430,
+        'dibattuta',
+      ),
+      fase(
+        'Redazione pentateucale',
+        -450,
+        -400,
+        'dibattuta',
+      ),
+    ],
+    contestoStorico: [],
   },
+
   {
     id: 'deuteronomio',
     titolo: 'Deuteronomio',
     categoriaId: 'torah',
-    datazioneIniziale: [-700],
-    datazioneFinale: [-500],
-    descrizione: 'La ripetizione della Legge e l\'alleanza moabitica.',
-    metodiPrincipali: ['fonti', 'redazione', 'tradizione'],
-    eventiNarrati: [],
+    descrizione:
+      'Riformulazione della legge in forma di discorsi mosaici, centrata sull’alleanza, sull’unicità di YHWH e sulla fedeltà alla Torah.',
+    datazione: {
+      datazioneIniziale: -700,
+      datazioneFinale: -500,
+      etichettaInizio: 'tradizioni dal VII sec. a.C.',
+      etichettaFine: 'redazioni fino al VI-V sec. a.C.',
+      certezza: 'dibattuta',
+    },
+    metodiAnalisi: metodi(
+      'fonti',
+      'redazione',
+      'tradizione',
+      'forme',
+      'testuale',
+    ),
+    eventiNarrati: [
+      evento(
+        'Discorsi di Mosè nelle pianure di Moab',
+        -1250,
+        'tradizionale',
+        'La cornice narrativa presenta Mosè mentre trasmette la legge prima dell’ingresso nella terra.',
+      ),
+    ],
     redazione: [
-      { id: 'str1', etichetta: 'Nucleo Deuteronomico', inizio: [-700], fine: [-622], colore: '#3E6E82', certezza: 'alta' },
-      { id: 'str2', etichetta: 'Redazione Esilica', inizio: [-560], fine: [-540], colore: '#2A2420', certezza: 'alta' }
+      fase(
+        'Nucleo deuteronomico',
+        -700,
+        -622,
+        'dibattuta',
+        'Un nucleo legislativo viene spesso collegato agli sviluppi religiosi e politici del VII secolo a.C.',
+      ),
+      fase(
+        'Rielaborazione deuteronomistica',
+        -620,
+        -580,
+        'plausibile',
+      ),
+      fase(
+        'Redazione esilica e post-esilica',
+        -560,
+        -500,
+        'plausibile',
+      ),
     ],
     contestoStorico: [
-      { id: 'ctx1', anno: [-622], etichetta: 'Riforma di Giosia', certezza: 'alta', descrizione: 'Ritrovamento del rotolo della Legge nel Tempio.' }
-    ]
-  }
+      evento(
+        'Riforma di Giosia',
+        -622,
+        'storico',
+        'La narrazione di 2 Re 22–23 collega la riforma cultuale al ritrovamento di un libro della legge nel Tempio.',
+      ),
+      evento(
+        'Esilio babilonese',
+        -586,
+        'storico',
+        'L’esperienza dell’esilio costituisce uno sfondo fondamentale per le riletture deuteronomistiche dell’alleanza e della storia.',
+      ),
+    ],
+  },
 ];
