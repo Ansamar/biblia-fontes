@@ -8,6 +8,8 @@ export type BiblicalVerse = {
   metatesto?: { testo: string; stile?: string };
   marcatoreAlfabetico?: string;
   riferimentoAlternativo?: { salmo?: number; capitolo?: number; versetto: number; sistema?: AlternateSystem };
+  statoTestuale?: 'metatesto_solo' | 'omesso_nell_edizione' | 'lacunoso' | 'da_verificare' | string;
+  notaEditoriale?: string;
 };
 
 export type AlternateChapterNumber = number | { sistema?: AlternateSystem; numero: number };
@@ -26,6 +28,14 @@ function systemLabel(system?: AlternateSystem) {
   if (!system || system === 'LXX_VG') return 'LXX/Vg';
   if (system === 'MT') return 'MT';
   return system;
+}
+
+function textualStatusLabel(status?: string) {
+  if (status === 'metatesto_solo') return 'Solo soprascrizione / metatesto';
+  if (status === 'omesso_nell_edizione') return 'Versetto omesso nell’edizione';
+  if (status === 'lacunoso') return 'Testo lacunoso';
+  if (status === 'da_verificare') return 'Testo da verificare';
+  return status ? status.replaceAll('_', ' ') : null;
 }
 
 function alternateChapter(text: BiblicalTextUnit) {
@@ -68,6 +78,7 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
         const verseSystem = systemLabel(alt?.sistema || chapterAlt?.sistema);
         const altBook = alt?.salmo != null ? `Sal ${alt.salmo}` : alt?.capitolo != null ? `cap. ${alt.capitolo}` : null;
         const altLabel = alt ? `${verseSystem} → ${altBook ? `${altBook},` : ''}${alt.versetto}` : null;
+        const statusLabel = textualStatusLabel(verse.statoTestuale);
 
         return <div key={verse.numero} id={`v${verse.numero}`} className="scroll-mt-28">
           {verse.metatesto?.testo && <p className="mb-3 text-[0.86em] italic leading-7 text-ink-soft">{verse.metatesto.testo}</p>}
@@ -80,6 +91,13 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
             {critical && altLabel && <aside className="self-start pt-1 font-sans text-[0.58em] leading-5 text-ink-faint md:max-w-[150px]" aria-label={`Numerazione parallela del versetto ${verse.numero}`}>
               <span className="inline-flex rounded-md border border-papyrus-line bg-paper-card px-2 py-1 font-mono text-[10px] tracking-wide text-ink-soft">{altLabel}</span>
             </aside>}
+          </div>}
+          {!verse.testo && statusLabel && <div className="rounded-xl border border-papyrus-line bg-papyrus/45 px-4 py-3 font-sans text-sm leading-6 text-ink-soft">
+            <div className="flex flex-wrap items-center gap-2">
+              <a href={`#v${verse.numero}`} aria-label={`Versetto ${verse.numero}`} className="font-semibold text-bronze no-underline hover:text-seal">[{verse.numero}]</a>
+              <span className="font-medium text-ink">{statusLabel}</span>
+            </div>
+            {verse.notaEditoriale && <p className="mt-1 text-xs leading-5 text-ink-faint">{verse.notaEditoriale}</p>}
           </div>}
         </div>;
       })}
