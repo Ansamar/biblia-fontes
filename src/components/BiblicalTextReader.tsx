@@ -1,8 +1,11 @@
 'use client';
 
+import {useMemo, useState} from 'react';
+
 export type AlternateSystem = 'LXX_VG' | 'MT' | 'ALTRO' | string;
 
 export type BiblicalVerse = {
+  _key?: string;
   numero: number;
   testo: string;
   metatesto?: { testo: string; stile?: string };
@@ -22,6 +25,7 @@ export type BiblicalTextUnit = {
   lingua?: string;
   tradizione?: string;
   versetti: BiblicalVerse[];
+  witnesses?: BiblicalTextUnit[];
 };
 
 function systemLabel(system?: AlternateSystem) {
@@ -38,6 +42,12 @@ function textualStatusLabel(status?: string) {
   return status ? status.replaceAll('_', ' ') : null;
 }
 
+function witnessLabel(text: BiblicalTextUnit) {
+  if (text.tradizione === 'ester_ebraico') return 'Testo ebraico';
+  if (text.tradizione === 'ester_greco') return 'Testo greco';
+  return text.edizione || text.tradizione || 'Testo biblico';
+}
+
 function alternateChapter(text: BiblicalTextUnit) {
   if (text.numeroAlternativo == null) return null;
   if (typeof text.numeroAlternativo === 'number') {
@@ -49,11 +59,21 @@ function alternateChapter(text: BiblicalTextUnit) {
   };
 }
 
-export default function BiblicalTextReader({ text, critical = false }: { text: BiblicalTextUnit; critical?: boolean }) {
+function verseLabel(verse: BiblicalVerse) {
+  const marker = verse.marcatoreAlfabetico;
+  if (marker && /^[a-z]$/i.test(marker)) return `${verse.numero}${marker.toLowerCase()}`;
+  return String(verse.numero);
+}
+
+function verseAnchor(verse: BiblicalVerse, index: number) {
+  return `v${verseLabel(verse).replace(/[^a-z0-9_-]/gi, '-')}-${index}`;
+}
+
+function SingleWitness({text, critical = false, compact = false}: {text: BiblicalTextUnit; critical?: boolean; compact?: boolean}) {
   const chapterAlt = alternateChapter(text);
   const hasAlternate = chapterAlt != null || text.versetti.some((verse) => verse.riferimentoAlternativo);
 
-  return <div className="reading-text mx-auto max-w-[760px]">
+  return <div className={compact ? '' : 'reading-text mx-auto max-w-[760px]'}>
     <div className="mb-7 border-b border-papyrus-line pb-5">
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-ink-faint">
         <span>{text.edizione || 'Testo biblico'}</span>
@@ -67,34 +87,37 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
         </div>
         <details className="mt-3 text-sm leading-6 text-ink-soft">
           <summary className="cursor-pointer font-medium text-bronze">Perché due numerazioni?</summary>
-          <p className="mt-2">La numerazione dei Salmi della tradizione ebraica/masoretica non coincide sempre con quella della Settanta e della Vulgata. Biblia Fontes mantiene il riferimento principale nel testo e segnala separatamente la numerazione parallela, così i due sistemi non vengono confusi.</p>
+          <p className="mt-2">La numerazione dei Salmi della tradizione ebraica/masoretica non coincide sempre con quella della Settanta e della Vulgata. Biblia Fontes mantiene il riferimento principale nel testo e segnala separatamente la numerazione parallela.</p>
         </details>
       </div>}
     </div>
 
     <div className="space-y-5 font-serif text-[1.22em] leading-[1.75] text-ink">
-      {text.versetti.map((verse) => {
+      {text.versetti.map((verse, index) => {
         const alt = verse.riferimentoAlternativo;
         const verseSystem = systemLabel(alt?.sistema || chapterAlt?.sistema);
         const altBook = alt?.salmo != null ? `Sal ${alt.salmo}` : alt?.capitolo != null ? `cap. ${alt.capitolo}` : null;
         const altLabel = alt ? `${verseSystem} → ${altBook ? `${altBook},` : ''}${alt.versetto}` : null;
         const statusLabel = textualStatusLabel(verse.statoTestuale);
+        const label = verseLabel(verse);
+        const anchor = verseAnchor(verse, index);
+        const suffixMarker = verse.marcatoreAlfabetico && !/^[a-z]$/i.test(verse.marcatoreAlfabetico) ? verse.marcatoreAlfabetico : null;
 
-        return <div key={verse.numero} id={`v${verse.numero}`} className="scroll-mt-28">
+        return <div key={verse._key || `${label}-${index}`} id={anchor} className="scroll-mt-28">
           {verse.metatesto?.testo && <p className="mb-3 text-[0.86em] italic leading-7 text-ink-soft">{verse.metatesto.testo}</p>}
           {verse.testo && <div className={critical && altLabel ? 'grid gap-1 md:grid-cols-[1fr_auto] md:gap-5' : ''}>
             <p>
-              {verse.marcatoreAlfabetico && <span className="mr-2 font-sans text-[0.58em] font-semibold uppercase tracking-wider text-bronze">{verse.marcatoreAlfabetico}</span>}
-              <a href={`#v${verse.numero}`} aria-label={`Versetto ${verse.numero}`} className="mr-2 inline-block align-[0.12em] font-sans text-[0.62em] font-semibold text-bronze no-underline hover:text-seal">[{verse.numero}]</a>
+              {suffixMarker && <span className="mr-2 font-sans text-[0.58em] font-semibold uppercase tracking-wider text-bronze">{suffixMarker}</span>}
+              <a href={`#${anchor}`} aria-label={`Versetto ${label}`} className="mr-2 inline-block align-[0.12em] font-sans text-[0.62em] font-semibold text-bronze no-underline hover:text-seal">[{label}]</a>
               <span>{verse.testo}</span>
             </p>
-            {critical && altLabel && <aside className="self-start pt-1 font-sans text-[0.58em] leading-5 text-ink-faint md:max-w-[150px]" aria-label={`Numerazione parallela del versetto ${verse.numero}`}>
+            {critical && altLabel && <aside className="self-start pt-1 font-sans text-[0.58em] leading-5 text-ink-faint md:max-w-[150px]" aria-label={`Numerazione parallela del versetto ${label}`}>
               <span className="inline-flex rounded-md border border-papyrus-line bg-paper-card px-2 py-1 font-mono text-[10px] tracking-wide text-ink-soft">{altLabel}</span>
             </aside>}
           </div>}
           {!verse.testo && statusLabel && <div className="rounded-xl border border-papyrus-line bg-papyrus/45 px-4 py-3 font-sans text-sm leading-6 text-ink-soft">
             <div className="flex flex-wrap items-center gap-2">
-              <a href={`#v${verse.numero}`} aria-label={`Versetto ${verse.numero}`} className="font-semibold text-bronze no-underline hover:text-seal">[{verse.numero}]</a>
+              <a href={`#${anchor}`} aria-label={`Versetto ${label}`} className="font-semibold text-bronze no-underline hover:text-seal">[{label}]</a>
               <span className="font-medium text-ink">{statusLabel}</span>
             </div>
             {verse.notaEditoriale && <p className="mt-1 text-xs leading-5 text-ink-faint">{verse.notaEditoriale}</p>}
@@ -102,5 +125,35 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
         </div>;
       })}
     </div>
+  </div>;
+}
+
+export default function BiblicalTextReader({ text, critical = false }: { text: BiblicalTextUnit; critical?: boolean }) {
+  const witnesses = useMemo(() => {
+    const supplied = Array.isArray(text.witnesses) ? text.witnesses : [];
+    return supplied.length ? supplied : [text];
+  }, [text]);
+  const [selected, setSelected] = useState(0);
+  const [compare, setCompare] = useState(false);
+  const current = witnesses[Math.min(selected, witnesses.length - 1)] || text;
+  const multiple = witnesses.length > 1;
+
+  return <div>
+    {multiple && <div className="mb-8 rounded-2xl border border-papyrus-line bg-papyrus/45 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Tradizioni testuali</p>
+          <p className="mt-1 text-sm leading-6 text-ink-faint">Le forme testuali restano distinte: puoi leggerle separatamente oppure affiancarle.</p>
+        </div>
+        <button type="button" onClick={() => setCompare((value) => !value)} className="rounded-full border border-papyrus-line px-4 py-2 text-xs font-semibold text-ink-soft hover:border-bronze hover:text-bronze" aria-pressed={compare}>{compare ? 'Vista singola' : 'Affianca'}</button>
+      </div>
+      {!compare && <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Tradizione testuale">
+        {witnesses.map((witness, index) => <button key={`${witness.tradizione || witness.edizione || index}-${index}`} type="button" role="tab" aria-selected={selected === index} onClick={() => setSelected(index)} className={`rounded-full border px-4 py-2 text-xs font-semibold ${selected === index ? 'border-bronze text-bronze' : 'border-papyrus-line text-ink-soft hover:border-bronze/60 hover:text-bronze'}`}>{witnessLabel(witness)}</button>)}
+      </div>}
+    </div>}
+
+    {compare && multiple
+      ? <div className="grid gap-8 xl:grid-cols-2">{witnesses.slice(0,2).map((witness,index) => <section key={`${witness.tradizione || index}-compare`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5"><p className="mb-5 font-mono text-[10px] uppercase tracking-widest text-bronze">{witnessLabel(witness)}</p><SingleWitness text={witness} critical={critical} compact /></section>)}</div>
+      : <SingleWitness text={current} critical={critical} />}
   </div>;
 }
