@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "studio": "sanity dev"
+    "studio": "sanity dev",
+    "audit:reader": "node audit-reader-production.mjs",
+    "audit": "npm run build && npm run audit:reader"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.4",
