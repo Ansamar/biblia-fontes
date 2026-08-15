@@ -17,7 +17,7 @@ const query = `{
   },
   "testiBiblici": *[_type == "testoBiblicoCapitolo" && libro._ref == $bookId && numero == $numero]{
     _id,
-    numero, numeroAlternativo, edizione, lingua, tradizione, testimone,
+    numero, numeroAlternativo, edizione, lingua, tradizione, testimone, direzione,
     versetti[]{
       _key,
       numero,
@@ -26,7 +26,8 @@ const query = `{
       marcatoreAlfabetico,
       riferimentoAlternativo,
       statoTestuale,
-      notaEditoriale
+      notaEditoriale,
+      apparatoMasoretico
     }
   }
 }`;
@@ -41,75 +42,36 @@ function isItalianWitness(text: ReaderWitness) {
   const lingua = normalized(text.lingua);
   const tradizione = normalized(text.tradizione);
   const edizione = normalized(text.edizione);
-
-  return (
-    lingua === 'it' ||
-    lingua.includes('italian') ||
-    tradizione.includes('cei') ||
-    edizione.includes('cei')
-  );
+  return lingua === 'it' || lingua.includes('italian') || tradizione.includes('cei') || edizione.includes('cei');
 }
 
 function isExplicitGreekWitness(text: ReaderWitness) {
   const lingua = normalized(text.lingua);
   const tradizione = normalized(text.tradizione);
   const edizione = normalized(text.edizione);
-
-  return (
-    lingua === 'grc' ||
-    lingua.includes('grec') ||
-    tradizione.includes('lxx') ||
-    tradizione.includes('grec') ||
-    edizione.includes('settanta') ||
-    edizione.includes('lxx')
-  );
+  return lingua === 'grc' || lingua.includes('grec') || tradizione.includes('lxx') || tradizione.includes('grec') || edizione.includes('settanta') || edizione.includes('lxx');
 }
 
 function isExplicitHebrewWitness(text: ReaderWitness) {
   const lingua = normalized(text.lingua);
   const tradizione = normalized(text.tradizione);
-
-  return (
-    lingua === 'he' ||
-    lingua.includes('ebra') ||
-    tradizione === 'mt' ||
-    tradizione.includes('masoret') ||
-    tradizione.includes('ebra')
-  );
+  return lingua === 'he' || lingua.includes('ebra') || tradizione === 'mt' || tradizione.includes('masoret') || tradizione.includes('ebra');
 }
 
 function isExplicitLatinWitness(text: ReaderWitness) {
   const lingua = normalized(text.lingua);
   const tradizione = normalized(text.tradizione);
   const edizione = normalized(text.edizione);
-
-  return (
-    lingua === 'la' ||
-    lingua.includes('latin') ||
-    tradizione.includes('vulg') ||
-    edizione.includes('vulg')
-  );
+  return lingua === 'la' || lingua.includes('latin') || tradizione.includes('vulg') || edizione.includes('vulg');
 }
 
 function witnessPriority(text: ReaderWitness) {
-  // 0 — Italiano esplicito (CEI).
   if (isItalianWitness(text)) return 0;
-
-  // 1 — Documento storico/legacy senza metadati linguistici: nel corpus
-  //     attuale corrisponde al testo italiano già presente prima dei nuovi
-  //     testimoni. Lo teniamo davanti alle lingue aggiunte.
-  const hasLanguageMetadata = Boolean(
-    normalized(text.lingua) ||
-    normalized(text.tradizione) ||
-    normalized(text.edizione)
-  );
+  const hasLanguageMetadata = Boolean(normalized(text.lingua) || normalized(text.tradizione) || normalized(text.edizione));
   if (!hasLanguageMetadata) return 1;
-
-  // Ordine editoriale dei nuovi testimoni.
-  if (isExplicitGreekWitness(text)) return 2;
-  if (isExplicitHebrewWitness(text)) return 3;
+  if (isExplicitHebrewWitness(text)) return 2;
+  if (isExplicitGreekWitness(text)) return 3;
   if (isExplicitLatinWitness(text)) return 4;
-
   return 5;
 }
 
@@ -136,20 +98,16 @@ export default async function DynamicChapterPage({ params }: { params: Promise<{
   const reference = `${abbr} ${numero}`;
   const category = categoryLabel(libro.categoriaId);
 
-  const sanityTexts = Array.isArray(data.testiBiblici)
-    ? (data.testiBiblici as ReaderWitness[])
-    : [];
+  const sanityTexts = Array.isArray(data.testiBiblici) ? (data.testiBiblici as ReaderWitness[]) : [];
   const fixture = textFixtureFor(slug, numero);
   const hasItalianSanity = sanityTexts.some(isItalianWitness);
   const witnesses = orderWitnesses([
     ...(!hasItalianSanity && fixture ? [fixture] : []),
     ...sanityTexts,
   ]);
-  const biblicalText = witnesses.length
-    ? { ...witnesses[0], witnesses }
-    : fixture;
+  const biblicalText = witnesses.length ? { ...witnesses[0], witnesses } : fixture;
 
-  return <AppShell><main className="mx-auto max-w-[1120px] px-5 py-10 md:px-8 md:py-14">
+  return <AppShell><main className="mx-auto max-w-[1600px] px-5 py-10 md:px-8 md:py-14 xl:px-10">
     <nav className="text-sm text-ink-faint" aria-label="Breadcrumb"><Link href="/" className="hover:text-bronze">Bibbia</Link><span className="mx-2">/</span><span>{category}</span><span className="mx-2">/</span><Link href={`/bibbia/${slug}`} className="hover:text-bronze">{libro.titolo}</Link><span className="mx-2">/</span><span className="text-ink-soft">Capitolo {numero}</span></nav>
 
     <header className="mt-9"><div className="flex flex-wrap items-end justify-between gap-6"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze">{libro.titolo} · Capitolo {numero}</p><h1 className="mt-3 font-serif text-5xl font-bold md:text-6xl">{chapter.titolo || `Capitolo ${numero}`}</h1></div><div className="flex gap-4 text-sm">{numero > 1 && <Link href={`/bibbia/${slug}/${numero-1}`} className="text-ink-soft hover:text-bronze">← {abbr} {numero-1}</Link>}{numero < total && <Link href={`/bibbia/${slug}/${numero+1}`} className="text-ink-soft hover:text-bronze">{abbr} {numero+1} →</Link>}</div></div></header>
