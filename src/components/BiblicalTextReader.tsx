@@ -170,6 +170,7 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
 
   const current = witnesses[Math.min(selected, witnesses.length - 1)] || text;
   const second = witnesses[Math.min(secondary, witnesses.length - 1)] || witnesses[0] || text;
+  const synopsisColumns = witnesses.length >= 4 ? '2xl:grid-cols-4' : '2xl:grid-cols-3';
 
   return <div>
     {multiple && <div className="mb-8 rounded-2xl border border-papyrus-line bg-papyrus/45 p-4 md:p-5">
@@ -196,7 +197,7 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
     {mode === 'compare' && multiple
       ? <div className="grid gap-6 2xl:grid-cols-2">{[current, second].map((witness,index) => <section key={`${witness.tradizione || witness.edizione || index}-compare-${index}`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5 md:p-6"><p className="mb-5 font-mono text-[10px] uppercase tracking-widest text-bronze" dir="ltr">{witnessShortLabel(witness)} · {witnessLabel(witness)}</p><SingleWitness text={witness} critical={critical} compact /></section>)}</div>
       : mode === 'synopsis' && witnesses.length >= 3
-        ? <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">{witnesses.map((witness,index) => <section key={`${witness.tradizione || witness.edizione || index}-synopsis`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5"><p className="mb-5 font-mono text-[10px] uppercase tracking-widest text-bronze" dir="ltr">{witnessShortLabel(witness)} · {witnessLabel(witness)}</p><SingleWitness text={witness} critical={critical} compact /></section>)}</div>
+        ? <div className={`grid gap-5 xl:grid-cols-2 ${synopsisColumns}`}>{witnesses.map((witness,index) => <section key={`${witness.tradizione || witness.edizione || index}-synopsis`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5"><p className="mb-5 font-mono text-[10px] uppercase tracking-widest text-bronze" dir="ltr">{witnessShortLabel(witness)} · {witnessLabel(witness)}</p><SingleWitness text={witness} critical={critical} compact /></section>)}</div>
         : <SingleWitness text={current} critical={critical} />}
   </div>;
 }
