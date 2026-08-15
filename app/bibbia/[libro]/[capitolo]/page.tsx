@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppShell from '../../../../src/components/AppShell';
 import UniversalChapterStudy from '../../../../src/components/UniversalChapterStudy';
+import type { BiblicalTextUnit } from '../../../../src/components/BiblicalTextReader';
 import { client } from '../../../../src/sanity/client';
 import { bookAbbreviation, bookIdFromSlug, categoryLabel } from '../../../../src/lib/bibleRouting';
 import { textFixtureFor } from '../../../../src/data/textFixtures';
@@ -15,7 +16,7 @@ const query = `{
     bibliografia
   },
   "testiBiblici": *[_type == "testoBiblicoCapitolo" && libro._ref == $bookId && numero == $numero] | order(tradizione asc){
-    numero, numeroAlternativo, edizione, lingua, tradizione,
+    numero, numeroAlternativo, edizione, lingua, tradizione, testimone,
     versetti[]{
       _key,
       numero,
@@ -28,6 +29,24 @@ const query = `{
     }
   }
 }`;
+
+function isItalianWitness(text: BiblicalTextUnit) {
+  const lingua = (text.lingua || '').toLocaleLowerCase('it-IT');
+  const tradizione = (text.tradizione || '').toLocaleLowerCase('it-IT');
+  const edizione = (text.edizione || '').toLocaleLowerCase('it-IT');
+
+  return lingua.includes('italian') || tradizione.includes('cei') || edizione.includes('cei');
+}
+
+function orderWitnesses(texts: BiblicalTextUnit[]) {
+  return texts
+    .map((text, index) => ({ text, index }))
+    .sort((a, b) => {
+      const italianDifference = Number(!isItalianWitness(a.text)) - Number(!isItalianWitness(b.text));
+      return italianDifference || a.index - b.index;
+    })
+    .map(({ text }) => text);
+}
 
 export default async function DynamicChapterPage({ params }: { params: Promise<{ libro: string; capitolo: string }> }) {
   const { libro: slug, capitolo } = await params;
@@ -44,10 +63,18 @@ export default async function DynamicChapterPage({ params }: { params: Promise<{
   const abbr = bookAbbreviation(slug, libro.titolo);
   const reference = `${abbr} ${numero}`;
   const category = categoryLabel(libro.categoriaId);
-  const sanityTexts = Array.isArray(data.testiBiblici) ? data.testiBiblici : [];
+
+  const sanityTexts = Array.isArray(data.testiBiblici)
+    ? (data.testiBiblici as BiblicalTextUnit[])
+    : [];
   const fixture = textFixtureFor(slug, numero);
-  const biblicalText = sanityTexts.length
-    ? { ...sanityTexts[0], witnesses: sanityTexts }
+  const hasItalianSanity = sanityTexts.some(isItalianWitness);
+  const witnesses = orderWitnesses([
+    ...(!hasItalianSanity && fixture ? [fixture] : []),
+    ...sanityTexts,
+  ]);
+  const biblicalText = witnesses.length
+    ? { ...witnesses[0], witnesses }
     : fixture;
 
   return <AppShell><main className="mx-auto max-w-[1120px] px-5 py-10 md:px-8 md:py-14">
