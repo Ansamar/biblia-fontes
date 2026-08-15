@@ -15,7 +15,8 @@ const query = `{
     attribuzioniFonti[]{..., "fonte": fonte->{_id, sigla, nome, titolo, categoria, descrizione}},
     bibliografia
   },
-  "testiBiblici": *[_type == "testoBiblicoCapitolo" && libro._ref == $bookId && numero == $numero] | order(tradizione asc){
+  "testiBiblici": *[_type == "testoBiblicoCapitolo" && libro._ref == $bookId && numero == $numero]{
+    _id,
     numero, numeroAlternativo, edizione, lingua, tradizione, testimone,
     versetti[]{
       _key,
@@ -30,21 +31,92 @@ const query = `{
   }
 }`;
 
-function isItalianWitness(text: BiblicalTextUnit) {
-  const lingua = (text.lingua || '').toLocaleLowerCase('it-IT');
-  const tradizione = (text.tradizione || '').toLocaleLowerCase('it-IT');
-  const edizione = (text.edizione || '').toLocaleLowerCase('it-IT');
+type ReaderWitness = BiblicalTextUnit & {_id?: string};
 
-  return lingua.includes('italian') || tradizione.includes('cei') || edizione.includes('cei');
+function normalized(value?: string) {
+  return (value || '').trim().toLocaleLowerCase('it-IT');
 }
 
-function orderWitnesses(texts: BiblicalTextUnit[]) {
+function isItalianWitness(text: ReaderWitness) {
+  const lingua = normalized(text.lingua);
+  const tradizione = normalized(text.tradizione);
+  const edizione = normalized(text.edizione);
+
+  return (
+    lingua === 'it' ||
+    lingua.includes('italian') ||
+    tradizione.includes('cei') ||
+    edizione.includes('cei')
+  );
+}
+
+function isExplicitGreekWitness(text: ReaderWitness) {
+  const lingua = normalized(text.lingua);
+  const tradizione = normalized(text.tradizione);
+  const edizione = normalized(text.edizione);
+
+  return (
+    lingua === 'grc' ||
+    lingua.includes('grec') ||
+    tradizione.includes('lxx') ||
+    tradizione.includes('grec') ||
+    edizione.includes('settanta') ||
+    edizione.includes('lxx')
+  );
+}
+
+function isExplicitHebrewWitness(text: ReaderWitness) {
+  const lingua = normalized(text.lingua);
+  const tradizione = normalized(text.tradizione);
+
+  return (
+    lingua === 'he' ||
+    lingua.includes('ebra') ||
+    tradizione === 'mt' ||
+    tradizione.includes('masoret') ||
+    tradizione.includes('ebra')
+  );
+}
+
+function isExplicitLatinWitness(text: ReaderWitness) {
+  const lingua = normalized(text.lingua);
+  const tradizione = normalized(text.tradizione);
+  const edizione = normalized(text.edizione);
+
+  return (
+    lingua === 'la' ||
+    lingua.includes('latin') ||
+    tradizione.includes('vulg') ||
+    edizione.includes('vulg')
+  );
+}
+
+function witnessPriority(text: ReaderWitness) {
+  // 0 — Italiano esplicito (CEI).
+  if (isItalianWitness(text)) return 0;
+
+  // 1 — Documento storico/legacy senza metadati linguistici: nel corpus
+  //     attuale corrisponde al testo italiano già presente prima dei nuovi
+  //     testimoni. Lo teniamo davanti alle lingue aggiunte.
+  const hasLanguageMetadata = Boolean(
+    normalized(text.lingua) ||
+    normalized(text.tradizione) ||
+    normalized(text.edizione)
+  );
+  if (!hasLanguageMetadata) return 1;
+
+  // Ordine editoriale dei nuovi testimoni.
+  if (isExplicitGreekWitness(text)) return 2;
+  if (isExplicitHebrewWitness(text)) return 3;
+  if (isExplicitLatinWitness(text)) return 4;
+
+  return 5;
+}
+
+function orderWitnesses(texts: ReaderWitness[]) {
   return texts
     .map((text, index) => ({ text, index }))
-    .sort((a, b) => {
-      const italianDifference = Number(!isItalianWitness(a.text)) - Number(!isItalianWitness(b.text));
-      return italianDifference || a.index - b.index;
-    })
+    .sort((a, b) => witnessPriority(a.text) - witnessPriority(b.text) || a.index - b.index)
     .map(({ text }) => text);
 }
 
@@ -65,7 +137,7 @@ export default async function DynamicChapterPage({ params }: { params: Promise<{
   const category = categoryLabel(libro.categoriaId);
 
   const sanityTexts = Array.isArray(data.testiBiblici)
-    ? (data.testiBiblici as BiblicalTextUnit[])
+    ? (data.testiBiblici as ReaderWitness[])
     : [];
   const fixture = textFixtureFor(slug, numero);
   const hasItalianSanity = sanityTexts.some(isItalianWitness);
