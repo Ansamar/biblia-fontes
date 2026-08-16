@@ -32,6 +32,11 @@ export type BiblicalTextUnit = {
 
 type ReaderMode = 'single' | 'compare' | 'synopsis';
 
+type WitnessIdentity = {
+  badge: string;
+  name: string;
+};
+
 function systemLabel(system?: AlternateSystem) {
   if (!system || system === 'LXX_VG') return 'LXX/Vg';
   if (system === 'MT') return 'MT';
@@ -46,21 +51,66 @@ function textualStatusLabel(status?: string) {
   return status ? status.replaceAll('_', ' ') : null;
 }
 
-function witnessLabel(text: BiblicalTextUnit) {
-  if (text.tradizione === 'ester_ebraico') return 'Testo ebraico';
-  if (text.tradizione === 'ester_greco') return 'Testo greco';
-  if (text.tradizione === 'mt') return 'Ebraico · MT';
-  if (text.tradizione === 'lxx') return 'Greco · LXX';
-  return text.edizione || text.tradizione || 'Testo biblico';
+function languageBadge(text: BiblicalTextUnit) {
+  const language = (text.lingua || '').toLocaleLowerCase('it-IT');
+  const tradition = (text.tradizione || '').toLocaleLowerCase('it-IT');
+
+  if (language === 'it' || language.includes('ital') || tradition.includes('cei') || tradition === 'traduzione_italiana') return 'ITA';
+  if (language.includes('ebra') || tradition === 'mt' || tradition === 'ester_ebraico') return 'HEB';
+  if (language.includes('grec') || tradition.includes('lxx') || tradition.includes('greco') || tradition.includes('teodozione') || tradition.includes('_og')) return 'GRE';
+  if (language.includes('latin') || tradition.includes('vulg')) return 'LAT';
+
+  return (text.lingua || 'TXT').slice(0, 3).toLocaleUpperCase('it-IT');
 }
 
-function witnessShortLabel(text: BiblicalTextUnit) {
-  const language = (text.lingua || '').toLocaleLowerCase('it-IT');
-  if (language.includes('ital') || (text.tradizione || '').includes('cei')) return 'Italiano';
-  if (language.includes('ebra') || text.tradizione === 'mt') return 'Ebraico';
-  if (language.includes('grec') || (text.tradizione || '').includes('lxx')) return 'Greco';
-  if (language.includes('latin') || (text.tradizione || '').includes('vulg')) return 'Latino';
-  return witnessLabel(text);
+function witnessName(text: BiblicalTextUnit) {
+  const tradition = (text.tradizione || '').toLocaleLowerCase('it-IT');
+  const witness = text.testimone || '';
+  const edition = text.edizione || '';
+
+  if (tradition === 'traduzione_italiana' || tradition.includes('cei')) return 'CEI 2008';
+  if (tradition === 'mt' || /westminster leningrad codex|\bwlc\b/i.test(witness)) return 'WLC';
+  if (tradition === 'daniele_greco_og') return 'OLD GREEK';
+  if (tradition === 'daniele_teodozione') return 'THEODOTION';
+  if (tradition === 'susanna_og') return 'SUSANNA · OLD GREEK';
+  if (tradition === 'susanna_teodozione') return 'SUSANNA · THEODOTION';
+  if (tradition === 'bel_og') return 'BEL · OLD GREEK';
+  if (tradition === 'bel_teodozione') return 'BEL · THEODOTION';
+  if (tradition === 'lxx') return 'LXX';
+  if (tradition === 'vulgata') return 'VULGATA';
+  if (tradition === 'ester_ebraico') return 'TESTO EBRAICO';
+  if (tradition === 'ester_greco') return 'TESTO GRECO';
+
+  if (/bel e il drago.*old greek/i.test(witness)) return 'BEL · OLD GREEK';
+  if (/bel e il drago.*theodotion/i.test(witness)) return 'BEL · THEODOTION';
+  if (/susanna.*old greek/i.test(witness)) return 'SUSANNA · OLD GREEK';
+  if (/susanna.*theodotion/i.test(witness)) return 'SUSANNA · THEODOTION';
+  if (/^old greek$/i.test(witness)) return 'OLD GREEK';
+  if (/^theodotion$/i.test(witness)) return 'THEODOTION';
+  if (/vulgata/i.test(witness) || /vulgata/i.test(edition)) return 'VULGATA';
+
+  const fallback = witness || edition || text.tradizione || 'Testo biblico';
+  return fallback.toLocaleUpperCase('it-IT');
+}
+
+function witnessIdentity(text: BiblicalTextUnit): WitnessIdentity {
+  return {
+    badge: languageBadge(text),
+    name: witnessName(text),
+  };
+}
+
+function WitnessIdentityMark({text, selected = false, compact = false}: {text: BiblicalTextUnit; selected?: boolean; compact?: boolean}) {
+  const identity = witnessIdentity(text);
+
+  return <span className="inline-flex min-w-0 items-center gap-2" dir="ltr">
+    <span className={`inline-flex shrink-0 items-center rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-bold tracking-[0.08em] ${selected ? 'border-bronze bg-bronze/10 text-bronze' : 'border-papyrus-line bg-paper-card text-ink-faint'}`}>
+      {identity.badge}
+    </span>
+    <span className={`${compact ? 'text-[10px]' : 'text-xs'} min-w-0 truncate font-semibold tracking-[0.02em]`}>
+      {identity.name}
+    </span>
+  </span>;
 }
 
 function alternateChapter(text: BiblicalTextUnit) {
@@ -92,8 +142,8 @@ function SingleWitness({text, critical = false, compact = false}: {text: Biblica
   return <div className={compact ? '' : 'reading-text mx-auto max-w-[820px]'} dir={rtl ? 'rtl' : 'ltr'}>
     <div className="mb-7 border-b border-papyrus-line pb-5" dir="ltr">
       <div className="flex flex-wrap items-center justify-between gap-3 text-xs text-ink-faint">
+        <WitnessIdentityMark text={text} />
         <span>{text.edizione || 'Testo biblico'}</span>
-        <span>{text.lingua || 'Italiano'}</span>
       </div>
       {text.testimone && <p className="mt-2 text-xs leading-5 text-ink-faint">{text.testimone}</p>}
 
@@ -145,7 +195,10 @@ function WitnessPicker({label, value, witnesses, onChange, disabledIndex}: {labe
   return <label className="flex min-w-[180px] flex-1 flex-col gap-1.5 text-xs text-ink-faint">
     <span className="font-mono text-[9px] uppercase tracking-widest">{label}</span>
     <select value={value} onChange={(event) => onChange(Number(event.target.value))} className="rounded-xl border border-papyrus-line bg-paper-card px-3 py-2.5 text-sm font-medium text-ink outline-none focus:border-bronze">
-      {witnesses.map((witness, index) => <option key={`${witnessLabel(witness)}-${index}`} value={index} disabled={index === disabledIndex}>{witnessShortLabel(witness)} — {witnessLabel(witness)}</option>)}
+      {witnesses.map((witness, index) => {
+        const identity = witnessIdentity(witness);
+        return <option key={`${identity.badge}-${identity.name}-${index}`} value={index} disabled={index === disabledIndex}>{identity.badge} · {identity.name}</option>;
+      })}
     </select>
   </label>;
 }
@@ -177,15 +230,21 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Tradizioni testuali</p>
-          <p className="mt-1 text-sm leading-6 text-ink-faint">Leggi una versione, confrontane due oppure apri la sinossi completa.</p>
+          <p className="mt-1 text-sm leading-6 text-ink-faint">Leggi un testimone, confrontane due oppure apri la sinossi completa.</p>
         </div>
         <div className="inline-flex rounded-full border border-papyrus-line bg-paper-card p-1" role="group" aria-label="Modalità del Reader">
           {([['single','Lettura'],['compare','Confronto'],['synopsis','Sinossi']] as const).map(([value,label]) => <button key={value} type="button" onClick={() => setMode(value)} disabled={value === 'synopsis' && witnesses.length < 3} className={`rounded-full px-3.5 py-2 text-xs font-semibold transition ${mode === value ? 'bg-bronze text-white' : 'text-ink-soft hover:text-bronze'} disabled:cursor-not-allowed disabled:opacity-35`} aria-pressed={mode === value}>{label}</button>)}
         </div>
       </div>
 
-      {mode === 'single' && <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Tradizione testuale">
-        {witnesses.map((witness, index) => <button key={`${witness.tradizione || witness.edizione || index}-${index}`} type="button" role="tab" aria-selected={selected === index} onClick={() => setSelected(index)} className={`rounded-full border px-4 py-2 text-xs font-semibold ${selected === index ? 'border-bronze text-bronze' : 'border-papyrus-line text-ink-soft hover:border-bronze/60 hover:text-bronze'}`}>{witnessShortLabel(witness)}</button>)}
+      {mode === 'single' && <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Testimone testuale">
+        {witnesses.map((witness, index) => {
+          const identity = witnessIdentity(witness);
+          const active = selected === index;
+          return <button key={`${witness.tradizione || witness.edizione || index}-${index}`} type="button" role="tab" aria-selected={active} aria-label={`${identity.badge} ${identity.name}`} onClick={() => setSelected(index)} className={`inline-flex items-center rounded-full border px-3 py-2 transition ${active ? 'border-bronze bg-paper-card text-bronze shadow-sm' : 'border-papyrus-line text-ink-soft hover:border-bronze/60 hover:text-bronze'}`}>
+            <WitnessIdentityMark text={witness} selected={active} />
+          </button>;
+        })}
       </div>}
 
       {mode === 'compare' && <div className="mt-4 flex flex-col gap-3 md:flex-row">
@@ -195,9 +254,9 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
     </div>}
 
     {mode === 'compare' && multiple
-      ? <div className="grid gap-6 2xl:grid-cols-2">{[current, second].map((witness,index) => <section key={`${witness.tradizione || witness.edizione || index}-compare-${index}`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5 md:p-6"><p className="mb-5 font-mono text-[10px] uppercase tracking-widest text-bronze" dir="ltr">{witnessShortLabel(witness)} · {witnessLabel(witness)}</p><SingleWitness text={witness} critical={critical} compact /></section>)}</div>
+      ? <div className="grid gap-6 2xl:grid-cols-2">{[current, second].map((witness,index) => <section key={`${witness.tradizione || witness.edizione || index}-compare-${index}`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5 md:p-6"><div className="mb-5 text-bronze" dir="ltr"><WitnessIdentityMark text={witness} /></div><SingleWitness text={witness} critical={critical} compact /></section>)}</div>
       : mode === 'synopsis' && witnesses.length >= 3
-        ? <div className={`grid gap-5 xl:grid-cols-2 ${synopsisColumns}`}>{witnesses.map((witness,index) => <section key={`${witness.tradizione || witness.edizione || index}-synopsis`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5"><p className="mb-5 font-mono text-[10px] uppercase tracking-widest text-bronze" dir="ltr">{witnessShortLabel(witness)} · {witnessLabel(witness)}</p><SingleWitness text={witness} critical={critical} compact /></section>)}</div>
+        ? <div className={`grid gap-5 xl:grid-cols-2 ${synopsisColumns}`}>{witnesses.map((witness,index) => <section key={`${witness.tradizione || witness.edizione || index}-synopsis`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5"><div className="mb-5 text-bronze" dir="ltr"><WitnessIdentityMark text={witness} compact /></div><SingleWitness text={witness} critical={critical} compact /></section>)}</div>
         : <SingleWitness text={current} critical={critical} />}
   </div>;
 }
