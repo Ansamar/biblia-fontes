@@ -7,6 +7,13 @@ import { client } from '../../../../src/sanity/client';
 import { bookAbbreviation, bookIdFromSlug, categoryLabel } from '../../../../src/lib/bibleRouting';
 import { textFixtureFor } from '../../../../src/data/textFixtures';
 
+const DANIEL_SPECIAL_TRADITIONS = [
+  'susanna_og',
+  'susanna_teodozione',
+  'bel_og',
+  'bel_teodozione',
+];
+
 const query = `{
   "libro": *[_id == $bookId][0]{_id, titolo, categoriaId, capitoli, mondoDelTesto},
   "capitolo": *[_type == "capitolo" && libro._ref == $bookId && numero == $numero][0]{
@@ -15,7 +22,29 @@ const query = `{
     attribuzioniFonti[]{..., "fonte": fonte->{_id, sigla, nome, titolo, categoria, descrizione}},
     bibliografia
   },
-  "testiBiblici": *[_type == "testoBiblicoCapitolo" && libro._ref == $bookId && numero == $numero]{
+  "testiBiblici": *[
+    _type == "testoBiblicoCapitolo" &&
+    libro._ref == $bookId &&
+    (
+      (
+        numero == $numero &&
+        !(
+          $bookId == "libro-daniele" &&
+          tradizione in ["susanna_og", "susanna_teodozione", "bel_og", "bel_teodozione"]
+        )
+      ) ||
+      (
+        $bookId == "libro-daniele" &&
+        $numero == 13 &&
+        tradizione in ["susanna_og", "susanna_teodozione"]
+      ) ||
+      (
+        $bookId == "libro-daniele" &&
+        $numero == 14 &&
+        tradizione in ["bel_og", "bel_teodozione"]
+      )
+    )
+  ]{
     _id,
     numero, numeroAlternativo, edizione, lingua, tradizione, testimone, direzione,
     versetti[]{
@@ -82,6 +111,26 @@ function orderWitnesses(texts: ReaderWitness[]) {
     .map(({ text }) => text);
 }
 
+function isDanielSpecialWitness(text: ReaderWitness) {
+  return DANIEL_SPECIAL_TRADITIONS.includes(normalized(text.tradizione));
+}
+
+function isWitnessRelevantToChapter(slug: string, numero: number, text: ReaderWitness) {
+  if (slug !== 'daniele') return true;
+
+  const tradizione = normalized(text.tradizione);
+
+  if (numero === 13) {
+    return !isDanielSpecialWitness(text) || tradizione === 'susanna_og' || tradizione === 'susanna_teodozione';
+  }
+
+  if (numero === 14) {
+    return !isDanielSpecialWitness(text) || tradizione === 'bel_og' || tradizione === 'bel_teodozione';
+  }
+
+  return !isDanielSpecialWitness(text);
+}
+
 export default async function DynamicChapterPage({ params }: { params: Promise<{ libro: string; capitolo: string }> }) {
   const { libro: slug, capitolo } = await params;
   const numero = Number(capitolo);
@@ -98,7 +147,8 @@ export default async function DynamicChapterPage({ params }: { params: Promise<{
   const reference = `${abbr} ${numero}`;
   const category = categoryLabel(libro.categoriaId);
 
-  const sanityTexts = Array.isArray(data.testiBiblici) ? (data.testiBiblici as ReaderWitness[]) : [];
+  const sanityTextsRaw = Array.isArray(data.testiBiblici) ? (data.testiBiblici as ReaderWitness[]) : [];
+  const sanityTexts = sanityTextsRaw.filter((text) => isWitnessRelevantToChapter(slug, numero, text));
   const fixture = textFixtureFor(slug, numero);
   const hasItalianSanity = sanityTexts.some(isItalianWitness);
   const witnesses = orderWitnesses([
