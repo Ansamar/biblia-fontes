@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import AppShell from '../../../src/components/AppShell';
+import ExplorerShareButton from '../../../src/components/ExplorerShareButton';
 import HistoricalExplorerShell from '../../../src/components/HistoricalExplorerShell';
 import StudyContextNav from '../../../src/components/StudyContextNav';
 import { genesisDemoData } from '../../../src/historical-explorer/genesisDemoData';
@@ -53,7 +54,10 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
                 <p className="mt-3 max-w-3xl text-lg leading-8 text-ink-soft">Interroga la storia attestata, ricostruita o discussa intorno a Genesi. Il libro resta il contesto; tempo, spazio, entità e relazioni cambiano la prospettiva.</p>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs text-ink-faint"><span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">{entryLabel}</span>{context.year !== undefined && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Anno richiesto: {Math.abs(context.year)} {context.year < 0 ? 'a.C.' : 'd.C.'}</span>}{context.entity && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Entità: {context.entity}</span>}</div>
               </div>
-              <Link href="/bibbia/genesi#timeline" className="rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">← Torna alla Timeline del testo</Link>
+              <div className="flex flex-wrap items-center gap-2">
+                <ExplorerShareButton />
+                <Link href="/bibbia/genesi#timeline" className="rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">← Torna alla Timeline del testo</Link>
+              </div>
             </div>
           </div>
         </section>
