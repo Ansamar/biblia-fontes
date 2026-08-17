@@ -12,10 +12,10 @@ export type SanityHistoricalSource = HistoricalSource;
 export type SanityHistoricalBiblicalReference = {
   display: string;
   bookSlug: string;
-  chapterStart?: number;
-  chapterEnd?: number;
-  verseStart?: number;
-  verseEnd?: number;
+  chapterStart?: number | null;
+  chapterEnd?: number | null;
+  verseStart?: number | null;
+  verseEnd?: number | null;
 };
 
 type SanityGeoPoint = {
@@ -23,12 +23,17 @@ type SanityGeoPoint = {
   lng: number;
 };
 
-export type SanityHistoricalEntity = Omit<HistoricalEntity, 'biblicalRefs' | 'relations' | 'spatial'> & {
+export type SanityHistoricalEntity = Omit<HistoricalEntity, 'biblicalRefs' | 'relations' | 'spatial' | 'temporal'> & {
+  temporal: {
+    start?: number | null;
+    end?: number | null;
+    precision: HistoricalEntity['temporal']['precision'];
+  };
   biblicalRefs?: SanityHistoricalBiblicalReference[];
   spatial?: {
-    point?: SanityGeoPoint;
-    region?: string;
-  };
+    point?: SanityGeoPoint | null;
+    region?: string | null;
+  } | null;
   relations?: Array<{
     targetId?: string;
     target?: { id?: string };
@@ -60,26 +65,37 @@ export type SanityHistoricalExplorerDocument = {
   areas?: SanityHistoricalArea[];
 };
 
+function definedNumber(value: number | null | undefined): number | undefined {
+  return value == null ? undefined : value;
+}
+
 function normalizeReference(reference: SanityHistoricalBiblicalReference): HistoricalBiblicalReference {
   return {
     display: reference.display,
     bookSlug: reference.bookSlug,
-    chapterStart: reference.chapterStart,
-    chapterEnd: reference.chapterEnd,
-    verseStart: reference.verseStart,
-    verseEnd: reference.verseEnd,
+    chapterStart: definedNumber(reference.chapterStart),
+    chapterEnd: definedNumber(reference.chapterEnd),
+    verseStart: definedNumber(reference.verseStart),
+    verseEnd: definedNumber(reference.verseEnd),
   };
 }
 
 function normalizeEntity(entity: SanityHistoricalEntity): HistoricalEntity {
   const point = entity.spatial?.point;
+  const region = entity.spatial?.region || undefined;
+
   return {
     ...entity,
-    spatial: point || entity.spatial?.region
+    temporal: {
+      precision: entity.temporal.precision,
+      start: definedNumber(entity.temporal.start),
+      end: definedNumber(entity.temporal.end),
+    },
+    spatial: point || region
       ? {
           lat: point?.lat,
           lng: point?.lng,
-          region: entity.spatial?.region,
+          region,
         }
       : undefined,
     biblicalRefs: entity.biblicalRefs?.map(normalizeReference),
