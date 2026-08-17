@@ -29,6 +29,24 @@ export type HistoricalSource = {
   note?: string;
 };
 
+export type HistoricalGeometryConfidence = 'illustrative' | 'approximate' | 'reconstructed';
+
+export type HistoricalArea = {
+  id: string;
+  entityId: string;
+  label: string;
+  temporal: {
+    start: number;
+    end: number;
+  };
+  confidence: HistoricalGeometryConfidence;
+  note: string;
+  geometry: {
+    type: 'Polygon';
+    coordinates: number[][][];
+  };
+};
+
 export type HistoricalEntity = {
   id: string;
   type: HistoricalEntityType;
