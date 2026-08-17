@@ -9,7 +9,9 @@ export type HistoricalDatasetIssue = {
     | 'broken-area-target'
     | 'missing-area-source'
     | 'invalid-area-range'
-    | 'invalid-entity-range';
+    | 'invalid-entity-range'
+    | 'legacy-biblical-reference'
+    | 'invalid-biblical-reference';
   ownerId: string;
   message: string;
 };
@@ -19,6 +21,8 @@ export type HistoricalDatasetDiagnostics = {
   areaCount: number;
   sourceCount: number;
   classifiedSourceCount: number;
+  biblicalReferenceCount: number;
+  structuredBiblicalReferenceCount: number;
   issues: HistoricalDatasetIssue[];
   hasErrors: boolean;
 };
@@ -28,91 +32,71 @@ export function diagnoseHistoricalDataset(dataset: HistoricalExplorerDataset): H
   const entityIds = new Set(dataset.entities.map((entity) => entity.id));
   let sourceCount = 0;
   let classifiedSourceCount = 0;
+  let biblicalReferenceCount = 0;
+  let structuredBiblicalReferenceCount = 0;
 
   for (const entity of dataset.entities) {
     if (!entity.sources.length) {
-      issues.push({
-        severity: 'warning',
-        code: 'missing-entity-source',
-        ownerId: entity.id,
-        message: `${entity.label}: nessuna fonte o provenance registrata.`,
-      });
+      issues.push({ severity: 'warning', code: 'missing-entity-source', ownerId: entity.id, message: `${entity.label}: nessuna fonte o provenance registrata.` });
     }
 
     for (const source of entity.sources) {
       sourceCount += 1;
       if (source.kind) classifiedSourceCount += 1;
-      else {
+      else issues.push({ severity: 'warning', code: 'unclassified-source', ownerId: entity.id, message: `${entity.label}: la fonte “${source.label}” non è ancora classificata.` });
+    }
+
+    for (const reference of entity.biblicalRefs || []) {
+      biblicalReferenceCount += 1;
+      if (typeof reference === 'string') {
         issues.push({
           severity: 'warning',
-          code: 'unclassified-source',
+          code: 'legacy-biblical-reference',
           ownerId: entity.id,
-          message: `${entity.label}: la fonte “${source.label}” non è ancora classificata.`,
+          message: `${entity.label}: il riferimento “${reference}” usa ancora il formato stringa legacy.`,
+        });
+        continue;
+      }
+
+      structuredBiblicalReferenceCount += 1;
+      const invalidChapterRange = reference.chapterStart !== undefined && reference.chapterEnd !== undefined && reference.chapterStart > reference.chapterEnd;
+      const invalidVerseRange = reference.verseStart !== undefined && reference.verseEnd !== undefined && reference.verseStart > reference.verseEnd;
+      if (!reference.display || !reference.bookSlug || invalidChapterRange || invalidVerseRange) {
+        issues.push({
+          severity: 'error',
+          code: 'invalid-biblical-reference',
+          ownerId: entity.id,
+          message: `${entity.label}: riferimento biblico strutturato non valido (${reference.display || 'senza etichetta'}).`,
         });
       }
     }
 
     for (const relation of entity.relations) {
       if (!entityIds.has(relation.targetId)) {
-        issues.push({
-          severity: 'error',
-          code: 'broken-relation',
-          ownerId: entity.id,
-          message: `${entity.label}: relazione verso entità inesistente “${relation.targetId}”.`,
-        });
+        issues.push({ severity: 'error', code: 'broken-relation', ownerId: entity.id, message: `${entity.label}: relazione verso entità inesistente “${relation.targetId}”.` });
       }
     }
 
     const { start, end } = entity.temporal;
     if (start !== undefined && end !== undefined && start > end) {
-      issues.push({
-        severity: 'error',
-        code: 'invalid-entity-range',
-        ownerId: entity.id,
-        message: `${entity.label}: intervallo temporale invertito (${start} > ${end}).`,
-      });
+      issues.push({ severity: 'error', code: 'invalid-entity-range', ownerId: entity.id, message: `${entity.label}: intervallo temporale invertito (${start} > ${end}).` });
     }
   }
 
   for (const area of dataset.areas || []) {
     if (!entityIds.has(area.entityId)) {
-      issues.push({
-        severity: 'error',
-        code: 'broken-area-target',
-        ownerId: area.id,
-        message: `${area.label}: entityId “${area.entityId}” non esiste nel dataset.`,
-      });
+      issues.push({ severity: 'error', code: 'broken-area-target', ownerId: area.id, message: `${area.label}: entityId “${area.entityId}” non esiste nel dataset.` });
     }
-
     if (area.temporal.start > area.temporal.end) {
-      issues.push({
-        severity: 'error',
-        code: 'invalid-area-range',
-        ownerId: area.id,
-        message: `${area.label}: intervallo temporale invertito (${area.temporal.start} > ${area.temporal.end}).`,
-      });
+      issues.push({ severity: 'error', code: 'invalid-area-range', ownerId: area.id, message: `${area.label}: intervallo temporale invertito (${area.temporal.start} > ${area.temporal.end}).` });
     }
-
     if (!area.sources?.length) {
-      issues.push({
-        severity: 'warning',
-        code: 'missing-area-source',
-        ownerId: area.id,
-        message: `${area.label}: provenance della geometria non registrata.`,
-      });
+      issues.push({ severity: 'warning', code: 'missing-area-source', ownerId: area.id, message: `${area.label}: provenance della geometria non registrata.` });
     }
-
     for (const source of area.sources || []) {
       sourceCount += 1;
       if (source.kind) classifiedSourceCount += 1;
-      else {
-        issues.push({
-          severity: 'warning',
-          code: 'unclassified-source',
-          ownerId: area.id,
-          message: `${area.label}: la fonte geometrica “${source.label}” non è ancora classificata.`,
-        });
-      }
+      else issues.push({ severity: 'warning', code: 'unclassified-source', ownerId: area.id, message: `${area.label}: la fonte geometrica “${source.label}” non è ancora classificata.` });
     }
   }
 
@@ -121,6 +105,8 @@ export function diagnoseHistoricalDataset(dataset: HistoricalExplorerDataset): H
     areaCount: dataset.areas?.length || 0,
     sourceCount,
     classifiedSourceCount,
+    biblicalReferenceCount,
+    structuredBiblicalReferenceCount,
     issues,
     hasErrors: issues.some((issue) => issue.severity === 'error'),
   };
