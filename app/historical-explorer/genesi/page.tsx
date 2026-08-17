@@ -59,7 +59,7 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
         </section>
 
         <section className="mx-auto max-w-[1580px] px-3 py-5 md:px-6 md:py-8">
-          <HistoricalExplorerShell dataset={dataset} originBookSlug="genesi" initialYear={context.year} initialEntityId={context.entity} />
+          <HistoricalExplorerShell dataset={dataset} originBookSlug="genesi" initialYear={context.year} initialEntityId={context.entity} syncUrlState />
         </section>
       </main>
     </AppShell>
