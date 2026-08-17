@@ -1,11 +1,11 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { historicalAreas } from '../historical-explorer/historicalAreas';
-import type { HistoricalEntity } from '../historical-explorer/types';
+import type { HistoricalArea, HistoricalEntity } from '../historical-explorer/types';
 
 type HistoricalExplorerMapProps = {
   entities: HistoricalEntity[];
+  areas?: HistoricalArea[];
   selectedId?: string;
   year: number;
   onSelect: (id: string) => void;
@@ -110,7 +110,7 @@ function loadMapLibre(): Promise<MapLibreGlobal> {
   });
 }
 
-export default function HistoricalExplorerMap({ entities, selectedId, year, onSelect }: HistoricalExplorerMapProps) {
+export default function HistoricalExplorerMap({ entities, areas = [], selectedId, year, onSelect }: HistoricalExplorerMapProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapInstance | null>(null);
   const markersRef = useRef<MarkerInstance[]>([]);
@@ -189,7 +189,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
     if (status !== 'ready' || !mapRef.current) return;
     const map = mapRef.current;
     const visibleIds = new Set(entities.map((entity) => entity.id));
-    const activeAreas = historicalAreas.filter(
+    const activeAreas = areas.filter(
       (area) => visibleIds.has(area.entityId) && area.temporal.start <= year && area.temporal.end >= year,
     );
 
@@ -235,7 +235,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
         'line-dasharray': [3, 2],
       },
     });
-  }, [entities, status, year]);
+  }, [areas, entities, status, year]);
 
   useEffect(() => {
     if (status !== 'ready' || !mapRef.current || !mapLibreRef.current) return;
@@ -332,7 +332,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
             <span><i className="mr-2 inline-block h-2 w-2 rounded-[2px] bg-[#30271f]" />città storica</span>
             <span><i className="mr-2 inline-block h-2 w-2 rotate-45 bg-[#703026]" />evento puntuale</span>
             <span><i className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9b6a38]" />regione / testo / relazione</span>
-            <span><i className="mr-2 inline-block h-3 w-5 border border-dashed border-[#9b6a38]/70 bg-[#9b6a38]/15" />area storica · ricostruzione didattica</span>
+            {areas.length > 0 && <span><i className="mr-2 inline-block h-3 w-5 border border-dashed border-[#9b6a38]/70 bg-[#9b6a38]/15" />area storica · ricostruzione didattica</span>}
           </div>
         </div>
 
@@ -351,7 +351,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-papyrus-line bg-papyrus/25 px-4 py-2 text-[10px] leading-5 text-ink-faint">
-        <span>Le aree tratteggiate sono ricostruzioni didattiche approssimate: servono a mostrare il mutamento geo-temporale, non frontiere storiche certe.</span>
+        <span>{areas.length > 0 ? 'Le aree tratteggiate sono ricostruzioni didattiche approssimate: servono a mostrare il mutamento geo-temporale, non frontiere storiche certe.' : 'Questo dataset non espone geometrie territoriali: la mappa mostra soltanto entità georeferenziate.'}</span>
         <span>Base © OpenStreetMap contributors</span>
       </div>
     </div>
