@@ -3,7 +3,8 @@ import type { HistoricalArea } from './types';
 /**
  * Prime geometrie dimostrative dell'Historical Explorer di Genesi.
  * Non sono frontiere storiche precise: servono a validare il motore geo-temporale.
- * Ogni area porta quindi un confidence esplicito e una nota metodologica.
+ * Ogni area porta quindi un confidence esplicito, una nota metodologica e una
+ * provenance distinta da quella delle entità storiche rappresentate.
  */
 export const genesisHistoricalAreas: HistoricalArea[] = [
   {
@@ -13,6 +14,13 @@ export const genesisHistoricalAreas: HistoricalArea[] = [
     temporal: { start: -850, end: -627 },
     confidence: 'illustrative',
     note: 'Inviluppo dimostrativo per testare la variazione territoriale nel tempo; non rappresenta un confine politico puntuale.',
+    sources: [
+      {
+        kind: 'editorial',
+        label: 'Biblia Fontes · geometria editoriale di prototipo',
+        note: 'Poligono costruito esclusivamente per validare l’interazione geo-temporale. Non deriva da un dataset cartografico storico pubblicato.',
+      },
+    ],
     geometry: {
       type: 'Polygon',
       coordinates: [[
@@ -34,6 +42,13 @@ export const genesisHistoricalAreas: HistoricalArea[] = [
     temporal: { start: -626, end: -540 },
     confidence: 'illustrative',
     note: 'Inviluppo dimostrativo del sistema babilonese fra Mesopotamia e Levante; non va letto come frontiera amministrativa precisa.',
+    sources: [
+      {
+        kind: 'editorial',
+        label: 'Biblia Fontes · geometria editoriale di prototipo',
+        note: 'Poligono costruito esclusivamente per validare l’interazione geo-temporale. Non deriva da un dataset cartografico storico pubblicato.',
+      },
+    ],
     geometry: {
       type: 'Polygon',
       coordinates: [[
@@ -55,6 +70,13 @@ export const genesisHistoricalAreas: HistoricalArea[] = [
     temporal: { start: -539, end: -400 },
     confidence: 'illustrative',
     note: 'Inviluppo didattico limitato alla finestra geografica del prototipo. L’impero achemenide reale si estendeva molto oltre la carta mostrata.',
+    sources: [
+      {
+        kind: 'editorial',
+        label: 'Biblia Fontes · geometria editoriale di prototipo',
+        note: 'Poligono costruito esclusivamente per validare l’interazione geo-temporale. Non deriva da un dataset cartografico storico pubblicato.',
+      },
+    ],
     geometry: {
       type: 'Polygon',
       coordinates: [[
