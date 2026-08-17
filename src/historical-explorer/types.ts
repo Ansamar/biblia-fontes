@@ -68,6 +68,14 @@ export type HistoricalEntity = {
   sources: HistoricalSource[];
 };
 
+export type HistoricalScenario = {
+  id: string;
+  start: number;
+  end: number;
+  title: string;
+  summary: string;
+};
+
 export type ExplorerLayer = 'politics' | 'places' | 'events' | 'texts' | 'transmission';
 
 export type HistoricalExplorerDataset = {
@@ -76,4 +84,5 @@ export type HistoricalExplorerDataset = {
   subtitle: string;
   defaultRange: [number, number];
   entities: HistoricalEntity[];
+  scenarios?: HistoricalScenario[];
 };
