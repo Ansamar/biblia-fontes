@@ -85,4 +85,5 @@ export type HistoricalExplorerDataset = {
   defaultRange: [number, number];
   entities: HistoricalEntity[];
   scenarios?: HistoricalScenario[];
+  quickYears?: number[];
 };
