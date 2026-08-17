@@ -27,12 +27,6 @@ const statusLabels: Record<HistoricalEntity['epistemicStatus'], string> = {
   comparandum: 'comparandum', narrative: 'narrativo', undatable: 'non databile',
 };
 
-const scenarios = [
-  { start: -911, end: -627, title: 'Orizzonte neo-assiro', summary: 'L’Assiria costituisce il principale quadro imperiale del Vicino Oriente. Ninive emerge come centro politico e il Levante vive dentro una rete di pressioni, tributi e conflitti regionali.' },
-  { start: -626, end: -540, title: 'Orizzonte neobabilonese', summary: 'Babilonia sostituisce l’Assiria come potenza dominante. Le conquiste nel Levante, la crisi di Giuda e l’esilio diventano un contesto decisivo per la memoria e la rielaborazione delle tradizioni bibliche.' },
-  { start: -539, end: -400, title: 'Orizzonte persiano', summary: 'Con la conquista di Babilonia da parte di Ciro, il Levante entra nel sistema achemenide. Yehud, Gerusalemme e la ricostruzione comunitaria costituiscono un contesto importante per la storia del Pentateuco.' },
-];
-
 function formatYear(year?: number) {
   if (year === undefined) return 'non databile';
   if (year < 0) return `${Math.abs(year)} a.C.`;
@@ -72,7 +66,7 @@ export default function HistoricalExplorerShell({ dataset, initialYear, initialE
   const inactiveEntities = datedEntities.filter((entity) => !activeAt(entity, year));
   const undatedEntities = visibleEntities.filter((entity) => entity.temporal.start === undefined);
   const mapEntities = visibleEntities.filter((entity) => entity.temporal.start === undefined || activeAt(entity, year) || entity.id === selectedId);
-  const activeScenario = scenarios.find((scenario) => scenario.start <= year && scenario.end >= year);
+  const activeScenario = dataset.scenarios?.find((scenario) => scenario.start <= year && scenario.end >= year);
   const punctualEvents = activeEntities.filter((entity) => entity.type === 'event' && entity.temporal.start === entity.temporal.end);
   const activePowers = activeEntities.filter((entity) => entity.type === 'empire' || entity.type === 'people');
 
@@ -113,7 +107,7 @@ export default function HistoricalExplorerShell({ dataset, initialYear, initialE
   return (
     <section aria-labelledby="historical-explorer-shell-title" className="overflow-hidden rounded-3xl border border-papyrus-line bg-paper-card shadow-sm">
       <header className="border-b border-papyrus-line p-5 md:p-7">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Biblia Fontes Historical Explorer · architecture v0.4</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Biblia Fontes Historical Explorer · architecture v0.5</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-5">
           <div><h2 id="historical-explorer-shell-title" className="font-serif text-3xl font-bold md:text-4xl">{dataset.title}</h2><p className="mt-3 max-w-4xl text-base leading-7 text-ink-soft">{dataset.subtitle}</p></div>
           <div className="rounded-xl border border-bronze/30 bg-bronze/5 px-4 py-3 text-sm leading-6 text-ink-soft"><strong className="text-ink">Focus:</strong> storia attestata, ricostruita o discussa intorno al testo.</div>
@@ -139,8 +133,8 @@ export default function HistoricalExplorerShell({ dataset, initialYear, initialE
 
       <div className="border-b border-papyrus-line bg-ink px-5 py-4 text-papyrus md:px-7">
         <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
-          <div><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-papyrus/55">Scenario storico · {formatYear(year)}</p><h3 className="mt-1 font-serif text-2xl font-bold">{activeScenario?.title ?? 'Transizione storica'}</h3><p className="mt-2 max-w-4xl text-sm leading-6 text-papyrus/75">{activeScenario?.summary ?? 'L’anno selezionato cade in una fase di transizione tra quadri politici. L’Explorer mostra gli elementi attestati pertinenti senza imporre una singola lettura totalizzante.'}</p></div>
-          <div className="flex flex-wrap gap-2 text-[10px]">{activePowers.map((entity) => <button key={entity.id} type="button" onClick={() => setSelectedId(entity.id)} className="rounded-full border border-papyrus/25 px-3 py-1.5 text-papyrus/85 hover:border-papyrus/60">{entity.label}</button>)}{punctualEvents.map((entity) => <button key={entity.id} type="button" onClick={() => setSelectedId(entity.id)} className="rounded-full border border-bronze bg-bronze px-3 py-1.5 text-white">◆ {entity.label}</button>)}</div>
+          <div><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-papyrus/55">Scenario storico · {formatYear(year)}</p><h3 className="mt-1 font-serif text-2xl font-bold">{activeScenario?.title ?? 'Transizione storica'}</h3><p className="mt-2 max-w-4xl text-sm leading-6 text-papyrus/75">{activeScenario?.summary ?? 'L’anno selezionato cade fuori dagli scenari esplicitamente modellati per questo dataset. L’Explorer mostra gli elementi pertinenti senza imporre una cornice storica non registrata.'}</p></div>
+          <div className="flex flex-wrap gap-2 text-[10px]">{activePowers.map((entity) => <button key={entity.id} type="button" onClick={() => selectEntity(entity.id)} className="rounded-full border border-papyrus/25 px-3 py-1.5 text-papyrus/85 hover:border-papyrus/60">{entity.label}</button>)}{punctualEvents.map((entity) => <button key={entity.id} type="button" onClick={() => selectEntity(entity.id)} className="rounded-full border border-bronze bg-bronze px-3 py-1.5 text-white">◆ {entity.label}</button>)}</div>
         </div>
       </div>
 
