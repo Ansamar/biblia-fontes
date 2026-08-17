@@ -8,22 +8,19 @@ import { diagnoseHistoricalDataset } from '../../../src/historical-explorer/diag
 import { genesisDemoData } from '../../../src/historical-explorer/genesisDemoData';
 import { genesisHistoricalAreas } from '../../../src/historical-explorer/historicalAreas';
 import { genesisQuickYears, genesisScenarios } from '../../../src/historical-explorer/genesisScenarios';
+import { historicalExplorerDatasetFromSanity } from '../../../src/historical-explorer/sanityAdapter';
+import { historicalExplorerDatasetQuery } from '../../../src/historical-explorer/sanityQuery';
+import type { HistoricalExplorerDataset } from '../../../src/historical-explorer/types';
 import { client } from '../../../src/sanity/client';
 import { parseStudyContext } from '../../../src/study-context/context';
 
-const query = `*[_id == "libro-genesi"][0]{
+const bookQuery = `*[_id == "libro-genesi"][0]{
   titolo,
   datazione
 }`;
 
-export default async function GenesisHistoricalExplorerPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
-  const libro = await client.fetch(query);
-  const context = parseStudyContext(await searchParams);
-  const formationLabel = [libro?.datazione?.etichettaInizio, libro?.datazione?.etichettaFine]
-    .filter(Boolean)
-    .join(' — ') || 'Processo compositivo pluristratificato, con fasi e datazioni discusse.';
-
-  const dataset = {
+function fallbackDataset(formationLabel: string): HistoricalExplorerDataset {
+  return {
     ...genesisDemoData,
     scenarios: genesisScenarios,
     quickYears: genesisQuickYears,
@@ -32,6 +29,34 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
       ? { ...entity, summary: `${entity.summary} Dataset Biblia Fontes: ${formationLabel}` }
       : entity),
   };
+}
+
+export default async function GenesisHistoricalExplorerPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+  const context = parseStudyContext(await searchParams);
+
+  const [libro, sanityDocument] = await Promise.all([
+    client.fetch(bookQuery),
+    client.fetch(historicalExplorerDatasetQuery, { datasetId: 'genesis-history' }).catch(() => null),
+  ]);
+
+  const formationLabel = [libro?.datazione?.etichettaInizio, libro?.datazione?.etichettaFine]
+    .filter(Boolean)
+    .join(' — ') || 'Processo compositivo pluristratificato, con fasi e datazioni discusse.';
+
+  let dataset: HistoricalExplorerDataset;
+  let dataSource: 'sanity' | 'fallback' = 'fallback';
+
+  if (sanityDocument) {
+    try {
+      dataset = historicalExplorerDatasetFromSanity(sanityDocument);
+      dataSource = 'sanity';
+    } catch {
+      dataset = fallbackDataset(formationLabel);
+    }
+  } else {
+    dataset = fallbackDataset(formationLabel);
+  }
+
   const diagnostics = diagnoseHistoricalDataset(dataset);
 
   const entryLabel = context.source === 'timeline'
@@ -60,7 +85,14 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
                 <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Modalità · Storia</p>
                 <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">Historical Explorer · Genesi</h1>
                 <p className="mt-3 max-w-3xl text-lg leading-8 text-ink-soft">Interroga la storia attestata, ricostruita o discussa intorno a Genesi. Il libro resta il contesto; tempo, spazio, entità e relazioni cambiano la prospettiva.</p>
-                <div className="mt-4 flex flex-wrap gap-2 text-xs text-ink-faint"><span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">{entryLabel}</span>{context.year !== undefined && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Anno richiesto: {Math.abs(context.year)} {context.year < 0 ? 'a.C.' : 'd.C.'}</span>}{context.entity && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Entità: {context.entity}</span>}</div>
+                <div className="mt-4 flex flex-wrap gap-2 text-xs text-ink-faint">
+                  <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">{entryLabel}</span>
+                  <span className={`rounded-full border px-3 py-1.5 ${dataSource === 'sanity' ? 'border-bronze/45 bg-bronze/5 text-bronze' : 'border-papyrus-line bg-papyrus/60 text-ink-faint'}`}>
+                    Dati: {dataSource === 'sanity' ? 'Sanity production' : 'fallback locale'}
+                  </span>
+                  {context.year !== undefined && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Anno richiesto: {Math.abs(context.year)} {context.year < 0 ? 'a.C.' : 'd.C.'}</span>}
+                  {context.entity && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Entità: {context.entity}</span>}
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <ExplorerShareButton />
