@@ -23,3 +23,5 @@ export const genesisScenarios: HistoricalScenario[] = [
     summary: 'Con la conquista di Babilonia da parte di Ciro, il Levante entra nel sistema achemenide. Yehud, Gerusalemme e la ricostruzione comunitaria costituiscono un contesto importante per la storia del Pentateuco.',
   },
 ];
+
+export const genesisQuickYears = [-900, -700, -612, -586, -539, -500, -400];
