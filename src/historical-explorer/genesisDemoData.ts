@@ -1,4 +1,8 @@
-import type { HistoricalExplorerDataset } from './types';
+import type { HistoricalExplorerDataset, HistoricalSource } from './types';
+
+const secondary = (label: string, note?: string): HistoricalSource => ({ kind: 'secondary', label, note });
+const bibliography = (label: string, note?: string): HistoricalSource => ({ kind: 'bibliography', label, note });
+const primary = (label: string, note?: string): HistoricalSource => ({ kind: 'primary', label, note });
 
 export const genesisDemoData: HistoricalExplorerDataset = {
   id: 'genesis-history',
@@ -18,7 +22,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
         { targetId: 'nineveh', kind: 'context', label: 'Ninive come capitale dell’ultima fase imperiale' },
         { targetId: 'fall-nineveh', kind: 'interaction', label: 'Caduta di Ninive nel 612 a.C.' },
       ],
-      sources: [{ label: 'Cronologia storica del Vicino Oriente antico' }],
+      sources: [secondary('Cronologia storica del Vicino Oriente antico', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'neo-babylon',
@@ -34,7 +38,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
         { targetId: 'jerusalem-586', kind: 'interaction', label: 'Distruzione di Gerusalemme nel 586 a.C.' },
         { targetId: 'genesis-formation', kind: 'composition', label: 'Contesto rilevante per fasi di rielaborazione delle tradizioni' },
       ],
-      sources: [{ label: 'Storia neo-babilonese' }],
+      sources: [secondary('Storia neo-babilonese', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'achaemenid-persia',
@@ -51,7 +55,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
         { targetId: 'cyrus-babylon', kind: 'interaction', label: 'Presa di Babilonia nel 539 a.C.' },
         { targetId: 'genesis-formation', kind: 'composition', label: 'Contesto spesso collegato a fasi dell’assetto pentateucale' },
       ],
-      sources: [{ label: 'Storia achemenide e Yehud persiana' }],
+      sources: [secondary('Storia achemenide e Yehud persiana', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'nineveh',
@@ -62,7 +66,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
       spatial: { lat: 36.36, lng: 43.15, region: 'Alta Mesopotamia' },
       epistemicStatus: 'attested',
       relations: [{ targetId: 'neo-assyria', kind: 'context', label: 'Capitale neo-assira' }],
-      sources: [{ label: 'Archeologia e storia neo-assira' }],
+      sources: [secondary('Archeologia e storia neo-assira', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'babylon',
@@ -74,7 +78,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
       epistemicStatus: 'attested',
       biblicalRefs: ['2Re 24–25'],
       relations: [{ targetId: 'neo-babylon', kind: 'context', label: 'Capitale neobabilonese' }],
-      sources: [{ label: 'Archeologia e storia di Babilonia' }],
+      sources: [secondary('Archeologia e storia di Babilonia', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'susa',
@@ -85,7 +89,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
       spatial: { lat: 32.19, lng: 48.26, region: 'Susiana / Elam' },
       epistemicStatus: 'attested',
       relations: [{ targetId: 'achaemenid-persia', kind: 'context', label: 'Centro achemenide' }],
-      sources: [{ label: 'Archeologia e storia achemenide' }],
+      sources: [secondary('Archeologia e storia achemenide', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'jerusalem',
@@ -100,7 +104,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
         { targetId: 'jerusalem-586', kind: 'interaction', label: 'Distruzione del 586 a.C.' },
         { targetId: 'achaemenid-persia', kind: 'context', label: 'Ricostruzione in età persiana' },
       ],
-      sources: [{ label: 'Archeologia e storia di Gerusalemme e Yehud' }],
+      sources: [secondary('Archeologia e storia di Gerusalemme e Yehud', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'memphis',
@@ -111,7 +115,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
       spatial: { lat: 29.85, lng: 31.25, region: 'Basso Egitto' },
       epistemicStatus: 'attested',
       relations: [{ targetId: 'egypt', kind: 'context', label: 'Centro storico dell’Egitto' }],
-      sources: [{ label: 'Storia e archeologia dell’Egitto antico' }],
+      sources: [secondary('Storia e archeologia dell’Egitto antico', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'fall-nineveh',
@@ -125,7 +129,10 @@ export const genesisDemoData: HistoricalExplorerDataset = {
         { targetId: 'nineveh', kind: 'interaction', label: 'Caduta della città' },
         { targetId: 'neo-assyria', kind: 'interaction', label: 'Crisi terminale dell’impero neo-assiro' },
       ],
-      sources: [{ label: 'Cronache mesopotamiche e ricostruzione storica' }],
+      sources: [
+        primary('Cronache mesopotamiche', 'Corpus primario richiamato a livello generale; riferimento puntuale da completare.'),
+        secondary('Ricostruzione storica della caduta di Ninive', 'Bibliografia specifica da collegare nel dataset.'),
+      ],
     },
     {
       id: 'jerusalem-586',
@@ -141,7 +148,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
         { targetId: 'neo-babylon', kind: 'interaction', label: 'Dominio neobabilonese su Giuda' },
         { targetId: 'genesis-formation', kind: 'composition', label: 'Contesto storico rilevante per la rielaborazione delle tradizioni' },
       ],
-      sources: [{ label: 'Storia di Giuda e dell’impero neobabilonese' }],
+      sources: [secondary('Storia di Giuda e dell’impero neobabilonese', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'cyrus-babylon',
@@ -156,7 +163,10 @@ export const genesisDemoData: HistoricalExplorerDataset = {
         { targetId: 'neo-babylon', kind: 'interaction', label: 'Fine del dominio neobabilonese' },
         { targetId: 'achaemenid-persia', kind: 'interaction', label: 'Inizio del controllo persiano' },
       ],
-      sources: [{ label: 'Cronologia achemenide e fonti babilonesi' }],
+      sources: [
+        primary('Fonti babilonesi sul passaggio al dominio persiano', 'Corpus primario richiamato a livello generale; riferimento puntuale da completare.'),
+        secondary('Cronologia achemenide', 'Bibliografia specifica da collegare nel dataset.'),
+      ],
     },
     {
       id: 'genesis-formation',
@@ -171,7 +181,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
         { targetId: 'neo-babylon', kind: 'context', label: 'Fase esilica' },
         { targetId: 'achaemenid-persia', kind: 'context', label: 'Fase persiana' },
       ],
-      sources: [{ label: 'Modelli storico-critici della formazione del Pentateuco', note: 'Cronologia e stratificazione restano discusse.' }],
+      sources: [bibliography('Modelli storico-critici della formazione del Pentateuco', 'Cronologia e stratificazione restano discusse; riferimenti bibliografici puntuali da collegare.')],
     },
     {
       id: 'flood-traditions',
@@ -183,7 +193,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
       epistemicStatus: 'comparandum',
       biblicalRefs: ['Gen 6–9'],
       relations: [{ targetId: 'mesopotamia', kind: 'memory', label: 'Comparazione culturale' }],
-      sources: [{ label: 'Tradizioni mesopotamiche del diluvio' }],
+      sources: [bibliography('Tradizioni mesopotamiche del diluvio', 'Corpus e bibliografia comparativa da specificare con riferimenti puntuali.')],
     },
     {
       id: 'mesopotamia',
@@ -195,7 +205,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
       epistemicStatus: 'attested',
       biblicalRefs: ['Gen 1–11'],
       relations: [],
-      sources: [{ label: 'Vicino Oriente antico' }],
+      sources: [secondary('Vicino Oriente antico', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'canaan',
@@ -207,7 +217,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
       epistemicStatus: 'attested',
       biblicalRefs: ['Gen 12–36'],
       relations: [],
-      sources: [{ label: 'Archeologia e storia del Levante' }],
+      sources: [secondary('Archeologia e storia del Levante', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
     {
       id: 'egypt',
@@ -219,7 +229,7 @@ export const genesisDemoData: HistoricalExplorerDataset = {
       epistemicStatus: 'attested',
       biblicalRefs: ['Gen 37–50'],
       relations: [{ targetId: 'memphis', kind: 'context', label: 'Menfi come ancoraggio storico-geografico' }],
-      sources: [{ label: 'Storia dell’Egitto e relazioni con il Levante' }],
+      sources: [secondary('Storia dell’Egitto e relazioni con il Levante', 'Riferimento bibliografico puntuale da collegare nel dataset.')],
     },
   ],
 };
