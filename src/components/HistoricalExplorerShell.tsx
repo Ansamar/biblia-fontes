@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import HistoricalBiblicalReferences from './HistoricalBiblicalReferences';
 import HistoricalExplorerMap from './HistoricalExplorerMap';
+import { useExplorerUrlState } from '../historical-explorer/useExplorerUrlState';
 import type { ExplorerLayer, HistoricalEntity, HistoricalExplorerDataset } from '../historical-explorer/types';
 
 const layerLabels: Record<ExplorerLayer, string> = {
@@ -52,7 +53,7 @@ function activeAt(entity: HistoricalEntity, year: number) {
   return start <= year && (end ?? start) >= year;
 }
 
-export default function HistoricalExplorerShell({ dataset, initialYear, initialEntityId, originBookSlug }: { dataset: HistoricalExplorerDataset; initialYear?: number; initialEntityId?: string; originBookSlug?: string }) {
+export default function HistoricalExplorerShell({ dataset, initialYear, initialEntityId, originBookSlug, syncUrlState = false }: { dataset: HistoricalExplorerDataset; initialYear?: number; initialEntityId?: string; originBookSlug?: string; syncUrlState?: boolean }) {
   const [selectedId, setSelectedId] = useState(() => initialEntityId && dataset.entities.some((entity) => entity.id === initialEntityId) ? initialEntityId : dataset.entities[0]?.id ?? '');
   const [year, setYear] = useState(() => {
     const fallback = Math.round((dataset.defaultRange[0] + dataset.defaultRange[1]) / 2);
@@ -63,6 +64,8 @@ export default function HistoricalExplorerShell({ dataset, initialYear, initialE
   const [playing, setPlaying] = useState(false);
 
   const selected = dataset.entities.find((entity) => entity.id === selectedId) ?? dataset.entities[0];
+  useExplorerUrlState({ year, entityId: selected?.id, enabled: syncUrlState });
+
   const visibleEntities = useMemo(() => dataset.entities.filter((entity) => layers.includes(typeToLayer[entity.type])), [dataset.entities, layers]);
   const datedEntities = visibleEntities.filter((entity) => entity.temporal.start !== undefined);
   const activeEntities = datedEntities.filter((entity) => activeAt(entity, year));
