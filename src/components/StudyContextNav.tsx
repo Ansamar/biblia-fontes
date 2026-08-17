@@ -1,4 +1,7 @@
+'use client';
+
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 type StudyMode = 'overview' | 'text' | 'study' | 'timeline' | 'history';
 
@@ -15,6 +18,17 @@ const activeItem = `${baseItem} bg-ink text-papyrus`;
 const idleItem = `${baseItem} text-ink-soft hover:bg-papyrus-deep/60 hover:text-bronze`;
 const disabledItem = `${baseItem} cursor-default text-ink-faint/60`;
 
+function modeFromLocation(fallback: StudyMode): StudyMode {
+  if (typeof window === 'undefined') return fallback;
+  if (window.location.pathname.startsWith('/historical-explorer/')) return 'history';
+  const hash = window.location.hash;
+  if (hash === '#testo') return 'text';
+  if (hash === '#studio') return 'study';
+  if (hash === '#timeline') return 'timeline';
+  if (hash === '#panoramica' || !hash) return fallback;
+  return fallback;
+}
+
 export default function StudyContextNav({
   bookSlug,
   bookTitle,
@@ -22,6 +36,19 @@ export default function StudyContextNav({
   active = 'overview',
   historyAvailable = false,
 }: StudyContextNavProps) {
+  const [currentMode, setCurrentMode] = useState<StudyMode>(active);
+
+  useEffect(() => {
+    const sync = () => setCurrentMode(modeFromLocation(active));
+    sync();
+    window.addEventListener('hashchange', sync);
+    window.addEventListener('popstate', sync);
+    return () => {
+      window.removeEventListener('hashchange', sync);
+      window.removeEventListener('popstate', sync);
+    };
+  }, [active]);
+
   const items = [
     { key: 'overview' as const, label: 'Panoramica', href: `/bibbia/${bookSlug}#panoramica` },
     { key: 'text' as const, label: 'Testo', href: `/bibbia/${bookSlug}/${firstChapter}#testo` },
@@ -39,12 +66,12 @@ export default function StudyContextNav({
 
         <nav aria-label={`Modalità di studio di ${bookTitle}`} className="flex shrink-0 items-center gap-1 rounded-full border border-papyrus-line bg-paper-card/65 p-1">
           {items.map((item) => (
-            <Link key={item.key} href={item.href} aria-current={active === item.key ? 'page' : undefined} className={active === item.key ? activeItem : idleItem}>
+            <Link key={item.key} href={item.href} aria-current={currentMode === item.key ? 'page' : undefined} className={currentMode === item.key ? activeItem : idleItem} onClick={() => setCurrentMode(item.key)}>
               {item.label}
             </Link>
           ))}
           {historyAvailable ? (
-            <Link href={`/historical-explorer/${bookSlug}?source=book`} aria-current={active === 'history' ? 'page' : undefined} className={active === 'history' ? activeItem : idleItem}>
+            <Link href={`/historical-explorer/${bookSlug}?source=book`} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')}>
               Storia
             </Link>
           ) : (
