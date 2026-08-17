@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { studyContextHref } from '../study-context/context';
 
 type StudyMode = 'overview' | 'text' | 'study' | 'timeline' | 'history';
 
@@ -55,6 +56,7 @@ export default function StudyContextNav({
     { key: 'study' as const, label: 'Studio', href: `/bibbia/${bookSlug}#studio` },
     { key: 'timeline' as const, label: 'Timeline', href: `/bibbia/${bookSlug}#timeline` },
   ];
+  const historyHref = studyContextHref(`/historical-explorer/${bookSlug}`, { book: bookSlug, source: currentMode === 'timeline' ? 'timeline' : 'book' });
 
   return (
     <div className="sticky top-[72px] z-30 border-b border-papyrus-line/80 bg-papyrus/95 backdrop-blur">
@@ -71,7 +73,7 @@ export default function StudyContextNav({
             </Link>
           ))}
           {historyAvailable ? (
-            <Link href={`/historical-explorer/${bookSlug}?source=book`} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')}>
+            <Link href={historyHref} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')}>
               Storia
             </Link>
           ) : (
