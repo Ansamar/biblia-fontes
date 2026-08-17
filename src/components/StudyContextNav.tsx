@@ -14,6 +14,12 @@ type StudyContextNavProps = {
   historyAvailable?: boolean;
 };
 
+type HistoryReturnContext = {
+  fromHistory: boolean;
+  year?: number;
+  entity?: string;
+};
+
 const baseItem = 'inline-flex min-h-10 items-center rounded-full px-4 py-2 text-sm font-medium transition';
 const activeItem = `${baseItem} bg-ink text-papyrus`;
 const idleItem = `${baseItem} text-ink-soft hover:bg-papyrus-deep/60 hover:text-bronze`;
@@ -30,6 +36,18 @@ function modeFromLocation(fallback: StudyMode): StudyMode {
   return fallback;
 }
 
+function historyContextFromLocation(): HistoryReturnContext {
+  if (typeof window === 'undefined') return { fromHistory: false };
+  const params = new URLSearchParams(window.location.search);
+  const yearRaw = params.get('year');
+  const year = yearRaw !== null && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
+  return {
+    fromHistory: params.get('source') === 'history',
+    year,
+    entity: params.get('entity') || undefined,
+  };
+}
+
 export default function StudyContextNav({
   bookSlug,
   bookTitle,
@@ -38,9 +56,13 @@ export default function StudyContextNav({
   historyAvailable = false,
 }: StudyContextNavProps) {
   const [currentMode, setCurrentMode] = useState<StudyMode>(active);
+  const [historyReturn, setHistoryReturn] = useState<HistoryReturnContext>({ fromHistory: false });
 
   useEffect(() => {
-    const sync = () => setCurrentMode(modeFromLocation(active));
+    const sync = () => {
+      setCurrentMode(modeFromLocation(active));
+      setHistoryReturn(historyContextFromLocation());
+    };
     sync();
     window.addEventListener('hashchange', sync);
     window.addEventListener('popstate', sync);
@@ -56,7 +78,10 @@ export default function StudyContextNav({
     { key: 'study' as const, label: 'Studio', href: `/bibbia/${bookSlug}#studio` },
     { key: 'timeline' as const, label: 'Timeline', href: `/bibbia/${bookSlug}#timeline` },
   ];
-  const historyHref = studyContextHref(`/historical-explorer/${bookSlug}`, { book: bookSlug, source: currentMode === 'timeline' ? 'timeline' : 'book' });
+
+  const historyHref = studyContextHref(`/historical-explorer/${bookSlug}`, historyReturn.fromHistory
+    ? { book: bookSlug, source: 'history', year: historyReturn.year, entity: historyReturn.entity }
+    : { book: bookSlug, source: currentMode === 'timeline' ? 'timeline' : 'book' });
 
   return (
     <div className="sticky top-[72px] z-30 border-b border-papyrus-line/80 bg-papyrus/95 backdrop-blur">
@@ -73,8 +98,8 @@ export default function StudyContextNav({
             </Link>
           ))}
           {historyAvailable ? (
-            <Link href={historyHref} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')}>
-              Storia
+            <Link href={historyHref} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')} title={historyReturn.fromHistory ? 'Torna alla scena storica da cui hai aperto il testo' : undefined}>
+              {historyReturn.fromHistory ? '← Storia' : 'Storia'}
             </Link>
           ) : (
             <span className={disabledItem} title="Historical Explorer non ancora modellato per questo libro">Storia</span>
@@ -82,7 +107,7 @@ export default function StudyContextNav({
         </nav>
 
         <p className="ml-auto hidden max-w-[310px] text-right text-xs leading-5 text-ink-faint xl:block">
-          Cambia prospettiva senza perdere il libro che stai studiando.
+          {historyReturn.fromHistory ? 'Questo testo è stato aperto dall’Historical Explorer: puoi tornare alla stessa scena.' : 'Cambia prospettiva senza perdere il libro che stai studiando.'}
         </p>
       </div>
     </div>
