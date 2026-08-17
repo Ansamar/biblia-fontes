@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import AppShell from '../../../src/components/AppShell';
 import HistoricalExplorerShell from '../../../src/components/HistoricalExplorerShell';
+import StudyContextNav from '../../../src/components/StudyContextNav';
 import { genesisDemoData } from '../../../src/historical-explorer/genesisDemoData';
 import { client } from '../../../src/sanity/client';
 
@@ -24,6 +25,7 @@ export default async function GenesisHistoricalExplorerPage() {
 
   return (
     <AppShell>
+      <StudyContextNav bookSlug="genesi" bookTitle={libro?.titolo || 'Genesi'} firstChapter={1} active="history" historyAvailable />
       <main className="bg-paper-card/35">
         <section className="border-b border-papyrus-line bg-paper-card">
           <div className="mx-auto max-w-[1580px] px-5 py-8 md:px-8 md:py-10">
@@ -32,15 +34,15 @@ export default async function GenesisHistoricalExplorerPage() {
               <span className="mx-2">/</span>
               <Link href="/bibbia/genesi" className="hover:text-bronze">Genesi</Link>
               <span className="mx-2">/</span>
-              <span className="text-ink-soft">Historical Explorer</span>
+              <span className="text-ink-soft">Storia</span>
             </nav>
             <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Ambiente storico parallelo</p>
-                <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">Biblia Fontes Historical Explorer</h1>
-                <p className="mt-3 max-w-3xl text-lg leading-8 text-ink-soft">Interroga la storia attestata, ricostruita o discussa intorno al testo biblico. Tempo, spazio, entità e relazioni condividono lo stesso stato esplorativo.</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Modalità · Storia</p>
+                <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">Historical Explorer · Genesi</h1>
+                <p className="mt-3 max-w-3xl text-lg leading-8 text-ink-soft">Interroga la storia attestata, ricostruita o discussa intorno a Genesi. Il libro resta il contesto; tempo, spazio, entità e relazioni cambiano la prospettiva.</p>
               </div>
-              <Link href="/bibbia/genesi#cronologia" className="rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">← Torna alla Timeline del testo</Link>
+              <Link href="/bibbia/genesi#timeline" className="rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">← Torna alla Timeline del testo</Link>
             </div>
           </div>
         </section>
