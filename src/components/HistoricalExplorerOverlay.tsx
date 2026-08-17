@@ -58,7 +58,7 @@ export default function HistoricalExplorerOverlay({ formationLabel }: Historical
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-auto bg-papyrus/20 p-3 md:p-5">
-              <HistoricalExplorerShell dataset={dataset} />
+              <HistoricalExplorerShell dataset={dataset} originBookSlug="genesi" />
             </div>
           </div>
         </div>
