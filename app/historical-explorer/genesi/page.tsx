@@ -29,7 +29,9 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
     ? 'Aperto dalla Timeline del testo'
     : context.source === 'chapter'
       ? `Aperto dal capitolo ${context.chapter ?? ''}`.trim()
-      : 'Aperto dal contesto del libro';
+      : context.source === 'history'
+        ? 'Ripristino della scena storica'
+        : 'Aperto dal contesto del libro';
 
   return (
     <AppShell>
@@ -57,7 +59,7 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
         </section>
 
         <section className="mx-auto max-w-[1580px] px-3 py-5 md:px-6 md:py-8">
-          <HistoricalExplorerShell dataset={dataset} initialYear={context.year} initialEntityId={context.entity} />
+          <HistoricalExplorerShell dataset={dataset} originBookSlug="genesi" initialYear={context.year} initialEntityId={context.entity} />
         </section>
       </main>
     </AppShell>
