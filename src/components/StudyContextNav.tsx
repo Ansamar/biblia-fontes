@@ -74,14 +74,18 @@ export default function StudyContextNav({
     };
   }, [active]);
 
+  const historicalOriginBook = historyReturn.fromHistory && historyReturn.originBook ? historyReturn.originBook : bookSlug;
+  const contextualHref = (pathname: string, hash: string, chapter?: number) => historyReturn.fromHistory
+    ? `${studyContextHref(pathname, { book: historicalOriginBook, chapter, source: 'history', year: historyReturn.year, entity: historyReturn.entity })}${hash}`
+    : `${pathname}${hash}`;
+
   const items = [
-    { key: 'overview' as const, label: 'Panoramica', href: `/bibbia/${bookSlug}#panoramica` },
-    { key: 'text' as const, label: 'Testo', href: `/bibbia/${bookSlug}/${firstChapter}#testo` },
-    { key: 'study' as const, label: 'Studio', href: `/bibbia/${bookSlug}#studio` },
-    { key: 'timeline' as const, label: 'Timeline', href: `/bibbia/${bookSlug}#timeline` },
+    { key: 'overview' as const, label: 'Panoramica', href: contextualHref(`/bibbia/${bookSlug}`, '#panoramica') },
+    { key: 'text' as const, label: 'Testo', href: contextualHref(`/bibbia/${bookSlug}/${firstChapter}`, '#testo', firstChapter) },
+    { key: 'study' as const, label: 'Studio', href: contextualHref(`/bibbia/${bookSlug}`, '#studio') },
+    { key: 'timeline' as const, label: 'Timeline', href: contextualHref(`/bibbia/${bookSlug}`, '#timeline') },
   ];
 
-  const historicalOriginBook = historyReturn.fromHistory && historyReturn.originBook ? historyReturn.originBook : bookSlug;
   const canOpenHistory = historyAvailable || historyReturn.fromHistory;
   const historyHref = studyContextHref(`/historical-explorer/${historicalOriginBook}`, historyReturn.fromHistory
     ? { book: historicalOriginBook, source: 'history', year: historyReturn.year, entity: historyReturn.entity }
@@ -111,7 +115,7 @@ export default function StudyContextNav({
         </nav>
 
         <p className="ml-auto hidden max-w-[310px] text-right text-xs leading-5 text-ink-faint xl:block">
-          {historyReturn.fromHistory ? `Questo testo è stato aperto dall’Historical Explorer di ${historyReturn.originBook || historicalOriginBook}: puoi tornare alla stessa scena.` : 'Cambia prospettiva senza perdere il libro che stai studiando.'}
+          {historyReturn.fromHistory ? `Contesto storico conservato: puoi cambiare modalità e tornare all’Explorer di ${historyReturn.originBook || historicalOriginBook}.` : 'Cambia prospettiva senza perdere il libro che stai studiando.'}
         </p>
       </div>
     </div>
