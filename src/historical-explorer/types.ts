@@ -24,8 +24,19 @@ export type HistoricalRelation = {
   label: string;
 };
 
+export type HistoricalSourceKind =
+  | 'primary'
+  | 'secondary'
+  | 'dataset'
+  | 'bibliography'
+  | 'editorial';
+
 export type HistoricalSource = {
   label: string;
+  kind?: HistoricalSourceKind;
+  citation?: string;
+  locator?: string;
+  url?: string;
   note?: string;
 };
 
@@ -41,6 +52,7 @@ export type HistoricalArea = {
   };
   confidence: HistoricalGeometryConfidence;
   note: string;
+  sources?: HistoricalSource[];
   geometry: {
     type: 'Polygon';
     coordinates: number[][][];
