@@ -22,7 +22,8 @@ type MapInstance = {
   addSource: (id: string, source: Record<string, unknown>) => void;
   getSource: (id: string) => GeoJsonSource | undefined;
   addLayer: (layer: Record<string, unknown>) => void;
-  on: (event: string, handler: () => void) => void;
+  on: (...args: any[]) => void;
+  getCanvas: () => HTMLCanvasElement;
   remove: () => void;
   resize: () => void;
 };
@@ -54,6 +55,8 @@ const MAPLIBRE_VERSION = '5.6.0';
 const MAPLIBRE_SCRIPT_ID = 'biblia-fontes-maplibre-script';
 const MAPLIBRE_STYLE_ID = 'biblia-fontes-maplibre-style';
 const HISTORICAL_AREAS_SOURCE = 'biblia-fontes-historical-areas';
+const HISTORICAL_AREAS_FILL = 'biblia-fontes-historical-areas-fill';
+const HISTORICAL_AREAS_LINE = 'biblia-fontes-historical-areas-line';
 
 function activeAt(entity: HistoricalEntity, year: number) {
   const { start, end, precision } = entity.temporal;
@@ -216,7 +219,7 @@ export default function HistoricalExplorerMap({ entities, areas = [], selectedId
 
     map.addSource(HISTORICAL_AREAS_SOURCE, { type: 'geojson', data: featureCollection });
     map.addLayer({
-      id: 'biblia-fontes-historical-areas-fill',
+      id: HISTORICAL_AREAS_FILL,
       type: 'fill',
       source: HISTORICAL_AREAS_SOURCE,
       paint: {
@@ -225,7 +228,7 @@ export default function HistoricalExplorerMap({ entities, areas = [], selectedId
       },
     });
     map.addLayer({
-      id: 'biblia-fontes-historical-areas-line',
+      id: HISTORICAL_AREAS_LINE,
       type: 'line',
       source: HISTORICAL_AREAS_SOURCE,
       paint: {
@@ -234,6 +237,17 @@ export default function HistoricalExplorerMap({ entities, areas = [], selectedId
         'line-opacity': 0.72,
         'line-dasharray': [3, 2],
       },
+    });
+
+    map.on('click', HISTORICAL_AREAS_FILL, (event: any) => {
+      const entityId = event?.features?.[0]?.properties?.entityId;
+      if (typeof entityId === 'string') onSelectRef.current(entityId);
+    });
+    map.on('mouseenter', HISTORICAL_AREAS_FILL, () => {
+      map.getCanvas().style.cursor = 'pointer';
+    });
+    map.on('mouseleave', HISTORICAL_AREAS_FILL, () => {
+      map.getCanvas().style.cursor = '';
     });
   }, [areas, entities, status, year]);
 
@@ -332,7 +346,7 @@ export default function HistoricalExplorerMap({ entities, areas = [], selectedId
             <span><i className="mr-2 inline-block h-2 w-2 rounded-[2px] bg-[#30271f]" />città storica</span>
             <span><i className="mr-2 inline-block h-2 w-2 rotate-45 bg-[#703026]" />evento puntuale</span>
             <span><i className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9b6a38]" />regione / testo / relazione</span>
-            {areas.length > 0 && <span><i className="mr-2 inline-block h-3 w-5 border border-dashed border-[#9b6a38]/70 bg-[#9b6a38]/15" />area storica · ricostruzione didattica</span>}
+            {areas.length > 0 && <span><i className="mr-2 inline-block h-3 w-5 border border-dashed border-[#9b6a38]/70 bg-[#9b6a38]/15" />area storica · cliccabile</span>}
           </div>
         </div>
 
