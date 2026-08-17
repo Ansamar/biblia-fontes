@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { genesisDemoData } from '../historical-explorer/genesisDemoData';
+import { genesisScenarios } from '../historical-explorer/genesisScenarios';
 import { studyContextHref } from '../study-context/context';
 import HistoricalExplorerShell from './HistoricalExplorerShell';
 
@@ -27,14 +28,15 @@ export default function HistoricalExplorerOverlay({ formationLabel }: Historical
     };
   }, [open]);
 
+  const baseDataset = { ...genesisDemoData, scenarios: genesisScenarios };
   const dataset = formationLabel
     ? {
-        ...genesisDemoData,
-        entities: genesisDemoData.entities.map((entity) => entity.id === 'genesis-formation'
+        ...baseDataset,
+        entities: baseDataset.entities.map((entity) => entity.id === 'genesis-formation'
           ? { ...entity, summary: `${entity.summary} Dataset Biblia Fontes: ${formationLabel}` }
           : entity),
       }
-    : genesisDemoData;
+    : baseDataset;
   const fullPageHref = studyContextHref('/historical-explorer/genesi', { book: 'genesi', source: 'timeline' });
 
   return (
