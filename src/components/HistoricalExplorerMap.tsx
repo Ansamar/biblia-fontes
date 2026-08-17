@@ -61,6 +61,15 @@ function markerLabel(entity: HistoricalEntity) {
   return entity.type;
 }
 
+function markerStyle(entity: HistoricalEntity, selected: boolean) {
+  if (selected) return { background: '#9b6a38', color: '#fff', border: '#9b6a38', dot: '#fff' };
+  if (entity.type === 'city') return { background: 'rgba(250,247,240,.96)', color: '#30271f', border: 'rgba(80,63,47,.38)', dot: '#30271f' };
+  if (entity.type === 'empire') return { background: 'rgba(68,50,34,.94)', color: '#fff', border: 'rgba(68,50,34,.95)', dot: '#d9b07d' };
+  if (entity.type === 'region') return { background: 'rgba(239,229,210,.94)', color: '#4f4032', border: 'rgba(155,106,56,.45)', dot: '#9b6a38' };
+  if (entity.type === 'redaction' || entity.type === 'text') return { background: 'rgba(255,249,238,.96)', color: '#6e4b29', border: 'rgba(155,106,56,.65)', dot: '#9b6a38' };
+  return { background: 'rgba(250,247,240,.94)', color: '#30271f', border: 'rgba(80,63,47,.34)', dot: '#9b6a38' };
+}
+
 function loadMapLibre(): Promise<MapLibreGlobal> {
   if (window.maplibregl) return Promise.resolve(window.maplibregl);
 
@@ -75,8 +84,7 @@ function loadMapLibre(): Promise<MapLibreGlobal> {
   return new Promise((resolve, reject) => {
     const existing = document.getElementById(MAPLIBRE_SCRIPT_ID) as HTMLScriptElement | null;
     if (existing) {
-      existing.addEventListener('load', () => window.maplibregl ? resolve(window.maplibregl) : reject(new Error('MapLibre non disponibile')),
-        { once: true });
+      existing.addEventListener('load', () => window.maplibregl ? resolve(window.maplibregl) : reject(new Error('MapLibre non disponibile')), { once: true });
       existing.addEventListener('error', () => reject(new Error('Impossibile caricare MapLibre')), { once: true });
       return;
     }
@@ -95,6 +103,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapInstance | null>(null);
   const markersRef = useRef<MarkerInstance[]>([]);
+  const halosRef = useRef<MarkerInstance[]>([]);
   const mapLibreRef = useRef<MapLibreGlobal | null>(null);
   const fittedRef = useRef(false);
   const onSelectRef = useRef(onSelect);
@@ -102,9 +111,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
 
   onSelectRef.current = onSelect;
 
-  const mapped = entities.filter(
-    (entity) => entity.spatial?.lat !== undefined && entity.spatial?.lng !== undefined,
-  );
+  const mapped = entities.filter((entity) => entity.spatial?.lat !== undefined && entity.spatial?.lng !== undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,9 +144,9 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
                 type: 'raster',
                 source: 'osm',
                 paint: {
-                  'raster-saturation': -0.72,
-                  'raster-contrast': -0.08,
-                  'raster-brightness-max': 0.92,
+                  'raster-saturation': -0.78,
+                  'raster-contrast': -0.1,
+                  'raster-brightness-max': 0.9,
                 },
               },
             ],
@@ -158,7 +165,9 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
     return () => {
       cancelled = true;
       markersRef.current.forEach((marker) => marker.remove());
+      halosRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
+      halosRef.current = [];
       mapRef.current?.remove();
       mapRef.current = null;
       fittedRef.current = false;
@@ -169,12 +178,36 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
     if (status !== 'ready' || !mapRef.current || !mapLibreRef.current) return;
 
     markersRef.current.forEach((marker) => marker.remove());
+    halosRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
+    halosRef.current = [];
 
     const map = mapRef.current;
     const maplibre = mapLibreRef.current;
     const bounds = new maplibre.LngLatBounds();
     let boundsCount = 0;
+
+    mapped
+      .filter((entity) => entity.type === 'empire' && activeAt(entity, year))
+      .forEach((entity) => {
+        const lat = entity.spatial?.lat;
+        const lng = entity.spatial?.lng;
+        if (lat === undefined || lng === undefined) return;
+
+        const halo = document.createElement('div');
+        halo.setAttribute('aria-hidden', 'true');
+        halo.style.width = '150px';
+        halo.style.height = '150px';
+        halo.style.borderRadius = '999px';
+        halo.style.background = 'radial-gradient(circle, rgba(155,106,56,.22) 0%, rgba(155,106,56,.10) 48%, rgba(155,106,56,0) 72%)';
+        halo.style.border = '1px dashed rgba(155,106,56,.34)';
+        halo.style.pointerEvents = 'none';
+
+        const marker = new maplibre.Marker({ element: halo, anchor: 'center' })
+          .setLngLat([lng, lat])
+          .addTo(map);
+        halosRef.current.push(marker);
+      });
 
     mapped.forEach((entity) => {
       const lat = entity.spatial?.lat;
@@ -183,32 +216,33 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
 
       const selected = entity.id === selectedId;
       const active = activeAt(entity, year);
+      const style = markerStyle(entity, selected);
       const button = document.createElement('button');
       button.type = 'button';
       button.setAttribute('aria-label', `${entity.label} · ${markerLabel(entity)}`);
-      button.title = entity.label;
+      button.title = `${entity.label} · ${markerLabel(entity)}`;
       button.style.display = 'flex';
       button.style.alignItems = 'center';
-      button.style.gap = '6px';
-      button.style.padding = selected ? '7px 10px' : '6px 9px';
-      button.style.borderRadius = '999px';
-      button.style.border = selected ? '2px solid #9b6a38' : '1px solid rgba(80,63,47,.34)';
-      button.style.background = selected ? '#9b6a38' : 'rgba(250,247,240,.94)';
-      button.style.color = selected ? '#fff' : '#30271f';
+      button.style.gap = entity.type === 'city' ? '5px' : '6px';
+      button.style.padding = selected ? '7px 10px' : entity.type === 'city' ? '5px 8px' : '6px 9px';
+      button.style.borderRadius = entity.type === 'city' ? '9px' : '999px';
+      button.style.border = `${selected ? 2 : 1}px solid ${style.border}`;
+      button.style.background = style.background;
+      button.style.color = style.color;
       button.style.boxShadow = selected ? '0 8px 22px rgba(48,39,31,.24)' : '0 3px 10px rgba(48,39,31,.13)';
       button.style.cursor = 'pointer';
-      button.style.opacity = active ? '1' : '.42';
+      button.style.opacity = active ? '1' : '.32';
       button.style.whiteSpace = 'nowrap';
-      button.style.fontSize = '12px';
+      button.style.fontSize = entity.type === 'city' ? '11px' : '12px';
       button.style.fontWeight = '700';
       button.style.fontFamily = 'Georgia, serif';
       button.style.transition = 'opacity 150ms ease, transform 150ms ease, box-shadow 150ms ease';
 
       const dot = document.createElement('span');
-      dot.style.width = selected ? '8px' : '7px';
-      dot.style.height = selected ? '8px' : '7px';
-      dot.style.borderRadius = '999px';
-      dot.style.background = selected ? '#fff' : '#9b6a38';
+      dot.style.width = entity.type === 'city' ? '6px' : selected ? '8px' : '7px';
+      dot.style.height = dot.style.width;
+      dot.style.borderRadius = entity.type === 'city' ? '2px' : '999px';
+      dot.style.background = style.dot;
       dot.style.flex = '0 0 auto';
 
       const text = document.createElement('span');
@@ -216,7 +250,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
       button.append(dot, text);
       button.addEventListener('click', () => onSelectRef.current(entity.id));
       button.addEventListener('mouseenter', () => { button.style.opacity = '1'; });
-      button.addEventListener('mouseleave', () => { button.style.opacity = active ? '1' : '.42'; });
+      button.addEventListener('mouseleave', () => { button.style.opacity = active ? '1' : '.32'; });
 
       const marker = new maplibre.Marker({ element: button, anchor: 'bottom' })
         .setLngLat([lng, lat])
@@ -246,11 +280,21 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
     <div className="overflow-hidden rounded-2xl border border-papyrus-line bg-paper-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-papyrus-line bg-paper-card/95 px-4 py-2">
         <span className="font-mono text-[9px] uppercase tracking-wider text-ink-faint">Mappa interattiva · pan + zoom</span>
-        <span className="text-[11px] text-ink-faint">base contemporanea · layer storici sovrapposti</span>
+        <span className="text-[11px] text-ink-faint">base contemporanea · lettura storica sovrapposta</span>
       </div>
 
-      <div className="relative h-[390px] md:h-[430px]">
+      <div className="relative h-[430px] md:h-[500px]">
         <div ref={containerRef} className="absolute inset-0" aria-label="Mappa interattiva del Vicino Oriente" />
+
+        <div className="pointer-events-none absolute bottom-3 left-3 z-20 rounded-xl border border-papyrus-line bg-paper-card/92 px-3 py-2 shadow-sm backdrop-blur-sm">
+          <p className="font-mono text-[8px] uppercase tracking-wider text-ink-faint">Legenda</p>
+          <div className="mt-1.5 grid gap-1 text-[10px] text-ink-soft">
+            <span><i className="mr-2 inline-block h-2 w-2 rounded-full bg-[#443222]" />potere / impero</span>
+            <span><i className="mr-2 inline-block h-2 w-2 rounded-[2px] bg-[#30271f]" />città storica</span>
+            <span><i className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9b6a38]" />regione / testo / relazione</span>
+            <span><i className="mr-2 inline-block h-3 w-3 rounded-full border border-dashed border-[#9b6a38]/60" />area di attenzione dell’impero attivo</span>
+          </div>
+        </div>
 
         {status === 'loading' ? (
           <div className="absolute inset-0 grid place-items-center bg-paper-card/90 text-sm text-ink-faint">Caricamento della base cartografica…</div>
@@ -267,7 +311,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-papyrus-line bg-papyrus/25 px-4 py-2 text-[10px] leading-5 text-ink-faint">
-        <span>I punti indicano ancoraggi geografici; non rappresentano ancora estensioni territoriali storiche.</span>
+        <span>L’alone indica il potere attivo selezionato nel tempo: è un richiamo didattico, non un confine politico ricostruito.</span>
         <span>Base © OpenStreetMap contributors</span>
       </div>
     </div>
