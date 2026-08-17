@@ -51,9 +51,13 @@ function activeAt(entity: HistoricalEntity, year: number) {
   return start <= year && (end ?? start) >= year;
 }
 
-export default function HistoricalExplorerShell({ dataset }: { dataset: HistoricalExplorerDataset }) {
-  const [selectedId, setSelectedId] = useState(dataset.entities[0]?.id ?? '');
-  const [year, setYear] = useState(Math.round((dataset.defaultRange[0] + dataset.defaultRange[1]) / 2));
+export default function HistoricalExplorerShell({ dataset, initialYear, initialEntityId }: { dataset: HistoricalExplorerDataset; initialYear?: number; initialEntityId?: string }) {
+  const [selectedId, setSelectedId] = useState(() => initialEntityId && dataset.entities.some((entity) => entity.id === initialEntityId) ? initialEntityId : dataset.entities[0]?.id ?? '');
+  const [year, setYear] = useState(() => {
+    const fallback = Math.round((dataset.defaultRange[0] + dataset.defaultRange[1]) / 2);
+    const candidate = initialYear ?? fallback;
+    return Math.max(dataset.defaultRange[0], Math.min(dataset.defaultRange[1], candidate));
+  });
   const [layers, setLayers] = useState<ExplorerLayer[]>(['politics', 'places', 'events', 'texts']);
   const [playing, setPlaying] = useState(false);
 
