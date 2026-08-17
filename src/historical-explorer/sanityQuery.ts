@@ -27,8 +27,7 @@ export const historicalExplorerDatasetQuery = `
       precision
     },
     spatial{
-      lat,
-      lng,
+      point,
       region
     },
     epistemicStatus,
@@ -43,7 +42,7 @@ export const historicalExplorerDatasetQuery = `
     relations[]{
       kind,
       label,
-      "target": target->{_id}
+      "target": target->{id}
     },
     sources[]{
       label,
@@ -63,8 +62,13 @@ export const historicalExplorerDatasetQuery = `
     },
     confidence,
     note,
-    geometry,
-    "entity": entity->{_id},
+    geometry{
+      type,
+      rings[]{
+        points[]
+      }
+    },
+    "entity": entity->{id},
     sources[]{
       label,
       kind,
