@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { genesisDemoData } from '../historical-explorer/genesisDemoData';
+import { genesisHistoricalAreas } from '../historical-explorer/historicalAreas';
 import { genesisQuickYears, genesisScenarios } from '../historical-explorer/genesisScenarios';
 import { studyContextHref } from '../study-context/context';
 import HistoricalExplorerShell from './HistoricalExplorerShell';
@@ -28,7 +29,7 @@ export default function HistoricalExplorerOverlay({ formationLabel }: Historical
     };
   }, [open]);
 
-  const baseDataset = { ...genesisDemoData, scenarios: genesisScenarios, quickYears: genesisQuickYears };
+  const baseDataset = { ...genesisDemoData, scenarios: genesisScenarios, quickYears: genesisQuickYears, areas: genesisHistoricalAreas };
   const dataset = formationLabel
     ? {
         ...baseDataset,
