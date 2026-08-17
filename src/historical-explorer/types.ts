@@ -40,6 +40,15 @@ export type HistoricalSource = {
   note?: string;
 };
 
+export type HistoricalBiblicalReference = {
+  display: string;
+  bookSlug: string;
+  chapterStart?: number;
+  chapterEnd?: number;
+  verseStart?: number;
+  verseEnd?: number;
+};
+
 export type HistoricalGeometryConfidence = 'illustrative' | 'approximate' | 'reconstructed';
 
 export type HistoricalArea = {
@@ -75,7 +84,7 @@ export type HistoricalEntity = {
     region?: string;
   };
   epistemicStatus: EpistemicStatus;
-  biblicalRefs?: string[];
+  biblicalRefs?: Array<string | HistoricalBiblicalReference>;
   relations: HistoricalRelation[];
   sources: HistoricalSource[];
 };
