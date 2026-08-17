@@ -7,6 +7,7 @@ import type { BiblicalTextUnit } from '../../../../src/components/BiblicalTextRe
 import { client } from '../../../../src/sanity/client';
 import { bookAbbreviation, bookIdFromSlug, categoryLabel } from '../../../../src/lib/bibleRouting';
 import { textFixtureFor } from '../../../../src/data/textFixtures';
+import { parseStudyContext, studyContextHref } from '../../../../src/study-context/context';
 
 const DANIEL_SPECIAL_TRADITIONS = [
   'susanna_og',
@@ -132,8 +133,14 @@ function isWitnessRelevantToChapter(slug: string, numero: number, text: ReaderWi
   return !isDanielSpecialWitness(text);
 }
 
-export default async function DynamicChapterPage({ params }: { params: Promise<{ libro: string; capitolo: string }> }) {
+function titleFromSlug(slug?: string) {
+  if (!slug) return 'Historical Explorer';
+  return slug.split('-').map((part) => part ? part[0].toLocaleUpperCase('it-IT') + part.slice(1) : part).join(' ');
+}
+
+export default async function DynamicChapterPage({ params, searchParams }: { params: Promise<{ libro: string; capitolo: string }>; searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const { libro: slug, capitolo } = await params;
+  const context = parseStudyContext(await searchParams);
   const numero = Number(capitolo);
   if (!Number.isInteger(numero) || numero < 1) notFound();
 
@@ -158,12 +165,22 @@ export default async function DynamicChapterPage({ params }: { params: Promise<{
   ]);
   const biblicalText = witnesses.length ? { ...witnesses[0], witnesses } : fixture;
 
+  const fromHistory = context.source === 'history' && Boolean(context.book);
+  const historyBackHref = fromHistory && context.book
+    ? studyContextHref(`/historical-explorer/${context.book}`, { book: context.book, source: 'history', year: context.year, entity: context.entity })
+    : null;
+  const contextualChapterHref = (chapterNumber: number) => fromHistory
+    ? studyContextHref(`/bibbia/${slug}/${chapterNumber}`, { book: context.book, chapter: chapterNumber, source: 'history', year: context.year, entity: context.entity })
+    : `/bibbia/${slug}/${chapterNumber}`;
+
   return <AppShell>
     <StudyContextNav bookSlug={slug} bookTitle={libro.titolo} firstChapter={1} active="text" historyAvailable={slug === 'genesi'} />
     <main className="mx-auto max-w-[1600px] px-5 py-10 md:px-8 md:py-14 xl:px-10">
       <nav className="text-sm text-ink-faint" aria-label="Breadcrumb"><Link href="/" className="hover:text-bronze">Bibbia</Link><span className="mx-2">/</span><span>{category}</span><span className="mx-2">/</span><Link href={`/bibbia/${slug}`} className="hover:text-bronze">{libro.titolo}</Link><span className="mx-2">/</span><span className="text-ink-soft">Capitolo {numero}</span></nav>
 
-      <header className="mt-9"><div className="flex flex-wrap items-end justify-between gap-6"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze">{libro.titolo} · Capitolo {numero}</p><h1 className="mt-3 font-serif text-5xl font-bold md:text-6xl">{chapter.titolo || `Capitolo ${numero}`}</h1></div><div className="flex gap-4 text-sm">{numero > 1 && <Link href={`/bibbia/${slug}/${numero-1}`} className="text-ink-soft hover:text-bronze">← {abbr} {numero-1}</Link>}{numero < total && <Link href={`/bibbia/${slug}/${numero+1}`} className="text-ink-soft hover:text-bronze">{abbr} {numero+1} →</Link>}</div></div></header>
+      <header className="mt-9"><div className="flex flex-wrap items-end justify-between gap-6"><div><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze">{libro.titolo} · Capitolo {numero}</p><h1 className="mt-3 font-serif text-5xl font-bold md:text-6xl">{chapter.titolo || `Capitolo ${numero}`}</h1></div><div className="flex gap-4 text-sm">{numero > 1 && <Link href={contextualChapterHref(numero-1)} className="text-ink-soft hover:text-bronze">← {abbr} {numero-1}</Link>}{numero < total && <Link href={contextualChapterHref(numero+1)} className="text-ink-soft hover:text-bronze">{abbr} {numero+1} →</Link>}</div></div></header>
+
+      {fromHistory && historyBackHref && <section className="mt-7 rounded-2xl border border-bronze/45 bg-bronze/8 p-4 md:flex md:items-center md:justify-between md:gap-5" aria-label="Contesto storico conservato"><div><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Contesto conservato · Storia</p><p className="mt-1 text-sm leading-6 text-ink-soft">Hai aperto {reference} dall’Historical Explorer di {titleFromSlug(context.book)}{context.entity ? `, entità “${context.entity}”` : ''}{context.year !== undefined ? `, alla data di ${Math.abs(context.year)} ${context.year < 0 ? 'a.C.' : 'd.C.'}` : ''}. Il collegamento indica pertinenza documentaria o comparativa, non identifica automaticamente il racconto con un evento storico.</p></div><Link href={historyBackHref} className="mt-3 inline-flex shrink-0 rounded-full border border-bronze px-4 py-2 text-sm font-semibold text-bronze hover:bg-bronze hover:text-white md:mt-0">← Torna alla scena storica</Link></section>}
 
       <UniversalChapterStudy chapter={chapter} reference={reference} worldNarratedLabel={chapter.eventiNarrati || libro.mondoDelTesto} biblicalText={biblicalText} />
     </main>
