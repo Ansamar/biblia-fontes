@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppShell from '../../../src/components/AppShell';
-import BookTimeline from '../../../src/components/BookTimeline';
+import GenesisHistoryPrototype from '../../../src/components/GenesisHistoryPrototype';
 import { client } from '../../../src/sanity/client';
 
 const query = `{
@@ -59,7 +59,7 @@ export default async function GenesisPage() {
     </section>
 
     <section id="cronologia" className="border-y border-papyrus-line bg-paper-card/35">
-      <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><BookTimeline formationLabel={formationLabel} /></div>
+      <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><GenesisHistoryPrototype formationLabel={formationLabel} /></div>
     </section>
 
     <section className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
