@@ -221,6 +221,13 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
     }
   }, [selected, secondary, witnesses]);
 
+  useEffect(() => {
+    const requested = new URLSearchParams(window.location.search).get('mode');
+    if (requested === 'compare' && witnesses.length > 1) setMode('compare');
+    if (requested === 'synopsis' && witnesses.length >= 3) setMode('synopsis');
+    if (requested === 'single') setMode('single');
+  }, [witnesses.length]);
+
   const current = witnesses[Math.min(selected, witnesses.length - 1)] || text;
   const second = witnesses[Math.min(secondary, witnesses.length - 1)] || witnesses[0] || text;
   const synopsisColumns = witnesses.length >= 4 ? '2xl:grid-cols-4' : '2xl:grid-cols-3';
