@@ -4,6 +4,7 @@ import ExplorerShareButton from '../../../src/components/ExplorerShareButton';
 import HistoricalExplorerShell from '../../../src/components/HistoricalExplorerShell';
 import StudyContextNav from '../../../src/components/StudyContextNav';
 import { genesisDemoData } from '../../../src/historical-explorer/genesisDemoData';
+import { genesisScenarios } from '../../../src/historical-explorer/genesisScenarios';
 import { client } from '../../../src/sanity/client';
 import { parseStudyContext } from '../../../src/study-context/context';
 
@@ -21,6 +22,7 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
 
   const dataset = {
     ...genesisDemoData,
+    scenarios: genesisScenarios,
     entities: genesisDemoData.entities.map((entity) => entity.id === 'genesis-formation'
       ? { ...entity, summary: `${entity.summary} Dataset Biblia Fontes: ${formationLabel}` }
       : entity),
