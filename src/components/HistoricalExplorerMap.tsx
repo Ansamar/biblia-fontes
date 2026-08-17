@@ -21,10 +21,8 @@ type MapInstance = {
   flyTo: (options: Record<string, unknown>) => void;
   addSource: (id: string, source: Record<string, unknown>) => void;
   getSource: (id: string) => GeoJsonSource | undefined;
-  removeSource: (id: string) => void;
   addLayer: (layer: Record<string, unknown>) => void;
-  getLayer: (id: string) => unknown;
-  removeLayer: (id: string) => void;
+  on: (event: string, handler: () => void) => void;
   remove: () => void;
   resize: () => void;
 };
@@ -56,8 +54,6 @@ const MAPLIBRE_VERSION = '5.6.0';
 const MAPLIBRE_SCRIPT_ID = 'biblia-fontes-maplibre-script';
 const MAPLIBRE_STYLE_ID = 'biblia-fontes-maplibre-style';
 const HISTORICAL_AREAS_SOURCE = 'biblia-fontes-historical-areas';
-const HISTORICAL_AREAS_FILL = 'biblia-fontes-historical-areas-fill';
-const HISTORICAL_AREAS_LINE = 'biblia-fontes-historical-areas-line';
 
 function activeAt(entity: HistoricalEntity, year: number) {
   const { start, end, precision } = entity.temporal;
@@ -169,8 +165,11 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
 
         map.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
         mapRef.current = map;
-        setStatus('ready');
-        window.setTimeout(() => map.resize(), 50);
+        map.on('load', () => {
+          if (cancelled) return;
+          setStatus('ready');
+          window.setTimeout(() => map.resize(), 50);
+        });
       })
       .catch(() => {
         if (!cancelled) setStatus('error');
@@ -217,7 +216,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
 
     map.addSource(HISTORICAL_AREAS_SOURCE, { type: 'geojson', data: featureCollection });
     map.addLayer({
-      id: HISTORICAL_AREAS_FILL,
+      id: 'biblia-fontes-historical-areas-fill',
       type: 'fill',
       source: HISTORICAL_AREAS_SOURCE,
       paint: {
@@ -226,7 +225,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
       },
     });
     map.addLayer({
-      id: HISTORICAL_AREAS_LINE,
+      id: 'biblia-fontes-historical-areas-line',
       type: 'line',
       source: HISTORICAL_AREAS_SOURCE,
       paint: {
