@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import HistoricalExplorerMap from './HistoricalExplorerMap';
 import type { ExplorerLayer, HistoricalEntity, HistoricalExplorerDataset } from '../historical-explorer/types';
 
 const layerLabels: Record<ExplorerLayer, string> = {
@@ -38,24 +39,47 @@ function temporalLabel(entity: HistoricalEntity) {
   return `${formatYear(start)} – ${formatYear(end)}`;
 }
 
+function activeAt(entity: HistoricalEntity, year: number) {
+  const { start, end, precision } = entity.temporal;
+  if (precision === 'unknown' || start === undefined) return false;
+  return start <= year && (end ?? start) >= year;
+}
+
 export default function HistoricalExplorerShell({ dataset }: { dataset: HistoricalExplorerDataset }) {
   const [selectedId, setSelectedId] = useState(dataset.entities[0]?.id ?? '');
   const [year, setYear] = useState(Math.round((dataset.defaultRange[0] + dataset.defaultRange[1]) / 2));
   const [layers, setLayers] = useState<ExplorerLayer[]>(['politics', 'places', 'events', 'texts']);
 
   const selected = dataset.entities.find((entity) => entity.id === selectedId) ?? dataset.entities[0];
-  const visibleEntities = useMemo(() => dataset.entities.filter((entity) => layers.includes(typeToLayer[entity.type])), [dataset.entities, layers]);
+  const visibleEntities = useMemo(
+    () => dataset.entities.filter((entity) => layers.includes(typeToLayer[entity.type])),
+    [dataset.entities, layers],
+  );
   const datedEntities = visibleEntities.filter((entity) => entity.temporal.start !== undefined);
+  const activeEntities = datedEntities.filter((entity) => activeAt(entity, year));
+  const inactiveEntities = datedEntities.filter((entity) => !activeAt(entity, year));
   const undatedEntities = visibleEntities.filter((entity) => entity.temporal.start === undefined);
 
   const toggleLayer = (layer: ExplorerLayer) => {
     setLayers((current) => current.includes(layer) ? current.filter((item) => item !== layer) : [...current, layer]);
   };
 
+  const selectEntity = (id: string) => {
+    const entity = dataset.entities.find((item) => item.id === id);
+    if (!entity) return;
+    setSelectedId(id);
+    if (entity.temporal.start !== undefined) {
+      const targetYear = entity.temporal.end !== undefined
+        ? Math.round((entity.temporal.start + entity.temporal.end) / 2)
+        : entity.temporal.start;
+      setYear(Math.max(dataset.defaultRange[0], Math.min(dataset.defaultRange[1], targetYear)));
+    }
+  };
+
   return (
     <section aria-labelledby="historical-explorer-shell-title" className="overflow-hidden rounded-3xl border border-papyrus-line bg-paper-card shadow-sm">
       <header className="border-b border-papyrus-line p-5 md:p-7">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Biblia Fontes Historical Explorer · architecture v0.2</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Biblia Fontes Historical Explorer · architecture v0.3</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-5">
           <div>
             <h2 id="historical-explorer-shell-title" className="font-serif text-3xl font-bold md:text-4xl">{dataset.title}</h2>
@@ -68,11 +92,11 @@ export default function HistoricalExplorerShell({ dataset }: { dataset: Historic
       </header>
 
       <div className="border-b border-papyrus-line bg-papyrus/20 px-5 py-4 md:px-7">
-        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-center">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
           <div>
             <div className="flex items-center justify-between gap-4 text-xs text-ink-faint">
               <span>{formatYear(dataset.defaultRange[0])}</span>
-              <strong className="font-mono text-sm text-bronze">{formatYear(year)}</strong>
+              <strong className="font-mono text-base text-bronze">{formatYear(year)}</strong>
               <span>{formatYear(dataset.defaultRange[1])}</span>
             </div>
             <input
@@ -84,6 +108,11 @@ export default function HistoricalExplorerShell({ dataset }: { dataset: Historic
               onChange={(event) => setYear(Number(event.target.value))}
               className="mt-2 w-full accent-current"
             />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {[-900, -700, -600, -539, -500, -400].filter((item) => item >= dataset.defaultRange[0] && item <= dataset.defaultRange[1]).map((item) => (
+                <button key={item} type="button" onClick={() => setYear(item)} className="rounded-full border border-papyrus-line px-2.5 py-1 text-[10px] text-ink-faint hover:border-bronze hover:text-bronze">{formatYear(item)}</button>
+              ))}
+            </div>
           </div>
           <div className="flex flex-wrap gap-2" aria-label="Layer storici">
             {(Object.keys(layerLabels) as ExplorerLayer[]).map((layer) => {
@@ -94,37 +123,40 @@ export default function HistoricalExplorerShell({ dataset }: { dataset: Historic
         </div>
       </div>
 
-      <div className="grid xl:grid-cols-[minmax(0,1.45fr)_360px]">
+      <div className="grid xl:grid-cols-[minmax(0,1.55fr)_380px]">
         <div className="min-w-0">
-          <div className="grid border-b border-papyrus-line lg:grid-cols-[minmax(0,1fr)_minmax(320px,.75fr)]">
-            <div className="min-h-[330px] border-b border-papyrus-line bg-papyrus/25 p-5 lg:border-b-0 lg:border-r md:p-6">
+          <div className="grid border-b border-papyrus-line lg:grid-cols-[minmax(0,1.18fr)_minmax(300px,.82fr)]">
+            <div className="border-b border-papyrus-line bg-papyrus/25 p-5 lg:border-b-0 lg:border-r md:p-6">
               <div className="flex items-center justify-between gap-4">
                 <div><p className="font-mono text-[10px] uppercase tracking-wider text-bronze">Spazio</p><h3 className="mt-1 font-serif text-2xl font-bold">Mappa storica</h3></div>
-                <span className="text-xs text-ink-faint">scheletro geo-temporale</span>
+                <span className="text-xs text-ink-faint">{activeEntities.length} entità attive</span>
               </div>
-              <div className="relative mt-5 min-h-[245px] overflow-hidden rounded-2xl border border-papyrus-line bg-paper-card/70 p-5">
-                <div aria-hidden="true" className="absolute inset-0 opacity-50" style={{ backgroundImage: 'linear-gradient(to right, currentColor 1px, transparent 1px), linear-gradient(to bottom, currentColor 1px, transparent 1px)', backgroundSize: '44px 44px', color: 'var(--papyrus-line)' }} />
-                <div className="relative flex h-full min-h-[205px] flex-wrap content-center justify-center gap-3">
-                  {visibleEntities.filter((entity) => entity.spatial?.region).map((entity) => <button key={entity.id} type="button" onClick={() => setSelectedId(entity.id)} className={`rounded-full border px-4 py-2 text-sm shadow-sm transition ${selected?.id === entity.id ? 'border-bronze bg-bronze text-white' : 'border-papyrus-line bg-paper-card text-ink-soft hover:border-bronze hover:text-bronze'}`}><span className="font-semibold">{entity.label}</span><span className="ml-2 text-[10px] opacity-70">{entity.spatial?.region}</span></button>)}
-                </div>
+              <div className="mt-5">
+                <HistoricalExplorerMap entities={visibleEntities} selectedId={selected?.id} year={year} onSelect={selectEntity} />
               </div>
             </div>
 
-            <div className="min-h-[330px] p-5 md:p-6">
+            <div className="p-5 md:p-6">
               <p className="font-mono text-[10px] uppercase tracking-wider text-bronze">Presenza nel tempo</p>
               <h3 className="mt-1 font-serif text-2xl font-bold">Contesto a {formatYear(year)}</h3>
+              <p className="mt-2 text-sm leading-6 text-ink-faint">Prima ciò che è attivo in questa data; sotto, gli altri elementi datati del campo selezionato.</p>
+
               <div className="mt-5 space-y-2">
-                {datedEntities.map((entity) => {
-                  const activeAtYear = (entity.temporal.start ?? year) <= year && (entity.temporal.end ?? entity.temporal.start ?? year) >= year;
-                  return <button key={entity.id} type="button" onClick={() => setSelectedId(entity.id)} className={`block w-full rounded-xl border p-3 text-left transition ${activeAtYear ? 'border-bronze/50 bg-bronze/8' : 'border-papyrus-line bg-paper-card opacity-60 hover:opacity-100'}`}><div className="flex items-center justify-between gap-3"><strong className="font-serif text-lg">{entity.label}</strong><span className="font-mono text-[9px] uppercase tracking-wide text-ink-faint">{statusLabels[entity.epistemicStatus]}</span></div><p className="mt-1 text-xs text-ink-faint">{temporalLabel(entity)}</p></button>;
-                })}
+                {activeEntities.length ? activeEntities.map((entity) => (
+                  <button key={entity.id} type="button" onClick={() => selectEntity(entity.id)} className={`block w-full rounded-xl border p-3 text-left transition ${selected?.id === entity.id ? 'border-bronze bg-bronze text-white' : 'border-bronze/45 bg-bronze/8 hover:border-bronze'}`}>
+                    <div className="flex items-center justify-between gap-3"><strong className="font-serif text-lg">{entity.label}</strong><span className={`font-mono text-[9px] uppercase tracking-wide ${selected?.id === entity.id ? 'text-white/70' : 'text-ink-faint'}`}>{statusLabels[entity.epistemicStatus]}</span></div>
+                    <p className={`mt-1 text-xs ${selected?.id === entity.id ? 'text-white/75' : 'text-ink-faint'}`}>{temporalLabel(entity)}</p>
+                  </button>
+                )) : <div className="rounded-xl border border-dashed border-papyrus-line p-4 text-sm leading-6 text-ink-faint">Nessuna entità datata attiva con i layer correnti.</div>}
               </div>
+
+              {inactiveEntities.length ? <details className="mt-4"><summary className="cursor-pointer text-xs font-semibold text-ink-faint hover:text-bronze">Altri elementi datati ({inactiveEntities.length})</summary><div className="mt-2 space-y-2">{inactiveEntities.map((entity) => <button key={entity.id} type="button" onClick={() => selectEntity(entity.id)} className="block w-full rounded-xl border border-papyrus-line bg-paper-card p-3 text-left opacity-65 transition hover:border-bronze hover:opacity-100"><strong className="font-serif">{entity.label}</strong><p className="mt-1 text-xs text-ink-faint">{temporalLabel(entity)}</p></button>)}</div></details> : null}
             </div>
           </div>
 
           <div className="p-5 md:p-6">
-            <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-wider text-bronze">Relazioni</p><h3 className="mt-1 font-serif text-2xl font-bold">Storia intorno al testo</h3></div><p className="max-w-xl text-sm leading-6 text-ink-faint">Gli elementi non databili restano visibili come comparanda o memorie, senza essere forzati sull’asse cronologico.</p></div>
-            {undatedEntities.length ? <div className="mt-5 flex flex-wrap gap-2">{undatedEntities.map((entity) => <button key={entity.id} type="button" onClick={() => setSelectedId(entity.id)} className="rounded-xl border border-dashed border-papyrus-line px-4 py-3 text-left hover:border-bronze"><span className="block font-serif font-bold">{entity.label}</span><span className="mt-1 block text-xs text-ink-faint">{statusLabels[entity.epistemicStatus]} · {entity.biblicalRefs?.join(', ')}</span></button>)}</div> : null}
+            <div className="flex flex-wrap items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-wider text-bronze">Fuori scala</p><h3 className="mt-1 font-serif text-2xl font-bold">Relazioni non databili</h3></div><p className="max-w-xl text-sm leading-6 text-ink-faint">Comparanda, aree culturali e memorie restano interrogabili senza ricevere una data artificiale.</p></div>
+            {undatedEntities.length ? <div className="mt-5 flex flex-wrap gap-2">{undatedEntities.map((entity) => <button key={entity.id} type="button" onClick={() => selectEntity(entity.id)} className={`rounded-xl border border-dashed px-4 py-3 text-left transition ${selected?.id === entity.id ? 'border-bronze bg-bronze text-white' : 'border-papyrus-line hover:border-bronze'}`}><span className="block font-serif font-bold">{entity.label}</span><span className={`mt-1 block text-xs ${selected?.id === entity.id ? 'text-white/70' : 'text-ink-faint'}`}>{statusLabels[entity.epistemicStatus]} · {entity.biblicalRefs?.join(', ')}</span></button>)}</div> : null}
           </div>
         </div>
 
@@ -133,9 +165,10 @@ export default function HistoricalExplorerShell({ dataset }: { dataset: Historic
             <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-bronze">Inspector · {selected.type}</p>
             <h3 className="mt-2 font-serif text-3xl font-bold">{selected.label}</h3>
             <div className="mt-3 flex flex-wrap gap-2"><span className="rounded-full border border-papyrus-line bg-paper-card px-3 py-1 text-xs font-semibold text-ink-soft">{statusLabels[selected.epistemicStatus]}</span><span className="rounded-full border border-papyrus-line px-3 py-1 text-xs text-ink-faint">{temporalLabel(selected)}</span></div>
+            {selected.spatial?.region ? <p className="mt-3 text-sm text-ink-faint">Spazio: {selected.spatial.region}</p> : null}
             <p className="mt-6 text-base leading-7 text-ink">{selected.summary}</p>
             {selected.biblicalRefs?.length ? <div className="mt-6 border-t border-papyrus-line pt-5"><p className="font-mono text-[10px] uppercase tracking-wider text-bronze">Nei testi</p><p className="mt-2 text-sm leading-6 text-ink-soft">{selected.biblicalRefs.join(' · ')}</p></div> : null}
-            {selected.relations.length ? <div className="mt-6 border-t border-papyrus-line pt-5"><p className="font-mono text-[10px] uppercase tracking-wider text-bronze">Relazioni</p><ul className="mt-2 space-y-2 text-sm leading-6 text-ink-soft">{selected.relations.map((relation) => <li key={`${relation.targetId}-${relation.kind}`}>{relation.label}</li>)}</ul></div> : null}
+            {selected.relations.length ? <div className="mt-6 border-t border-papyrus-line pt-5"><p className="font-mono text-[10px] uppercase tracking-wider text-bronze">Relazioni</p><ul className="mt-2 space-y-2 text-sm leading-6 text-ink-soft">{selected.relations.map((relation) => <li key={`${relation.targetId}-${relation.kind}`}><button type="button" onClick={() => selectEntity(relation.targetId)} className="text-left hover:text-bronze">→ {relation.label}</button></li>)}</ul></div> : null}
             <div className="mt-6 border-t border-papyrus-line pt-5"><p className="font-mono text-[10px] uppercase tracking-wider text-bronze">Fonti / provenienza</p><ul className="mt-2 space-y-2 text-sm leading-6 text-ink-soft">{selected.sources.map((source) => <li key={source.label}><strong className="text-ink">{source.label}</strong>{source.note ? ` — ${source.note}` : ''}</li>)}</ul></div>
           </> : null}
         </aside>
