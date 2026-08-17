@@ -1,11 +1,11 @@
 import type { HistoricalArea } from './types';
 
 /**
- * Prime geometrie dimostrative dell'Historical Explorer.
+ * Prime geometrie dimostrative dell'Historical Explorer di Genesi.
  * Non sono frontiere storiche precise: servono a validare il motore geo-temporale.
  * Ogni area porta quindi un confidence esplicito e una nota metodologica.
  */
-export const historicalAreas: HistoricalArea[] = [
+export const genesisHistoricalAreas: HistoricalArea[] = [
   {
     id: 'neo-assyria-demo-area',
     entityId: 'neo-assyria',
