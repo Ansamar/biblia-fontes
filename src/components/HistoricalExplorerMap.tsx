@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import type { HistoricalArea, HistoricalEntity } from '../historical-explorer/types';
+import HistoricalProvenance from './HistoricalProvenance';
 
 type HistoricalExplorerMapProps = {
   entities: HistoricalEntity[];
@@ -125,6 +126,7 @@ export default function HistoricalExplorerMap({ entities, areas = [], selectedId
   onSelectRef.current = onSelect;
 
   const mapped = entities.filter((entity) => entity.spatial?.lat !== undefined && entity.spatial?.lng !== undefined);
+  const activeAreaRecords = areas.filter((area) => area.temporal.start <= year && area.temporal.end >= year);
 
   useEffect(() => {
     let cancelled = false;
@@ -368,6 +370,26 @@ export default function HistoricalExplorerMap({ entities, areas = [], selectedId
         <span>{areas.length > 0 ? 'Le aree tratteggiate sono ricostruzioni didattiche approssimate: servono a mostrare il mutamento geo-temporale, non frontiere storiche certe.' : 'Questo dataset non espone geometrie territoriali: la mappa mostra soltanto entità georeferenziate.'}</span>
         <span>Base © OpenStreetMap contributors</span>
       </div>
+
+      {activeAreaRecords.length > 0 ? (
+        <details className="border-t border-papyrus-line bg-paper-card px-4 py-3">
+          <summary className="cursor-pointer text-xs font-semibold text-ink-soft hover:text-bronze">Provenienza delle geometrie attive ({activeAreaRecords.length})</summary>
+          <div className="mt-3 space-y-4">
+            {activeAreaRecords.map((area) => (
+              <div key={area.id} className="rounded-xl border border-papyrus-line bg-papyrus/20 p-3">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div>
+                    <strong className="font-serif text-base text-ink">{area.label}</strong>
+                    <p className="mt-1 text-xs leading-5 text-ink-faint">{area.note}</p>
+                  </div>
+                  <span className="rounded-full border border-papyrus-line px-2 py-0.5 font-mono text-[8px] uppercase tracking-wide text-ink-faint">{area.confidence}</span>
+                </div>
+                <div className="mt-3"><HistoricalProvenance sources={area.sources} compact /></div>
+              </div>
+            ))}
+          </div>
+        </details>
+      ) : null}
     </div>
   );
 }
