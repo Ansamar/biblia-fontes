@@ -1,7 +1,8 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppShell from '../../../src/components/AppShell';
-import GenesisHistoryPrototype from '../../../src/components/GenesisHistoryPrototype';
+import BookTimeline from '../../../src/components/BookTimeline';
+import HistoricalExplorerOverlay from '../../../src/components/HistoricalExplorerOverlay';
 import { client } from '../../../src/sanity/client';
 
 const query = `{
@@ -59,7 +60,22 @@ export default async function GenesisPage() {
     </section>
 
     <section id="cronologia" className="border-y border-papyrus-line bg-paper-card/35">
-      <div className="mx-auto max-w-[1520px] px-4 py-12 sm:px-5 md:px-8 md:py-16"><GenesisHistoryPrototype formationLabel={formationLabel} /></div>
+      <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-5">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Cronologia del libro</p>
+            <h2 className="mt-2 font-serif text-3xl font-bold md:text-4xl">Orientarsi, poi esplorare</h2>
+            <p className="mt-3 max-w-3xl text-base leading-7 text-ink-soft">La Timeline resta una lettura sintetica della scheda libro. Quando serve verificare relazioni tra racconto, storia, culture, formazione e trasmissione, Historical Explorer si apre come ambiente parallelo senza perdere il contesto di Genesi.</p>
+          </div>
+          <HistoricalExplorerOverlay formationLabel={formationLabel} />
+        </div>
+        <BookTimeline
+          formationLabel={formationLabel}
+          worldNarratedLabel="Dalle origini e genealogie ai cicli patriarcali e alla discesa in Egitto: sequenza narrativa non forzata su una scala storica unica."
+          contextLabel="Memorie, pratiche sociali e mondi culturali del Vicino Oriente antico da valutare criticamente caso per caso."
+          note="La Timeline orienta. Historical Explorer approfondisce relazioni, statuto epistemico e contesto storico-culturale in un ambiente separato."
+        />
+      </div>
     </section>
 
     <section className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
