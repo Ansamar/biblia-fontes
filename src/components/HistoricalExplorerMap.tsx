@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { historicalAreas } from '../historical-explorer/historicalAreas';
 import type { HistoricalEntity } from '../historical-explorer/types';
 
 type HistoricalExplorerMapProps = {
@@ -10,10 +11,20 @@ type HistoricalExplorerMapProps = {
   onSelect: (id: string) => void;
 };
 
+type GeoJsonSource = {
+  setData: (data: unknown) => void;
+};
+
 type MapInstance = {
   addControl: (control: unknown, position?: string) => void;
   fitBounds: (bounds: unknown, options?: Record<string, unknown>) => void;
   flyTo: (options: Record<string, unknown>) => void;
+  addSource: (id: string, source: Record<string, unknown>) => void;
+  getSource: (id: string) => GeoJsonSource | undefined;
+  removeSource: (id: string) => void;
+  addLayer: (layer: Record<string, unknown>) => void;
+  getLayer: (id: string) => unknown;
+  removeLayer: (id: string) => void;
   remove: () => void;
   resize: () => void;
 };
@@ -44,6 +55,9 @@ declare global {
 const MAPLIBRE_VERSION = '5.6.0';
 const MAPLIBRE_SCRIPT_ID = 'biblia-fontes-maplibre-script';
 const MAPLIBRE_STYLE_ID = 'biblia-fontes-maplibre-style';
+const HISTORICAL_AREAS_SOURCE = 'biblia-fontes-historical-areas';
+const HISTORICAL_AREAS_FILL = 'biblia-fontes-historical-areas-fill';
+const HISTORICAL_AREAS_LINE = 'biblia-fontes-historical-areas-line';
 
 function activeAt(entity: HistoricalEntity, year: number) {
   const { start, end, precision } = entity.temporal;
@@ -63,6 +77,7 @@ function markerLabel(entity: HistoricalEntity) {
 
 function markerStyle(entity: HistoricalEntity, selected: boolean) {
   if (selected) return { background: '#9b6a38', color: '#fff', border: '#9b6a38', dot: '#fff' };
+  if (entity.type === 'event') return { background: 'rgba(112,48,38,.95)', color: '#fff', border: 'rgba(112,48,38,1)', dot: '#fff' };
   if (entity.type === 'city') return { background: 'rgba(250,247,240,.96)', color: '#30271f', border: 'rgba(80,63,47,.38)', dot: '#30271f' };
   if (entity.type === 'empire') return { background: 'rgba(68,50,34,.94)', color: '#fff', border: 'rgba(68,50,34,.95)', dot: '#d9b07d' };
   if (entity.type === 'region') return { background: 'rgba(239,229,210,.94)', color: '#4f4032', border: 'rgba(155,106,56,.45)', dot: '#9b6a38' };
@@ -103,7 +118,6 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<MapInstance | null>(null);
   const markersRef = useRef<MarkerInstance[]>([]);
-  const halosRef = useRef<MarkerInstance[]>([]);
   const mapLibreRef = useRef<MapLibreGlobal | null>(null);
   const fittedRef = useRef(false);
   const onSelectRef = useRef(onSelect);
@@ -165,9 +179,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
     return () => {
       cancelled = true;
       markersRef.current.forEach((marker) => marker.remove());
-      halosRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
-      halosRef.current = [];
       mapRef.current?.remove();
       mapRef.current = null;
       fittedRef.current = false;
@@ -175,39 +187,67 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
   }, []);
 
   useEffect(() => {
+    if (status !== 'ready' || !mapRef.current) return;
+    const map = mapRef.current;
+    const visibleIds = new Set(entities.map((entity) => entity.id));
+    const activeAreas = historicalAreas.filter(
+      (area) => visibleIds.has(area.entityId) && area.temporal.start <= year && area.temporal.end >= year,
+    );
+
+    const featureCollection = {
+      type: 'FeatureCollection',
+      features: activeAreas.map((area) => ({
+        type: 'Feature',
+        id: area.id,
+        properties: {
+          entityId: area.entityId,
+          label: area.label,
+          confidence: area.confidence,
+          note: area.note,
+        },
+        geometry: area.geometry,
+      })),
+    };
+
+    const existing = map.getSource(HISTORICAL_AREAS_SOURCE);
+    if (existing) {
+      existing.setData(featureCollection);
+      return;
+    }
+
+    map.addSource(HISTORICAL_AREAS_SOURCE, { type: 'geojson', data: featureCollection });
+    map.addLayer({
+      id: HISTORICAL_AREAS_FILL,
+      type: 'fill',
+      source: HISTORICAL_AREAS_SOURCE,
+      paint: {
+        'fill-color': '#9b6a38',
+        'fill-opacity': 0.13,
+      },
+    });
+    map.addLayer({
+      id: HISTORICAL_AREAS_LINE,
+      type: 'line',
+      source: HISTORICAL_AREAS_SOURCE,
+      paint: {
+        'line-color': '#9b6a38',
+        'line-width': 1.5,
+        'line-opacity': 0.72,
+        'line-dasharray': [3, 2],
+      },
+    });
+  }, [entities, status, year]);
+
+  useEffect(() => {
     if (status !== 'ready' || !mapRef.current || !mapLibreRef.current) return;
 
     markersRef.current.forEach((marker) => marker.remove());
-    halosRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
-    halosRef.current = [];
 
     const map = mapRef.current;
     const maplibre = mapLibreRef.current;
     const bounds = new maplibre.LngLatBounds();
     let boundsCount = 0;
-
-    mapped
-      .filter((entity) => entity.type === 'empire' && activeAt(entity, year))
-      .forEach((entity) => {
-        const lat = entity.spatial?.lat;
-        const lng = entity.spatial?.lng;
-        if (lat === undefined || lng === undefined) return;
-
-        const halo = document.createElement('div');
-        halo.setAttribute('aria-hidden', 'true');
-        halo.style.width = '150px';
-        halo.style.height = '150px';
-        halo.style.borderRadius = '999px';
-        halo.style.background = 'radial-gradient(circle, rgba(155,106,56,.22) 0%, rgba(155,106,56,.10) 48%, rgba(155,106,56,0) 72%)';
-        halo.style.border = '1px dashed rgba(155,106,56,.34)';
-        halo.style.pointerEvents = 'none';
-
-        const marker = new maplibre.Marker({ element: halo, anchor: 'center' })
-          .setLngLat([lng, lat])
-          .addTo(map);
-        halosRef.current.push(marker);
-      });
 
     mapped.forEach((entity) => {
       const lat = entity.spatial?.lat;
@@ -280,7 +320,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
     <div className="overflow-hidden rounded-2xl border border-papyrus-line bg-paper-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-papyrus-line bg-paper-card/95 px-4 py-2">
         <span className="font-mono text-[9px] uppercase tracking-wider text-ink-faint">Mappa interattiva · pan + zoom</span>
-        <span className="text-[11px] text-ink-faint">base contemporanea · lettura storica sovrapposta</span>
+        <span className="text-[11px] text-ink-faint">base contemporanea · geometrie storiche temporali</span>
       </div>
 
       <div className="relative h-[430px] md:h-[500px]">
@@ -291,8 +331,9 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
           <div className="mt-1.5 grid gap-1 text-[10px] text-ink-soft">
             <span><i className="mr-2 inline-block h-2 w-2 rounded-full bg-[#443222]" />potere / impero</span>
             <span><i className="mr-2 inline-block h-2 w-2 rounded-[2px] bg-[#30271f]" />città storica</span>
+            <span><i className="mr-2 inline-block h-2 w-2 rotate-45 bg-[#703026]" />evento puntuale</span>
             <span><i className="mr-2 inline-block h-2 w-2 rounded-full bg-[#9b6a38]" />regione / testo / relazione</span>
-            <span><i className="mr-2 inline-block h-3 w-3 rounded-full border border-dashed border-[#9b6a38]/60" />area di attenzione dell’impero attivo</span>
+            <span><i className="mr-2 inline-block h-3 w-5 border border-dashed border-[#9b6a38]/70 bg-[#9b6a38]/15" />area storica · ricostruzione didattica</span>
           </div>
         </div>
 
@@ -311,7 +352,7 @@ export default function HistoricalExplorerMap({ entities, selectedId, year, onSe
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-papyrus-line bg-papyrus/25 px-4 py-2 text-[10px] leading-5 text-ink-faint">
-        <span>L’alone indica il potere attivo selezionato nel tempo: è un richiamo didattico, non un confine politico ricostruito.</span>
+        <span>Le aree tratteggiate sono ricostruzioni didattiche approssimate: servono a mostrare il mutamento geo-temporale, non frontiere storiche certe.</span>
         <span>Base © OpenStreetMap contributors</span>
       </div>
     </div>
