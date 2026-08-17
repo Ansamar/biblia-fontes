@@ -99,7 +99,22 @@ export default async function DynamicBookPage({ params }: { params: Promise<{ li
 
     <StudyContextNav bookSlug={slug} bookTitle={libro.titolo} firstChapter={firstChapter} active="overview" />
 
-    {macro.length > 0 && <section id="studio" className="scroll-mt-36 mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><div><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Architettura letteraria</p><h2 className="mt-2 font-serif text-3xl font-bold md:text-4xl">Struttura del libro</h2></div><div className={`mt-8 grid gap-4 ${macro.length >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2 lg:grid-cols-3'}`}>{macro.map((m:any, i:number) => <div key={`${m?.etichetta || m?.sigla || i}-${i}`} className="rounded-xl border border-papyrus-line bg-paper-card p-5"><span className="font-mono text-xs text-bronze">{m?.capitoloInizio ?? '…'}–{m?.capitoloFine ?? '…'}</span><h3 className="mt-3 font-serif text-xl font-bold">{m?.etichetta || m?.sigla || `Sezione ${i+1}`}</h3>{textFromUnknown(m?.descrizione) && <p className="mt-2 text-sm leading-6 text-ink-soft">{textFromUnknown(m.descrizione)}</p>}</div>)}</div></section>}
+    <section id="studio" className="scroll-mt-36 mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
+      <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+        <div>
+          <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Studio del libro</p>
+          <h2 className="mt-2 font-serif text-3xl font-bold md:text-4xl">Struttura, contesto e formazione</h2>
+          {macro.length > 0 ? <div className={`mt-8 grid gap-4 ${macro.length >= 4 ? 'md:grid-cols-2 lg:grid-cols-4' : 'md:grid-cols-2 lg:grid-cols-3'}`}>{macro.map((m:any, i:number) => <div key={`${m?.etichetta || m?.sigla || i}-${i}`} className="rounded-xl border border-papyrus-line bg-paper-card p-5"><span className="font-mono text-xs text-bronze">{m?.capitoloInizio ?? '…'}–{m?.capitoloFine ?? '…'}</span><h3 className="mt-3 font-serif text-xl font-bold">{m?.etichetta || m?.sigla || `Sezione ${i+1}`}</h3>{textFromUnknown(m?.descrizione) && <p className="mt-2 text-sm leading-6 text-ink-soft">{textFromUnknown(m.descrizione)}</p>}</div>)}</div> : <div className="mt-8 rounded-2xl border border-dashed border-papyrus-line bg-paper-card/45 p-6"><p className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">Architettura letteraria</p><p className="mt-3 leading-7 text-ink-soft">{textFromUnknown(libro.profiloLetterario?.strutturaGenerale, 'Macro-sezioni strutturate non ancora registrate per questo libro. La sezione Studio resta disponibile e usa soltanto i dati già presenti nel corpus.')}</p></div>}
+        </div>
+        <aside className="rounded-2xl border border-papyrus-line bg-paper-card p-6">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">{lens.title}</p>
+          <p className="mt-3 text-sm leading-6 text-ink-soft">{lens.intro}</p>
+          <ul className="mt-5 space-y-2 text-sm text-ink">{lens.items.map((item) => <li key={item} className="flex gap-2"><span className="text-bronze" aria-hidden="true">—</span><span>{item}</span></li>)}</ul>
+          <div className="mt-6 border-t border-papyrus-line pt-5"><p className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">Contesto</p><p className="mt-2 text-sm leading-6 text-ink-soft">{contextLabel}</p></div>
+          <div className="mt-5 border-t border-papyrus-line pt-5"><p className="font-mono text-[10px] uppercase tracking-widest text-ink-faint">Formazione</p><p className="mt-2 text-sm leading-6 text-ink-soft">{formationLabel}</p></div>
+        </aside>
+      </div>
+    </section>
 
     <section id="timeline" className="scroll-mt-36 border-y border-papyrus-line bg-paper-card/35"><div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><BookTimeline formationLabel={formationLabel} worldNarratedLabel={worldLabel} contextLabel={contextLabel} periodLabel={periodLabel} note={typeof libro.datazione === 'object' ? libro.datazione?.nota || formationLabel : formationLabel} /></div></section>
 
