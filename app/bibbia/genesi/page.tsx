@@ -59,7 +59,7 @@ export default async function GenesisPage() {
     </section>
 
     <section id="cronologia" className="border-y border-papyrus-line bg-paper-card/35">
-      <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16"><GenesisHistoryPrototype formationLabel={formationLabel} /></div>
+      <div className="mx-auto max-w-[1520px] px-4 py-12 sm:px-5 md:px-8 md:py-16"><GenesisHistoryPrototype formationLabel={formationLabel} /></div>
     </section>
 
     <section className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
