@@ -25,7 +25,7 @@ const aliasIndex = Object.entries(referenceAliases)
 
 export function historicalBiblicalReferenceTarget(
   raw: string,
-  context: { year?: number; entity?: string },
+  context: { originBook?: string; year?: number; entity?: string },
 ): BiblicalReferenceTarget | null {
   const normalized = normalize(raw);
   if (!normalized) return null;
@@ -41,7 +41,7 @@ export function historicalBiblicalReferenceTarget(
 
   return {
     href: studyContextHref(pathname, {
-      book: match.slug,
+      book: context.originBook || match.slug,
       chapter,
       source: 'history',
       year: context.year,
