@@ -16,6 +16,7 @@ type StudyContextNavProps = {
 
 type HistoryReturnContext = {
   fromHistory: boolean;
+  originBook?: string;
   year?: number;
   entity?: string;
 };
@@ -43,6 +44,7 @@ function historyContextFromLocation(): HistoryReturnContext {
   const year = yearRaw !== null && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
   return {
     fromHistory: params.get('source') === 'history',
+    originBook: params.get('book') || undefined,
     year,
     entity: params.get('entity') || undefined,
   };
@@ -79,8 +81,10 @@ export default function StudyContextNav({
     { key: 'timeline' as const, label: 'Timeline', href: `/bibbia/${bookSlug}#timeline` },
   ];
 
-  const historyHref = studyContextHref(`/historical-explorer/${bookSlug}`, historyReturn.fromHistory
-    ? { book: bookSlug, source: 'history', year: historyReturn.year, entity: historyReturn.entity }
+  const historicalOriginBook = historyReturn.fromHistory && historyReturn.originBook ? historyReturn.originBook : bookSlug;
+  const canOpenHistory = historyAvailable || historyReturn.fromHistory;
+  const historyHref = studyContextHref(`/historical-explorer/${historicalOriginBook}`, historyReturn.fromHistory
+    ? { book: historicalOriginBook, source: 'history', year: historyReturn.year, entity: historyReturn.entity }
     : { book: bookSlug, source: currentMode === 'timeline' ? 'timeline' : 'book' });
 
   return (
@@ -97,7 +101,7 @@ export default function StudyContextNav({
               {item.label}
             </Link>
           ))}
-          {historyAvailable ? (
+          {canOpenHistory ? (
             <Link href={historyHref} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')} title={historyReturn.fromHistory ? 'Torna alla scena storica da cui hai aperto il testo' : undefined}>
               {historyReturn.fromHistory ? '← Storia' : 'Storia'}
             </Link>
@@ -107,7 +111,7 @@ export default function StudyContextNav({
         </nav>
 
         <p className="ml-auto hidden max-w-[310px] text-right text-xs leading-5 text-ink-faint xl:block">
-          {historyReturn.fromHistory ? 'Questo testo è stato aperto dall’Historical Explorer: puoi tornare alla stessa scena.' : 'Cambia prospettiva senza perdere il libro che stai studiando.'}
+          {historyReturn.fromHistory ? `Questo testo è stato aperto dall’Historical Explorer di ${historyReturn.originBook || historicalOriginBook}: puoi tornare alla stessa scena.` : 'Cambia prospettiva senza perdere il libro che stai studiando.'}
         </p>
       </div>
     </div>
