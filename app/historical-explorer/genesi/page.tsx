@@ -1,8 +1,10 @@
 import Link from 'next/link';
 import AppShell from '../../../src/components/AppShell';
 import ExplorerShareButton from '../../../src/components/ExplorerShareButton';
+import HistoricalDatasetMethodology from '../../../src/components/HistoricalDatasetMethodology';
 import HistoricalExplorerShell from '../../../src/components/HistoricalExplorerShell';
 import StudyContextNav from '../../../src/components/StudyContextNav';
+import { diagnoseHistoricalDataset } from '../../../src/historical-explorer/diagnostics';
 import { genesisDemoData } from '../../../src/historical-explorer/genesisDemoData';
 import { genesisHistoricalAreas } from '../../../src/historical-explorer/historicalAreas';
 import { genesisQuickYears, genesisScenarios } from '../../../src/historical-explorer/genesisScenarios';
@@ -30,6 +32,7 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
       ? { ...entity, summary: `${entity.summary} Dataset Biblia Fontes: ${formationLabel}` }
       : entity),
   };
+  const diagnostics = diagnoseHistoricalDataset(dataset);
 
   const entryLabel = context.source === 'timeline'
     ? 'Aperto dalla Timeline del testo'
@@ -65,6 +68,10 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
               </div>
             </div>
           </div>
+        </section>
+
+        <section className="mx-auto max-w-[1580px] px-3 pt-5 md:px-6 md:pt-8">
+          <HistoricalDatasetMethodology diagnostics={diagnostics} />
         </section>
 
         <section className="mx-auto max-w-[1580px] px-3 py-5 md:px-6 md:py-8">
