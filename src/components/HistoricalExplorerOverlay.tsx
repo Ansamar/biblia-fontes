@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { genesisDemoData } from '../historical-explorer/genesisDemoData';
+import { studyContextHref } from '../study-context/context';
 import HistoricalExplorerShell from './HistoricalExplorerShell';
 
 type HistoricalExplorerOverlayProps = {
@@ -34,6 +35,7 @@ export default function HistoricalExplorerOverlay({ formationLabel }: Historical
           : entity),
       }
     : genesisDemoData;
+  const fullPageHref = studyContextHref('/historical-explorer/genesi', { book: 'genesi', source: 'timeline' });
 
   return (
     <>
@@ -51,7 +53,7 @@ export default function HistoricalExplorerOverlay({ formationLabel }: Historical
                 <p className="truncate font-serif text-lg font-bold text-ink">Genesi · la storia intorno al testo</p>
               </div>
               <div className="flex items-center gap-2">
-                <Link href="/historical-explorer/genesi" className="hidden rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft transition hover:border-bronze hover:text-bronze sm:inline-flex">Apri a piena pagina</Link>
+                <Link href={fullPageHref} className="hidden rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft transition hover:border-bronze hover:text-bronze sm:inline-flex">Apri a piena pagina</Link>
                 <button type="button" onClick={() => setOpen(false)} aria-label="Chiudi Historical Explorer" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-papyrus-line text-xl text-ink-soft transition hover:border-bronze hover:text-bronze">×</button>
               </div>
             </div>
