@@ -14,6 +14,8 @@ export type HistoricalEntityType =
   | 'city'
   | 'region'
   | 'person'
+  | 'institution'
+  | 'practice'
   | 'text'
   | 'redaction'
   | 'witness';
