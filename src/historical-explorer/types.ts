@@ -99,7 +99,7 @@ export type HistoricalScenario = {
   summary: string;
 };
 
-export type ExplorerLayer = 'politics' | 'places' | 'events' | 'texts' | 'transmission';
+export type ExplorerLayer = 'politics' | 'places' | 'events' | 'institutions' | 'texts' | 'transmission';
 
 export type HistoricalExplorerDataset = {
   id: string;
