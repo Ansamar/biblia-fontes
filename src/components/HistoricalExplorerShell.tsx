@@ -11,6 +11,7 @@ const layerLabels: Record<ExplorerLayer, string> = {
   politics: 'Popoli e poteri',
   places: 'Luoghi',
   events: 'Eventi e memorie',
+  institutions: 'Istituzioni e pratiche',
   texts: 'Testi e formazione',
   transmission: 'Trasmissione',
 };
@@ -19,6 +20,7 @@ const typeToLayer: Record<HistoricalEntity['type'], ExplorerLayer> = {
   people: 'politics', empire: 'politics', person: 'politics',
   city: 'places', region: 'places',
   event: 'events',
+  institution: 'institutions', practice: 'institutions',
   text: 'texts', redaction: 'texts',
   witness: 'transmission',
 };
@@ -55,7 +57,7 @@ export default function HistoricalExplorerShell({ dataset, initialYear, initialE
     const candidate = initialYear ?? fallback;
     return Math.max(dataset.defaultRange[0], Math.min(dataset.defaultRange[1], candidate));
   });
-  const [layers, setLayers] = useState<ExplorerLayer[]>(['politics', 'places', 'events', 'texts']);
+  const [layers, setLayers] = useState<ExplorerLayer[]>(['politics', 'places', 'events', 'institutions', 'texts']);
   const [playing, setPlaying] = useState(false);
 
   const selected = dataset.entities.find((entity) => entity.id === selectedId) ?? dataset.entities[0];
@@ -108,7 +110,7 @@ export default function HistoricalExplorerShell({ dataset, initialYear, initialE
   return (
     <section aria-labelledby="historical-explorer-shell-title" className="overflow-hidden rounded-3xl border border-papyrus-line bg-paper-card shadow-sm">
       <header className="border-b border-papyrus-line p-5 md:p-7">
-        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Biblia Fontes Historical Explorer · architecture v0.6</p>
+        <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Biblia Fontes Historical Explorer · architecture v0.7</p>
         <div className="mt-2 flex flex-wrap items-end justify-between gap-5">
           <div><h2 id="historical-explorer-shell-title" className="font-serif text-3xl font-bold md:text-4xl">{dataset.title}</h2><p className="mt-3 max-w-4xl text-base leading-7 text-ink-soft">{dataset.subtitle}</p></div>
           <div className="rounded-xl border border-bronze/30 bg-bronze/5 px-4 py-3 text-sm leading-6 text-ink-soft"><strong className="text-ink">Focus:</strong> storia attestata, ricostruita o discussa intorno al testo.</div>
