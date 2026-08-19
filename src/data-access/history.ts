@@ -5,7 +5,7 @@ import { bookIdFromSlug, categoryLabel } from '../lib/bibleRouting';
 import { canonicalBookOrder } from '../lib/canon';
 
 const bookQuery = `*[_id == $bookId][0]{_id,titolo,capitoli}`;
-const historyDatasetResolverQuery = `*[_type == "historicalExplorerDataset" && (bookRef._ref == $bookId || id == $legacyId)] | order(defined(bookRef._ref) desc)[0]{id}`;
+const historyDatasetResolverQuery = `*[_type == "historicalExplorerDataset" && (bookRef._ref == $bookId || id == $legacyId)]{id,"direct":bookRef._ref == $bookId}`;
 
 const historyIndexQuery = `*[_type == "historicalExplorerDataset"]{
   _id,
@@ -92,12 +92,14 @@ export async function fetchHistoryIndexView() {
 export async function fetchHistoryView(slug: string) {
   const bookId = bookIdFromSlug(slug);
   const legacyId = `${slug}-history`;
-  const [book, resolved] = await Promise.all([
+  const [book, candidates] = await Promise.all([
     client.fetch(bookQuery, { bookId }),
-    client.fetch(historyDatasetResolverQuery, { bookId, legacyId }).catch(() => null),
+    client.fetch(historyDatasetResolverQuery, { bookId, legacyId }).catch(() => []),
   ]);
-  const datasetId = resolved?.id || legacyId;
-  const rawDataset = resolved ? await client.fetch(historicalExplorerDatasetQuery, { datasetId }).catch(() => null) : null;
+  const options = Array.isArray(candidates) ? candidates : [];
+  const resolved = options.find((item: any) => item?.direct) || options[0];
+  const datasetId = resolved?.id;
+  const rawDataset = datasetId ? await client.fetch(historicalExplorerDatasetQuery, { datasetId }).catch(() => null) : null;
   if (!book || !rawDataset) return null;
 
   try {
