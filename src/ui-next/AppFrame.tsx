@@ -17,7 +17,7 @@ export default function AppFrame({ children }: { children: React.ReactNode }) {
 
           <nav className="hidden items-center gap-1 md:flex" aria-label="Navigazione principale">
             <Link href="/rebuild#bibbia" className="px-3 py-2 text-sm text-ink-soft hover:text-ink">Bibbia</Link>
-            <Link href="/historical-explorer" className="px-3 py-2 text-sm text-ink-soft hover:text-ink">Storia</Link>
+            <Link href="/rebuild/historical-explorer" className="px-3 py-2 text-sm text-ink-soft hover:text-ink">Storia</Link>
             <Link href="/cerca" className="px-3 py-2 text-sm text-ink-soft hover:text-ink">Ricerca</Link>
           </nav>
 
