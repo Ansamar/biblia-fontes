@@ -106,8 +106,45 @@ function witnessPriority(text: ReaderWitness) {
   return 5;
 }
 
+function witnessIdentity(text: ReaderWitness) {
+  return [
+    normalized(text.tradizione),
+    normalized(text.lingua),
+    normalized(text.testimone),
+    normalized(text.edizione),
+    String(text.numero ?? ''),
+  ].join('|');
+}
+
+function textFingerprint(text: ReaderWitness) {
+  return (text.versetti || [])
+    .map((verse) => `${verse.numero}:${normalized(verse.testo)}`)
+    .join('||');
+}
+
+function deduplicateWitnesses(texts: ReaderWitness[]) {
+  const seenIdentity = new Set<string>();
+  const seenContent = new Set<string>();
+  const result: ReaderWitness[] = [];
+
+  for (const text of texts) {
+    const identity = witnessIdentity(text);
+    const content = textFingerprint(text);
+    const contentKey = content ? `${normalized(text.lingua)}|${content}` : '';
+
+    if (seenIdentity.has(identity)) continue;
+    if (contentKey && seenContent.has(contentKey)) continue;
+
+    seenIdentity.add(identity);
+    if (contentKey) seenContent.add(contentKey);
+    result.push(text);
+  }
+
+  return result;
+}
+
 function orderWitnesses(texts: ReaderWitness[]) {
-  return texts
+  return deduplicateWitnesses(texts)
     .map((text, index) => ({ text, index }))
     .sort((a, b) => witnessPriority(a.text) - witnessPriority(b.text) || a.index - b.index)
     .map(({ text }) => text);
@@ -174,7 +211,7 @@ export default async function DynamicChapterPage({ params, searchParams }: { par
     : `/bibbia/${slug}/${chapterNumber}`;
 
   return <AppShell>
-    <StudyContextNav bookSlug={slug} bookTitle={libro.titolo} firstChapter={1} active="text" historyAvailable={slug === 'genesi'} />
+    <StudyContextNav bookSlug={slug} bookTitle={libro.titolo} firstChapter={1} active="text" historyAvailable />
     <main className="mx-auto max-w-[1600px] px-5 py-10 md:px-8 md:py-14 xl:px-10">
       <nav className="text-sm text-ink-faint" aria-label="Breadcrumb"><Link href="/" className="hover:text-bronze">Bibbia</Link><span className="mx-2">/</span><span>{category}</span><span className="mx-2">/</span><Link href={`/bibbia/${slug}`} className="hover:text-bronze">{libro.titolo}</Link><span className="mx-2">/</span><span className="text-ink-soft">Capitolo {numero}</span></nav>
 
