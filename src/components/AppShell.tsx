@@ -9,7 +9,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen bg-papyrus text-ink">
       <header className="sticky top-0 z-40 border-b border-papyrus-line/80 bg-papyrus/95 backdrop-blur">
         <div className="relative mx-auto flex min-h-[72px] max-w-[1220px] items-center gap-5 px-4 py-2 sm:px-5 md:px-8">
-          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="Biblia Fontes — Home">
+          <Link href="/" className="group flex shrink-0 items-center gap-2.5" aria-label="Biblia Fontes — pagina iniziale">
             <Image src="/biblia-fontes-mark.svg" width={48} height={40} alt="" priority className="h-10 w-auto dark:brightness-0 dark:invert" />
             <span className="hidden leading-none sm:block">
               <strong className="block font-serif text-[1.08rem] tracking-[0.12em] text-ink">BIBLIA</strong>
@@ -19,7 +19,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
           <nav className="hidden items-center gap-6 text-sm text-ink-soft md:flex" aria-label="Navigazione principale">
             <Link href="/#bibbia" className="hover:text-bronze">Bibbia</Link>
-            <Link href="/historical-explorer" className="hover:text-bronze">Historical Explorer</Link>
+            <Link href="/historical-explorer" className="hover:text-bronze">Esploratore storico</Link>
             <Link href="/fonti" className="hover:text-bronze">Fonti</Link>
           </nav>
 
@@ -41,17 +41,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                 <Image src="/biblia-fontes-mark.svg" width={46} height={38} alt="" className="h-9 w-auto opacity-90 dark:brightness-0 dark:invert" />
                 <div><p className="font-serif text-lg font-semibold tracking-wide">Biblia Fontes</p><p className="text-sm text-ink-faint">Testo · studio · storia · trasmissione</p></div>
               </div>
-              <p className="mt-5 max-w-xl text-sm leading-6 text-ink-faint">Un ambiente integrato di studio biblico: il testo resta il centro, mentre studio critico, fonti e Historical Explorer aprono prospettive complementari senza confondere racconto, storia e formazione.</p>
+              <p className="mt-5 max-w-xl text-sm leading-6 text-ink-faint">Un ambiente integrato di studio biblico: il testo resta il centro, mentre studio critico, fonti ed esplorazione storica aprono prospettive complementari senza confondere racconto, storia e formazione.</p>
             </div>
             <div className="border-t border-papyrus-line pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0">
-              <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">Progetto e design</p>
+              <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">Progetto e disegno dell’interfaccia</p>
               <NabhaWorksBadge />
-              <p className="mt-3 text-sm text-ink-faint">Tecnologia e design per la conoscenza.</p>
+              <p className="mt-3 text-sm text-ink-faint">Tecnologia e progettazione per la conoscenza.</p>
             </div>
           </div>
           <div className="mt-9 flex flex-col gap-3 border-t border-papyrus-line pt-5 text-xs text-ink-faint sm:flex-row sm:items-center sm:justify-between">
             <span>© 2026 NabhaWorks · Biblia Fontes</span>
-            <div className="flex flex-wrap gap-x-4 gap-y-2"><Link href="/historical-explorer" className="hover:text-bronze">Historical Explorer</Link><Link href="/fonti" className="hover:text-bronze">Fonti</Link><Link href="/cerca" className="hover:text-bronze">Ricerca globale</Link></div>
+            <div className="flex flex-wrap gap-x-4 gap-y-2"><Link href="/historical-explorer" className="hover:text-bronze">Esploratore storico</Link><Link href="/fonti" className="hover:text-bronze">Fonti</Link><Link href="/cerca" className="hover:text-bronze">Ricerca globale</Link></div>
           </div>
         </div>
       </footer>
