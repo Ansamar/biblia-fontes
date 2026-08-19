@@ -53,36 +53,58 @@ function levels(redazione: any) {
   return values.length ? values.slice(0, 5).join(' · ') : 'Modelli critici disponibili nei capitoli';
 }
 
-function nonOverlappingSections(sections: RawMacroSection[], chapters: RawChapter[]) {
-  const sorted = [...sections]
+type ChapterGroup = {
+  label: string;
+  start: number;
+  end: number;
+  chapters: RawChapter[];
+};
+
+function contiguousGroups(chapters: RawChapter[], labelPrefix = 'Capitoli'): ChapterGroup[] {
+  if (!chapters.length) return [];
+  const sorted = [...chapters].sort((a, b) => a.numero - b.numero);
+  const groups: RawChapter[][] = [];
+  let current: RawChapter[] = [];
+  for (const chapter of sorted) {
+    if (!current.length || chapter.numero === current[current.length - 1].numero + 1) current.push(chapter);
+    else { groups.push(current); current = [chapter]; }
+  }
+  if (current.length) groups.push(current);
+  return groups.map((items) => ({
+    label: items.length === 1 ? `Capitolo ${items[0].numero}` : labelPrefix,
+    start: items[0].numero,
+    end: items[items.length - 1].numero,
+    chapters: items,
+  }));
+}
+
+function completeSections(sections: RawMacroSection[], chapters: RawChapter[]) {
+  const sortedSections = [...sections]
     .filter((section) => Number.isFinite(section.capitoloInizio))
     .sort((a, b) => Number(a.capitoloInizio) - Number(b.capitoloInizio));
 
-  if (!sorted.length) {
-    return [{
-      label: 'Capitoli',
-      start: chapters[0]?.numero || 1,
-      end: chapters.at(-1)?.numero || 1,
-      chapters,
-    }];
+  if (!sortedSections.length) return contiguousGroups(chapters);
+
+  const assigned = new Set<number>();
+  const groups: ChapterGroup[] = [];
+
+  for (const section of sortedSections) {
+    const start = Number(section.capitoloInizio);
+    const end = Number.isFinite(section.capitoloFine) ? Number(section.capitoloFine) : start;
+    const groupChapters = chapters.filter((chapter) => chapter.numero >= start && chapter.numero <= end && !assigned.has(chapter.numero));
+    if (!groupChapters.length) continue;
+    groupChapters.forEach((chapter) => assigned.add(chapter.numero));
+    groups.push({
+      label: section.etichetta || section.titolo || `Capitoli ${groupChapters[0].numero}–${groupChapters[groupChapters.length - 1].numero}`,
+      start: groupChapters[0].numero,
+      end: groupChapters[groupChapters.length - 1].numero,
+      chapters: groupChapters,
+    });
   }
 
-  let previousEnd = 0;
-  return sorted.flatMap((section) => {
-    const sourceStart = Number(section.capitoloInizio || 1);
-    const sourceEnd = Number(section.capitoloFine || sourceStart);
-    const start = Math.max(sourceStart, previousEnd + 1);
-    const end = Math.max(start, sourceEnd);
-    previousEnd = end;
-    const groupChapters = chapters.filter((chapter) => chapter.numero >= start && chapter.numero <= end);
-    if (!groupChapters.length) return [];
-    return [{
-      label: section.etichetta || section.titolo || `Capitoli ${start}–${end}`,
-      start,
-      end,
-      chapters: groupChapters,
-    }];
-  });
+  const uncovered = chapters.filter((chapter) => !assigned.has(chapter.numero));
+  groups.push(...contiguousGroups(uncovered));
+  return groups.sort((a, b) => a.start - b.start);
 }
 
 export async function fetchBookView(slug: string) {
@@ -92,7 +114,7 @@ export async function fetchBookView(slug: string) {
 
   const book = data.libro;
   const chapters: RawChapter[] = Array.isArray(data.capitoli) ? data.capitoli : [];
-  const sections = nonOverlappingSections(Array.isArray(book.macroSezioni) ? book.macroSezioni : [], chapters);
+  const sections = completeSections(Array.isArray(book.macroSezioni) ? book.macroSezioni : [], chapters);
 
   return {
     slug,
