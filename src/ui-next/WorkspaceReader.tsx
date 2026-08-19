@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import type { BiblicalTextUnit, BiblicalVerse } from '../components/BiblicalTextReader';
+import type { AlternateChapterNumber, AlternateSystem, BiblicalTextUnit, BiblicalVerse } from '../components/BiblicalTextReader';
 
 type Mode = 'read' | 'compare' | 'synopsis';
 const norm = (value?: string) => (value || '').trim().toLocaleLowerCase('it-IT');
@@ -11,7 +11,7 @@ function badge(unit: BiblicalTextUnit) {
   const language = norm(unit.lingua); const tradition = norm(unit.tradizione);
   if (language === 'it' || tradition.includes('cei')) return 'ITA';
   if (language === 'he' || tradition === 'mt' || tradition.includes('ebra')) return 'HEB';
-  if (language === 'grc' || tradition.includes('lxx') || tradition.includes('greco') || tradition.includes('teodo')) return 'GRE';
+  if (language === 'grc' || tradition.includes('lxx') || tradition.includes('greco') || tradition.includes('teodo') || tradition.endsWith('_og')) return 'GRE';
   if (language === 'la' || tradition.includes('vulg')) return 'LAT';
   return (unit.lingua || 'TXT').slice(0,3).toUpperCase();
 }
@@ -22,21 +22,53 @@ function name(unit: BiblicalTextUnit) {
   if (tradition === 'mt') return unit.testimone || 'Testo masoretico';
   if (tradition === 'lxx') return 'Settanta';
   if (tradition.includes('vulg')) return 'Vulgata';
+  if (tradition === 'daniele_greco_og') return 'Daniele · Old Greek';
+  if (tradition === 'daniele_teodozione') return 'Daniele · Teodozione';
+  if (tradition === 'susanna_og') return 'Susanna · Old Greek';
+  if (tradition === 'susanna_teodozione') return 'Susanna · Teodozione';
+  if (tradition === 'bel_og') return 'Bel · Old Greek';
+  if (tradition === 'bel_teodozione') return 'Bel · Teodozione';
+  if (tradition === 'ester_ebraico') return 'Ester · testo ebraico';
+  if (tradition === 'ester_greco') return 'Ester · testo greco';
   if (tradition.includes('teodo')) return 'Teodozione';
   if (tradition.includes('old') || tradition.endsWith('_og')) return 'Old Greek';
   return unit.testimone || unit.edizione || unit.tradizione || 'Testo';
+}
+
+function systemLabel(system?: AlternateSystem) {
+  if (!system || system === 'LXX_VG') return 'LXX/Vg';
+  if (system === 'MT') return 'MT';
+  return String(system);
+}
+
+function alternateChapter(unit: BiblicalTextUnit) {
+  const alternate: AlternateChapterNumber | undefined = unit.numeroAlternativo;
+  if (alternate == null) return null;
+  if (typeof alternate === 'number') return { numero: alternate, sistema: unit.sistemaAlternativo || 'LXX_VG' };
+  return { numero: alternate.numero, sistema: alternate.sistema || unit.sistemaAlternativo || 'LXX_VG' };
 }
 
 function isRtl(unit: BiblicalTextUnit) { return unit.direzione === 'rtl' || norm(unit.lingua) === 'he' || norm(unit.lingua).includes('ebra'); }
 function verseLabel(verse: BiblicalVerse) { return `${verse.numero}${verse.marcatoreAlfabetico || ''}`; }
 
 function WitnessHeader({ unit }: { unit: BiblicalTextUnit }) {
-  return <div className="mb-5 flex min-h-9 items-start justify-between gap-4 border-b border-papyrus-line pb-3" dir="ltr"><div className="min-w-0"><div className="flex items-center gap-2"><span className="font-mono text-[9px] font-semibold tracking-[0.12em] text-bronze">{badge(unit)}</span><strong className="truncate text-xs font-semibold text-ink">{name(unit)}</strong></div>{unit.edizione && norm(unit.edizione) !== norm(name(unit)) && <p className="mt-1 truncate text-[10px] text-ink-faint">{unit.edizione}</p>}</div><span className="shrink-0 font-mono text-[9px] text-ink-faint">cap. {unit.numero}</span></div>;
+  const alternate = alternateChapter(unit);
+  return <div className="mb-5 flex min-h-9 items-start justify-between gap-4 border-b border-papyrus-line pb-3" dir="ltr">
+    <div className="min-w-0"><div className="flex items-center gap-2"><span className="font-mono text-[9px] font-semibold tracking-[0.12em] text-bronze">{badge(unit)}</span><strong className="truncate text-xs font-semibold text-ink">{name(unit)}</strong></div>{unit.edizione && norm(unit.edizione) !== norm(name(unit)) && <p className="mt-1 truncate text-[10px] text-ink-faint">{unit.edizione}</p>}</div>
+    <span className="shrink-0 text-right font-mono text-[9px] leading-4 text-ink-faint">cap. {unit.numero}{alternate && <><br />{systemLabel(alternate.sistema)} {alternate.numero}</>}</span>
+  </div>;
+}
+
+function VerseParallel({ verse }: { verse: BiblicalVerse }) {
+  const alternate = verse.riferimentoAlternativo;
+  if (!alternate) return null;
+  const location = alternate.salmo != null ? `Sal ${alternate.salmo},${alternate.versetto}` : alternate.capitolo != null ? `${alternate.capitolo},${alternate.versetto}` : String(alternate.versetto);
+  return <span dir="ltr" className="ml-2 inline-block align-[0.12em] font-sans text-[0.48em] font-medium text-ink-faint">{systemLabel(alternate.sistema)} {location}</span>;
 }
 
 function WitnessText({ unit, compact = false }: { unit: BiblicalTextUnit; compact?: boolean }) {
   const rtl = isRtl(unit);
-  return <div dir={rtl ? 'rtl' : 'ltr'} className={rtl ? 'text-right' : ''}><WitnessHeader unit={unit} /><div className={`${compact ? 'text-[1.02rem] leading-[1.75]' : 'reading-text text-[1.12rem] leading-[1.86]'} font-serif text-ink`}>{(unit.versetti || []).map((verse,index) => <div key={verse._key || `${verse.numero}-${index}`} className="mb-4 break-words">{verse.metatesto?.testo && <p className="mb-2 text-[0.82em] italic leading-6 text-ink-faint">{verse.metatesto.testo}</p>}{verse.testo ? <p><span dir="ltr" className="mr-2 inline-block align-[0.15em] font-sans text-[0.58em] font-semibold text-bronze">{verseLabel(verse)}</span>{verse.testo}</p> : <p className="border-l-2 border-papyrus-line pl-3 font-sans text-sm text-ink-faint">{verse.notaEditoriale || verse.statoTestuale || `Versetto ${verseLabel(verse)} senza testo`}</p>}</div>)}</div></div>;
+  return <div dir={rtl ? 'rtl' : 'ltr'} className={rtl ? 'text-right' : ''}><WitnessHeader unit={unit} /><div className={`${compact ? 'text-[1.02rem] leading-[1.75]' : 'reading-text text-[1.12rem] leading-[1.86]'} font-serif text-ink`}>{(unit.versetti || []).map((verse,index) => <div key={verse._key || `${verse.numero}-${index}`} className="mb-4 break-words">{verse.metatesto?.testo && <p className="mb-2 text-[0.82em] italic leading-6 text-ink-faint">{verse.metatesto.testo}</p>}{verse.testo ? <p><span dir="ltr" className="mr-2 inline-block align-[0.15em] font-sans text-[0.58em] font-semibold text-bronze">{verseLabel(verse)}</span>{verse.testo}<VerseParallel verse={verse} /></p> : <p className="border-l-2 border-papyrus-line pl-3 font-sans text-sm text-ink-faint">{verse.notaEditoriale || verse.statoTestuale || `Versetto ${verseLabel(verse)} senza testo`}</p>}</div>)}</div></div>;
 }
 
 function WitnessSelect({ value, onChange, witnesses, label, disabledIndex }: { value: number; onChange: (value: number) => void; witnesses: BiblicalTextUnit[]; label: string; disabledIndex?: number }) {
