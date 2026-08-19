@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import ReadingPreferences from '../components/ReadingPreferences';
 
 type Perspective = 'text' | 'study' | 'history' | 'sources';
@@ -22,7 +21,6 @@ export default function WorkspaceFrame({
   context?: { bookSlug?: string; bookTitle?: string; chapter?: number; reference?: string };
   active?: Perspective;
 }) {
-  const pathname = usePathname();
   const base = context?.bookSlug ? `/rebuild/bibbia/${context.bookSlug}` : '/rebuild';
   const chapterPath = context?.chapter ? `${base}/${context.chapter}` : base;
   const hrefFor = (id: Perspective) => {
@@ -42,11 +40,12 @@ export default function WorkspaceFrame({
           {context?.reference && <><span className="text-ink-faint">/</span><span className="truncate text-sm font-semibold">{context.reference}</span></>}
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <Link href="/rebuild?search=1" className="text-xs text-ink-faint hover:text-ink">Cerca</Link>
+          <Link href="/rebuild/historical-explorer" className="hidden text-xs text-ink-faint hover:text-ink sm:inline">Storia</Link>
+          <Link href="/rebuild/search" className="text-xs text-ink-faint hover:text-ink">Cerca</Link>
           <ReadingPreferences />
         </div>
       </div>
-      {(context?.bookSlug || pathname.includes('historical-explorer')) && <nav className="mx-auto flex h-11 max-w-[1600px] items-end gap-5 overflow-x-auto px-4 md:px-6" aria-label="Prospettiva di studio">
+      {context?.bookSlug && <nav className="mx-auto flex h-11 max-w-[1600px] items-end gap-5 overflow-x-auto px-4 md:px-6" aria-label="Prospettiva di studio">
         {perspectives.map((item) => <Link key={item.id} href={hrefFor(item.id)} className={`h-11 shrink-0 border-b-2 px-0.5 pt-3 text-xs font-medium ${active === item.id ? 'border-bronze text-ink' : 'border-transparent text-ink-faint hover:text-ink'}`}>{item.label}</Link>)}
       </nav>}
     </header>
