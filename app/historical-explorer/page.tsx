@@ -1,5 +1,7 @@
 import Link from 'next/link';
 import AppShell from '../../src/components/AppShell';
+import { canonicalHistoricalBookSlug } from '../../src/lib/historicalRouting';
+import { italianizeVisibleCopy } from '../../src/lib/italianUi';
 import { client } from '../../src/sanity/client';
 
 const fieldsQuery = `*[_type == "historicalExplorerDataset"]{
@@ -16,8 +18,8 @@ const fieldsQuery = `*[_type == "historicalExplorerDataset"]{
 
 function slugFromField(field: any) {
   const bookId = field?.book?._id || field?.bookRef;
-  if (typeof bookId === 'string' && bookId.startsWith('libro-')) return bookId.slice('libro-'.length);
-  if (typeof field?.id === 'string' && field.id.endsWith('-history')) return field.id.slice(0, -'-history'.length);
+  if (typeof bookId === 'string' && bookId.startsWith('libro-')) return canonicalHistoricalBookSlug(bookId);
+  if (typeof field?.id === 'string') return canonicalHistoricalBookSlug(field.id);
   return '';
 }
 
@@ -58,8 +60,8 @@ export default async function HistoricalExplorerLanding() {
                 <article key={field._id || field.id} className="rounded-2xl border border-papyrus-line bg-paper-card p-6 md:p-7">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="font-mono text-[9px] uppercase tracking-wider text-bronze">{field.book?.titolo || field.title}</p>
-                      <h3 className="mt-2 font-serif text-3xl font-bold">{field.title}</h3>
+                      <p className="font-mono text-[9px] uppercase tracking-wider text-bronze">{italianizeVisibleCopy(field.book?.titolo || field.title)}</p>
+                      <h3 className="mt-2 font-serif text-3xl font-bold">{italianizeVisibleCopy(field.title)}</h3>
                     </div>
                     <div className="flex flex-wrap gap-2 text-[10px] text-ink-faint">
                       <span className="rounded-full border border-papyrus-line px-2.5 py-1">{field.entities} entità</span>
@@ -67,7 +69,7 @@ export default async function HistoricalExplorerLanding() {
                       <span className="rounded-full border border-papyrus-line px-2.5 py-1">{field.scenarios} scenari</span>
                     </div>
                   </div>
-                  <p className="mt-4 max-w-3xl leading-7 text-ink-soft">{field.subtitle}</p>
+                  <p className="mt-4 max-w-3xl leading-7 text-ink-soft">{italianizeVisibleCopy(field.subtitle)}</p>
                   <Link href={`/historical-explorer/${field.bookSlug}`} className="mt-6 inline-flex min-h-11 items-center rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-papyrus hover:opacity-90">Apri l’esploratore storico →</Link>
                 </article>
               )) : (
