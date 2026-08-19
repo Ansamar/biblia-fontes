@@ -15,10 +15,8 @@
   --bronze-light: #B38B50;
   --seal: #7A2E2E;
   --paper-card: #FBF8F0;
-  --reading-scale: 1;
 }
 
-/* Dark mode deliberately avoids pure black: long scholarly reading is easier on a deep blue-black surface. */
 .dark {
   --papyrus: #0E1821;
   --papyrus-deep: #132431;
@@ -32,9 +30,14 @@
   --paper-card: #14232D;
 }
 
-html[data-font-scale='normal'] { --reading-scale: 1; }
-html[data-font-scale='large'] { --reading-scale: 1.12; }
-html[data-font-scale='xlarge'] { --reading-scale: 1.25; }
+/*
+ * Reading preferences are global. Tailwind text utilities are expressed in rem,
+ * so scaling the root font-size makes headings, cards, apparatus, Explorer and
+ * biblical text respond coherently to the same control.
+ */
+html[data-font-scale='normal'] { font-size: 100%; }
+html[data-font-scale='large'] { font-size: 112%; }
+html[data-font-scale='xlarge'] { font-size: 125%; }
 
 @theme inline {
   --font-serif: 'Cormorant Garamond', serif;
@@ -65,20 +68,26 @@ body {
   background-color: var(--papyrus);
   color: var(--ink);
   font-family: var(--font-sans);
-  font-size: calc(1rem * var(--reading-scale));
+  font-size: 1rem;
   line-height: 1.62;
-  transition: background-color 0.25s ease, color 0.25s ease, font-size 0.15s ease;
+  transition: background-color 0.25s ease, color 0.25s ease;
 }
 
 h1, h2, h3, h4 {
   font-family: var(--font-serif);
 }
 
-/* Long-form text can opt into this class without enlarging compact UI controls. */
 .reading-text {
-  font-size: calc(1.08rem * var(--reading-scale));
+  font-size: 1.08rem;
   line-height: 1.78;
   max-width: 72ch;
+}
+
+/* Keep dense controls usable at the largest scale without opting them out of accessibility scaling. */
+@media (max-width: 760px) {
+  html[data-font-scale='xlarge'] {
+    font-size: 118%;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
