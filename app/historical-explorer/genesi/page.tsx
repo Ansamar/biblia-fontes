@@ -26,7 +26,7 @@ function fallbackDataset(formationLabel: string): HistoricalExplorerDataset {
     quickYears: genesisQuickYears,
     areas: genesisHistoricalAreas,
     entities: genesisDemoData.entities.map((entity) => entity.id === 'genesis-formation'
-      ? { ...entity, summary: `${entity.summary} Dataset Biblia Fontes: ${formationLabel}` }
+      ? { ...entity, summary: `${entity.summary} Dati Biblia Fontes: ${formationLabel}` }
       : entity),
   };
 }
@@ -59,13 +59,11 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
 
   const diagnostics = diagnoseHistoricalDataset(dataset);
 
-  const entryLabel = context.source === 'timeline'
-    ? 'Aperto dalla Timeline del testo'
-    : context.source === 'chapter'
-      ? `Aperto dal capitolo ${context.chapter ?? ''}`.trim()
-      : context.source === 'history'
-        ? 'Ripristino della scena storica'
-        : 'Aperto dal contesto del libro';
+  const entryLabel = context.source === 'chapter'
+    ? `Aperto dal capitolo ${context.chapter ?? ''}`.trim()
+    : context.source === 'history'
+      ? 'Ripristino della scena storica'
+      : 'Aperto dal contesto del libro';
 
   return (
     <AppShell>
@@ -73,7 +71,7 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
       <main className="bg-paper-card/35">
         <section className="border-b border-papyrus-line bg-paper-card">
           <div className="mx-auto max-w-[1580px] px-5 py-8 md:px-8 md:py-10">
-            <nav className="text-sm text-ink-faint" aria-label="Breadcrumb">
+            <nav className="text-sm text-ink-faint" aria-label="Percorso">
               <Link href="/" className="hover:text-bronze">Bibbia</Link>
               <span className="mx-2">/</span>
               <Link href="/bibbia/genesi" className="hover:text-bronze">Genesi</Link>
@@ -82,13 +80,13 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
             </nav>
             <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Modalità · Storia</p>
-                <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">Historical Explorer · Genesi</h1>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Prospettiva · Storia</p>
+                <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">Esploratore storico · Genesi</h1>
                 <p className="mt-3 max-w-3xl text-lg leading-8 text-ink-soft">Interroga la storia attestata, ricostruita o discussa intorno a Genesi. Il libro resta il contesto; tempo, spazio, entità e relazioni cambiano la prospettiva.</p>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs text-ink-faint">
                   <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">{entryLabel}</span>
                   <span className={`rounded-full border px-3 py-1.5 ${dataSource === 'sanity' ? 'border-bronze/45 bg-bronze/5 text-bronze' : 'border-papyrus-line bg-papyrus/60 text-ink-faint'}`}>
-                    Dati: {dataSource === 'sanity' ? 'Sanity production' : 'fallback locale'}
+                    Origine dati: {dataSource === 'sanity' ? 'archivio Sanity' : 'copia locale di riserva'}
                   </span>
                   {context.year !== undefined && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Anno richiesto: {Math.abs(context.year)} {context.year < 0 ? 'a.C.' : 'd.C.'}</span>}
                   {context.entity && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Entità: {context.entity}</span>}
@@ -96,7 +94,7 @@ export default async function GenesisHistoricalExplorerPage({ searchParams }: { 
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <ExplorerShareButton />
-                <Link href="/bibbia/genesi#timeline" className="rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">← Torna alla Timeline del testo</Link>
+                <Link href="/bibbia/genesi#studio" className="rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">← Torna allo studio del libro</Link>
               </div>
             </div>
           </div>
