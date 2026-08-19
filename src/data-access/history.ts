@@ -5,6 +5,7 @@ import { bookIdFromSlug, categoryLabel } from '../lib/bibleRouting';
 import { canonicalBookOrder } from '../lib/canon';
 
 const bookQuery = `*[_id == $bookId][0]{_id,titolo,capitoli}`;
+const historyDatasetResolverQuery = `*[_type == "historicalExplorerDataset" && (bookRef._ref == $bookId || id == $legacyId)] | order(defined(bookRef._ref) desc)[0]{id}`;
 
 const historyIndexQuery = `*[_type == "historicalExplorerDataset"]{
   _id,
@@ -90,11 +91,13 @@ export async function fetchHistoryIndexView() {
 
 export async function fetchHistoryView(slug: string) {
   const bookId = bookIdFromSlug(slug);
-  const datasetId = `${slug}-history`;
-  const [book, rawDataset] = await Promise.all([
+  const legacyId = `${slug}-history`;
+  const [book, resolved] = await Promise.all([
     client.fetch(bookQuery, { bookId }),
-    client.fetch(historicalExplorerDatasetQuery, { datasetId }).catch(() => null),
+    client.fetch(historyDatasetResolverQuery, { bookId, legacyId }).catch(() => null),
   ]);
+  const datasetId = resolved?.id || legacyId;
+  const rawDataset = resolved ? await client.fetch(historicalExplorerDatasetQuery, { datasetId }).catch(() => null) : null;
   if (!book || !rawDataset) return null;
 
   try {
