@@ -5,13 +5,6 @@ import ReadingPreferences from '../components/ReadingPreferences';
 
 type Perspective = 'text' | 'study' | 'history' | 'sources';
 
-const perspectives: Array<{id: Perspective; label: string}> = [
-  {id:'text', label:'Testo'},
-  {id:'study', label:'Studio'},
-  {id:'history', label:'Storia'},
-  {id:'sources', label:'Fonti'},
-];
-
 export default function WorkspaceFrame({
   children,
   context,
@@ -23,6 +16,10 @@ export default function WorkspaceFrame({
 }) {
   const base = context?.bookSlug ? `/rebuild/bibbia/${context.bookSlug}` : '/rebuild';
   const chapterPath = context?.chapter ? `${base}/${context.chapter}` : base;
+  const perspectives: Array<{id: Perspective; label: string}> = context?.chapter
+    ? [{id:'text', label:'Testo'}, {id:'study', label:'Studio'}, {id:'history', label:'Storia'}, {id:'sources', label:'Fonti'}]
+    : [{id:'text', label:'Libro'}, {id:'study', label:'Studio'}, {id:'history', label:'Storia'}];
+
   const hrefFor = (id: Perspective) => {
     if (id === 'text') return chapterPath;
     if (id === 'study') return `${chapterPath}?view=study`;
