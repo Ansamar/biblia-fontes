@@ -34,11 +34,11 @@ export default function HistoricalExplorerOverlay({ formationLabel }: Historical
     ? {
         ...baseDataset,
         entities: baseDataset.entities.map((entity) => entity.id === 'genesis-formation'
-          ? { ...entity, summary: `${entity.summary} Dataset Biblia Fontes: ${formationLabel}` }
+          ? { ...entity, summary: `${entity.summary} Dati Biblia Fontes: ${formationLabel}` }
           : entity),
       }
     : baseDataset;
-  const fullPageHref = studyContextHref('/historical-explorer/genesi', { book: 'genesi', source: 'timeline' });
+  const fullPageHref = studyContextHref('/historical-explorer/genesi', { book: 'genesi', source: 'history' });
 
   return (
     <>
@@ -48,16 +48,16 @@ export default function HistoricalExplorerOverlay({ formationLabel }: Historical
       </button>
 
       {open ? (
-        <div role="dialog" aria-modal="true" aria-label="Biblia Fontes Historical Explorer — Genesi" className="fixed inset-0 z-[100] bg-ink/80 p-2 backdrop-blur-sm md:p-4">
+        <div role="dialog" aria-modal="true" aria-label="Esploratore storico di Biblia Fontes — Genesi" className="fixed inset-0 z-[100] bg-ink/80 p-2 backdrop-blur-sm md:p-4">
           <div className="mx-auto flex h-full max-w-[1740px] flex-col overflow-hidden rounded-2xl border border-papyrus-line bg-paper-card shadow-2xl">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-papyrus-line bg-paper-card px-4 py-3 md:px-6">
               <div className="min-w-0">
-                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-bronze">Biblia Fontes Historical Explorer</p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-bronze">Esploratore storico di Biblia Fontes</p>
                 <p className="truncate font-serif text-lg font-bold text-ink">Genesi · la storia intorno al testo</p>
               </div>
               <div className="flex items-center gap-2">
                 <Link href={fullPageHref} className="hidden rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft transition hover:border-bronze hover:text-bronze sm:inline-flex">Apri a piena pagina</Link>
-                <button type="button" onClick={() => setOpen(false)} aria-label="Chiudi Historical Explorer" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-papyrus-line text-xl text-ink-soft transition hover:border-bronze hover:text-bronze">×</button>
+                <button type="button" onClick={() => setOpen(false)} aria-label="Chiudi l’esploratore storico" className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-papyrus-line text-xl text-ink-soft transition hover:border-bronze hover:text-bronze">×</button>
               </div>
             </div>
             <div className="min-h-0 flex-1 overflow-auto bg-papyrus/20 p-3 md:p-5">
