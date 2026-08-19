@@ -5,7 +5,7 @@ import { useState } from 'react';
 
 const links = [
   ['Bibbia', '/#bibbia'],
-  ['Historical Explorer', '/historical-explorer'],
+  ['Esploratore storico', '/historical-explorer'],
   ['Fonti', '/fonti'],
 ];
 
