@@ -12,11 +12,8 @@ import { bookIdFromSlug } from '../../../src/lib/bibleRouting';
 import { client } from '../../../src/sanity/client';
 import { parseStudyContext } from '../../../src/study-context/context';
 
-const bookQuery = `*[_id == $bookId][0]{
-  _id,
-  titolo,
-  capitoli
-}`;
+const bookQuery = `*[_id == $bookId][0]{_id,titolo,capitoli}`;
+const resolverQuery = `*[_type == "historicalExplorerDataset" && (bookRef._ref == $bookId || id == $legacyId)]{id,"direct":bookRef._ref == $bookId}`;
 
 export default async function DynamicHistoricalExplorerPage({
   params,
@@ -30,12 +27,17 @@ export default async function DynamicHistoricalExplorerPage({
 
   const context = parseStudyContext(await searchParams);
   const bookId = bookIdFromSlug(slug);
-  const datasetId = `${slug}-history`;
+  const legacyId = `${slug}-history`;
 
-  const [libro, sanityDocument] = await Promise.all([
+  const [libro, candidates] = await Promise.all([
     client.fetch(bookQuery, { bookId }),
-    client.fetch(historicalExplorerDatasetQuery, { datasetId }).catch(() => null),
+    client.fetch(resolverQuery, { bookId, legacyId }).catch(() => []),
   ]);
+
+  const options = Array.isArray(candidates) ? candidates : [];
+  const resolved = options.find((item: any) => item?.direct) || options[0];
+  const datasetId = resolved?.id;
+  const sanityDocument = datasetId ? await client.fetch(historicalExplorerDatasetQuery, { datasetId }).catch(() => null) : null;
 
   if (!libro || !sanityDocument) notFound();
 
@@ -61,7 +63,7 @@ export default async function DynamicHistoricalExplorerPage({
       <main className="bg-paper-card/35">
         <section className="border-b border-papyrus-line bg-paper-card">
           <div className="mx-auto max-w-[1580px] px-5 py-8 md:px-8 md:py-10">
-            <nav className="text-sm text-ink-faint" aria-label="Breadcrumb">
+            <nav className="text-sm text-ink-faint" aria-label="Percorso">
               <Link href="/" className="hover:text-bronze">Bibbia</Link>
               <span className="mx-2">/</span>
               <Link href={`/bibbia/${slug}`} className="hover:text-bronze">{bookTitle}</Link>
@@ -71,14 +73,12 @@ export default async function DynamicHistoricalExplorerPage({
 
             <div className="mt-6 flex flex-wrap items-end justify-between gap-5">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Modalità · Storia</p>
-                <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">Historical Explorer · {bookTitle}</h1>
-                <p className="mt-3 max-w-3xl text-lg leading-8 text-ink-soft">
-                  {dataset.subtitle}
-                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">Prospettiva · Storia</p>
+                <h1 className="mt-2 font-serif text-4xl font-bold md:text-5xl">Esploratore storico · {bookTitle}</h1>
+                <p className="mt-3 max-w-3xl text-lg leading-8 text-ink-soft">{dataset.subtitle}</p>
                 <div className="mt-4 flex flex-wrap gap-2 text-xs text-ink-faint">
                   <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">{entryLabel}</span>
-                  <span className="rounded-full border border-bronze/45 bg-bronze/5 px-3 py-1.5 text-bronze">Dati: Sanity production</span>
+                  <span className="rounded-full border border-bronze/45 bg-bronze/5 px-3 py-1.5 text-bronze">Origine dati: archivio Sanity</span>
                   {context.year !== undefined && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Anno richiesto: {Math.abs(context.year)} {context.year < 0 ? 'a.C.' : 'd.C.'}</span>}
                   {context.entity && <span className="rounded-full border border-papyrus-line bg-papyrus/60 px-3 py-1.5">Entità: {context.entity}</span>}
                 </div>
