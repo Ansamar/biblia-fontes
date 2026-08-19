@@ -116,6 +116,14 @@ function witnessIdentity(text: ReaderWitness) {
   ].join('|');
 }
 
+function witnessFamily(text: ReaderWitness) {
+  const tradition = normalized(text.tradizione);
+  const witness = normalized(text.testimone);
+  const edition = normalized(text.edizione);
+  const language = normalized(text.lingua);
+  return tradition || witness || edition || language || 'unknown';
+}
+
 function textFingerprint(text: ReaderWitness) {
   return (text.versetti || [])
     .map((verse) => `${verse.numero}:${normalized(verse.testo)}`)
@@ -124,19 +132,21 @@ function textFingerprint(text: ReaderWitness) {
 
 function deduplicateWitnesses(texts: ReaderWitness[]) {
   const seenIdentity = new Set<string>();
-  const seenContent = new Set<string>();
+  const seenContentWithinFamily = new Set<string>();
   const result: ReaderWitness[] = [];
 
   for (const text of texts) {
     const identity = witnessIdentity(text);
     const content = textFingerprint(text);
-    const contentKey = content ? `${normalized(text.lingua)}|${content}` : '';
+    const contentKey = content
+      ? `${witnessFamily(text)}|${normalized(text.lingua)}|${content}`
+      : '';
 
     if (seenIdentity.has(identity)) continue;
-    if (contentKey && seenContent.has(contentKey)) continue;
+    if (contentKey && seenContentWithinFamily.has(contentKey)) continue;
 
     seenIdentity.add(identity);
-    if (contentKey) seenContent.add(contentKey);
+    if (contentKey) seenContentWithinFamily.add(contentKey);
     result.push(text);
   }
 
