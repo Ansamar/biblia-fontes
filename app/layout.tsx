@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Biblia Fontes",
-  description: "Ambiente integrato di studio biblico: testo, fonti, formazione, Timeline e Historical Explorer.",
+  description: "Ambiente accademico per leggere la Scrittura, confrontarne le tradizioni, studiarne la formazione e interrogare la storia intorno al testo.",
 };
 
 export default function RootLayout({
