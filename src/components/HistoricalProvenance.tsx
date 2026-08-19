@@ -3,14 +3,14 @@ import type { HistoricalSource, HistoricalSourceKind } from '../historical-explo
 const kindLabels: Record<HistoricalSourceKind, string> = {
   primary: 'fonte primaria',
   secondary: 'studio secondario',
-  dataset: 'dataset',
+  dataset: 'insieme di dati',
   bibliography: 'bibliografia',
   editorial: 'elaborazione editoriale',
 };
 
 export default function HistoricalProvenance({ sources, compact = false }: { sources?: HistoricalSource[]; compact?: boolean }) {
   if (!sources?.length) {
-    return <p className="text-xs leading-5 text-ink-faint">Provenienza non ancora strutturata nel dataset.</p>;
+    return <p className="text-xs leading-5 text-ink-faint">Provenienza non ancora strutturata nei dati storici.</p>;
   }
 
   return (
@@ -24,9 +24,7 @@ export default function HistoricalProvenance({ sources, compact = false }: { sou
                 {kindLabels[source.kind]}
               </span>
             ) : (
-              <span className="rounded-full border border-dashed border-papyrus-line px-2 py-0.5 font-mono text-[8px] uppercase tracking-wide text-ink-faint">
-                da classificare
-              </span>
+              <span className="rounded-full border border-dashed border-papyrus-line px-2 py-0.5 font-mono text-[8px] uppercase tracking-wide text-ink-faint">da classificare</span>
             )}
           </div>
           {source.citation ? <p className="mt-2 text-xs leading-5 text-ink-soft">{source.citation}{source.locator ? ` · ${source.locator}` : ''}</p> : source.locator ? <p className="mt-2 text-xs leading-5 text-ink-soft">{source.locator}</p> : null}
