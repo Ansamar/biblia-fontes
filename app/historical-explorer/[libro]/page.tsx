@@ -9,11 +9,13 @@ import { diagnoseHistoricalDataset } from '../../../src/historical-explorer/diag
 import { historicalExplorerDatasetFromSanity } from '../../../src/historical-explorer/sanityAdapter';
 import { historicalExplorerDatasetQuery } from '../../../src/historical-explorer/sanityQuery';
 import { bookIdFromSlug } from '../../../src/lib/bibleRouting';
+import { historicalDatasetIdCandidates } from '../../../src/lib/historicalRouting';
+import { italianizeVisibleCopy } from '../../../src/lib/italianUi';
 import { client } from '../../../src/sanity/client';
 import { parseStudyContext } from '../../../src/study-context/context';
 
 const bookQuery = `*[_id == $bookId][0]{_id,titolo,capitoli}`;
-const resolverQuery = `*[_type == "historicalExplorerDataset" && (bookRef._ref == $bookId || id == $legacyId)]{id,"direct":bookRef._ref == $bookId}`;
+const resolverQuery = `*[_type == "historicalExplorerDataset" && (bookRef._ref == $bookId || id in $candidateIds)]{id,"direct":bookRef._ref == $bookId}`;
 
 export default async function DynamicHistoricalExplorerPage({
   params,
@@ -27,11 +29,11 @@ export default async function DynamicHistoricalExplorerPage({
 
   const context = parseStudyContext(await searchParams);
   const bookId = bookIdFromSlug(slug);
-  const legacyId = `${slug}-history`;
+  const candidateIds = historicalDatasetIdCandidates(slug);
 
   const [libro, candidates] = await Promise.all([
     client.fetch(bookQuery, { bookId }),
-    client.fetch(resolverQuery, { bookId, legacyId }).catch(() => []),
+    client.fetch(resolverQuery, { bookId, candidateIds }).catch(() => []),
   ]);
 
   const options = Array.isArray(candidates) ? candidates : [];
@@ -43,13 +45,25 @@ export default async function DynamicHistoricalExplorerPage({
 
   let dataset;
   try {
-    dataset = historicalExplorerDatasetFromSanity(sanityDocument);
+    const raw = historicalExplorerDatasetFromSanity(sanityDocument);
+    dataset = {
+      ...raw,
+      title: italianizeVisibleCopy(raw.title),
+      subtitle: italianizeVisibleCopy(raw.subtitle),
+      entities: raw.entities.map((entity) => ({
+        ...entity,
+        label: italianizeVisibleCopy(entity.label),
+        summary: italianizeVisibleCopy(entity.summary),
+        relations: entity.relations.map((relation) => ({ ...relation, label: italianizeVisibleCopy(relation.label) })),
+      })),
+      scenarios: raw.scenarios?.map((scenario) => ({ ...scenario, title: italianizeVisibleCopy(scenario.title), summary: italianizeVisibleCopy(scenario.summary) })),
+    };
   } catch {
     notFound();
   }
 
   const diagnostics = diagnoseHistoricalDataset(dataset);
-  const bookTitle = libro.titolo || slug;
+  const bookTitle = italianizeVisibleCopy(libro.titolo || slug);
 
   const entryLabel = context.source === 'chapter'
     ? `Aperto dal capitolo ${context.chapter ?? ''}`.trim()
