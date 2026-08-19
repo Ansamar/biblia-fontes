@@ -2,6 +2,7 @@ import { client } from '../sanity/client';
 import { historicalExplorerDatasetQuery } from '../historical-explorer/sanityQuery';
 import { historicalExplorerDatasetFromSanity } from '../historical-explorer/sanityAdapter';
 import { bookIdFromSlug, categoryLabel } from '../lib/bibleRouting';
+import { canonicalBookOrder } from '../lib/canon';
 
 const bookQuery = `*[_id == $bookId][0]{_id,titolo,capitoli}`;
 
@@ -70,7 +71,7 @@ export async function fetchHistoryIndexView() {
       slug,
       title: item.book?.titolo || item.title || slug,
       category: categoryLabel(item.book?.categoriaId),
-      order: finite(item.book?.ordine) ? item.book.ordine : 999,
+      order: canonicalBookOrder(slug, finite(item.book?.ordine) ? item.book.ordine : 999),
       subtitle: item.subtitle || '',
       start,
       end,
