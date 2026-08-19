@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { fetchBookView } from '../../../../src/data-access/book';
-import AppFrame from '../../../../src/ui-next/AppFrame';
+import WorkspaceFrame from '../../../../src/ui-next/WorkspaceFrame';
 import BookSurface from '../../../../src/ui-next/BookSurface';
 
 export default async function RebuiltBookPage({ params }: { params: Promise<{ libro: string }> }) {
@@ -8,9 +8,5 @@ export default async function RebuiltBookPage({ params }: { params: Promise<{ li
   const book = await fetchBookView(libro);
   if (!book) notFound();
 
-  return (
-    <AppFrame>
-      <BookSurface book={book} />
-    </AppFrame>
-  );
+  return <WorkspaceFrame context={{bookSlug: book.slug, bookTitle: book.title}} active="text"><BookSurface book={book} /></WorkspaceFrame>;
 }
