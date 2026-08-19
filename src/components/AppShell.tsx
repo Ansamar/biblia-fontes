@@ -39,9 +39,9 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <div>
               <div className="flex items-center gap-3">
                 <Image src="/biblia-fontes-mark.svg" width={46} height={38} alt="" className="h-9 w-auto opacity-90 dark:brightness-0 dark:invert" />
-                <div><p className="font-serif text-lg font-semibold tracking-wide">Biblia Fontes</p><p className="text-sm text-ink-faint">Testo · studio · tempo · storia</p></div>
+                <div><p className="font-serif text-lg font-semibold tracking-wide">Biblia Fontes</p><p className="text-sm text-ink-faint">Testo · studio · storia · trasmissione</p></div>
               </div>
-              <p className="mt-5 max-w-xl text-sm leading-6 text-ink-faint">Un ambiente integrato di studio biblico: il testo resta il centro, mentre Timeline, fonti, apparato critico e Historical Explorer aprono prospettive complementari senza perdere il contesto.</p>
+              <p className="mt-5 max-w-xl text-sm leading-6 text-ink-faint">Un ambiente integrato di studio biblico: il testo resta il centro, mentre studio critico, fonti e Historical Explorer aprono prospettive complementari senza confondere racconto, storia e formazione.</p>
             </div>
             <div className="border-t border-papyrus-line pt-6 md:border-l md:border-t-0 md:pl-8 md:pt-0">
               <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.18em] text-ink-faint">Progetto e design</p>
