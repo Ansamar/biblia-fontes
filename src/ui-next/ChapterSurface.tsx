@@ -1,9 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
-import BiblicalTextReader from '../components/BiblicalTextReader';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useMemo, useState } from 'react';
 import type { ChapterView } from '../data-access/chapter';
+import WorkspaceReader from './WorkspaceReader';
 
 type Panel = 'summary' | 'structure' | 'context' | 'critical' | 'sources' | 'bibliography';
 
@@ -16,84 +17,85 @@ const labels: Array<[Panel, string]> = [
   ['bibliography', 'Bibliografia'],
 ];
 
-function text(value: any, fallback = ''): string {
+function toText(value: any, fallback = ''): string {
   if (value == null) return fallback;
   if (typeof value === 'string' || typeof value === 'number') return String(value);
-  if (Array.isArray(value)) return value.map((item) => text(item)).filter(Boolean).join(' · ') || fallback;
+  if (Array.isArray(value)) return value.map((item) => toText(item)).filter(Boolean).join(' · ') || fallback;
   if (typeof value === 'object') return value.descrizione || value.motivazione || value.etichetta || value.citazione || value.titolo || value.nome || value.nota || fallback;
   return fallback;
 }
 
 export default function ChapterSurface({ chapter }: { chapter: ChapterView }) {
-  const [panel, setPanel] = useState<Panel>('summary');
+  const searchParams = useSearchParams();
+  const requestedView = searchParams.get('view');
+  const [panel, setPanel] = useState<Panel>(requestedView === 'sources' ? 'sources' : 'summary');
   const reference = `${chapter.abbreviation} ${chapter.number}`;
 
-  const panelContent = {
+  useEffect(() => {
+    if (requestedView === 'sources') setPanel('sources');
+    else if (requestedView === 'study' && panel === 'sources') setPanel('summary');
+  }, [requestedView, panel]);
+
+  const nearby = useMemo(() => {
+    const currentIndex = chapter.chapters.findIndex((item: any) => item.numero === chapter.number);
+    const start = Math.max(0, currentIndex - 5);
+    return chapter.chapters.slice(start, start + 11);
+  }, [chapter.chapters, chapter.number]);
+
+  const panelContent: Record<Exclude<Panel, 'sources' | 'bibliography'>, string> = {
     summary: chapter.summary,
     structure: chapter.structure || 'Struttura dettagliata in preparazione.',
     context: chapter.context || 'Contesto storico-culturale in preparazione.',
-    critical: [chapter.critical, chapter.textual].filter(Boolean).join('\n\n') || 'Apparato critico in preparazione.',
-    sources: '',
-    bibliography: '',
+    critical: [chapter.critical, chapter.textual, chapter.formation].filter(Boolean).join('\n\n') || 'Apparato critico in preparazione.',
   };
 
-  return <main className="mx-auto max-w-[1480px] px-4 py-6 md:px-7 md:py-8">
-    <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs text-ink-faint" aria-label="Percorso">
-      <Link href="/rebuild" className="hover:text-ink">Bibbia</Link><span>/</span>
-      <Link href={`/rebuild/bibbia/${chapter.slug}`} className="hover:text-ink">{chapter.bookTitle}</Link><span>/</span>
-      <span className="text-ink">{reference}</span>
-    </nav>
-
-    <header className="mb-7 border-b border-papyrus-line pb-6">
-      <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
-        <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-bronze">{chapter.category} · {reference}</p>
-          <h1 className="mt-2 font-serif text-4xl font-semibold leading-none md:text-5xl">{chapter.title}</h1>
-        </div>
-        <div className="flex gap-4 text-sm text-ink-soft">
-          {chapter.number > 1 && <Link href={`/rebuild/bibbia/${chapter.slug}/${chapter.number - 1}`} className="hover:text-ink">← {chapter.abbreviation} {chapter.number - 1}</Link>}
-          {chapter.number < chapter.totalChapters && <Link href={`/rebuild/bibbia/${chapter.slug}/${chapter.number + 1}`} className="hover:text-ink">{chapter.abbreviation} {chapter.number + 1} →</Link>}
-        </div>
+  return <main className="mx-auto max-w-[1600px] px-4 py-5 md:px-6 md:py-7">
+    <header className="mb-5 grid gap-4 border-b border-papyrus-line pb-5 lg:grid-cols-[170px_minmax(0,1fr)_310px] lg:items-end">
+      <div className="hidden lg:block"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">{chapter.category}</p></div>
+      <div>
+        <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-bronze">{reference}</p>
+        <h1 className="mt-1 font-serif text-3xl font-semibold leading-tight md:text-4xl">{chapter.title}</h1>
+      </div>
+      <div className="flex justify-start gap-4 text-xs text-ink-faint lg:justify-end">
+        {chapter.number > 1 && <Link href={`/rebuild/bibbia/${chapter.slug}/${chapter.number - 1}`} className="hover:text-ink">← {chapter.abbreviation} {chapter.number - 1}</Link>}
+        {chapter.number < chapter.totalChapters && <Link href={`/rebuild/bibbia/${chapter.slug}/${chapter.number + 1}`} className="hover:text-ink">{chapter.abbreviation} {chapter.number + 1} →</Link>}
       </div>
     </header>
 
-    <div className="grid gap-7 xl:grid-cols-[190px_minmax(0,1fr)_330px]">
-      <aside className="hidden xl:block">
-        <div className="sticky top-6">
-          <p className="mb-3 font-mono text-[10px] uppercase tracking-[0.16em] text-ink-faint">Capitolo</p>
-          <Link href={`/rebuild/bibbia/${chapter.slug}`} className="block border-l-2 border-bronze py-1 pl-3 font-serif text-xl font-semibold">{chapter.bookTitle}</Link>
-          <p className="mt-3 pl-3 text-sm leading-6 text-ink-faint">{chapter.number} di {chapter.totalChapters}</p>
-          <div className="mt-7 border-t border-papyrus-line pt-5">
-            <Link href={`/historical-explorer/${chapter.slug}`} className="text-sm text-ink-soft hover:text-ink">Apri nella storia →</Link>
-          </div>
+    <div className="grid gap-0 xl:grid-cols-[170px_minmax(0,1fr)_330px]">
+      <aside className="hidden border-r border-papyrus-line pr-4 xl:block">
+        <div className="sticky top-28 max-h-[calc(100vh-8rem)] overflow-y-auto pb-8">
+          <Link href={`/rebuild/bibbia/${chapter.slug}`} className="font-serif text-lg font-semibold hover:text-bronze">{chapter.bookTitle}</Link>
+          <p className="mt-1 text-[11px] text-ink-faint">{chapter.totalChapters} capitoli</p>
+          <nav className="mt-5" aria-label={`Capitoli di ${chapter.bookTitle}`}>
+            {nearby.map((item: any) => <Link key={item._id} href={`/rebuild/bibbia/${chapter.slug}/${item.numero}`} className={`grid grid-cols-[2rem_1fr] gap-2 border-t border-papyrus-line py-2.5 text-xs ${item.numero === chapter.number ? 'text-ink' : 'text-ink-faint hover:text-ink'}`}><span className={item.numero === chapter.number ? 'font-semibold text-bronze' : ''}>{String(item.numero).padStart(2, '0')}</span><span className="line-clamp-2 leading-4">{item.titolo || `Capitolo ${item.numero}`}</span></Link>)}
+          </nav>
+          <Link href={`/rebuild/bibbia/${chapter.slug}`} className="mt-4 inline-flex text-[11px] font-semibold text-bronze hover:text-ink">Indice completo →</Link>
         </div>
       </aside>
 
-      <article className="min-w-0">
-        <div className="mb-4 flex items-center justify-between border-b border-papyrus-line pb-3">
-          <div><p className="font-mono text-[10px] uppercase tracking-[0.16em] text-bronze">Testo</p><h2 className="mt-1 font-serif text-2xl font-semibold">{reference}</h2></div>
-          <span className="text-xs text-ink-faint">Lettura · confronto · sinossi</span>
+      <article className="min-w-0 px-0 xl:px-7">
+        <div className="mb-5 flex items-center justify-between gap-4">
+          <div><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-bronze">Testo biblico</p><p className="mt-1 text-xs text-ink-faint">Tradizioni disponibili nello stesso contesto di studio</p></div>
+          <Link href={`/rebuild/historical-explorer/${chapter.slug}?chapter=${chapter.number}`} className="text-xs text-ink-faint hover:text-ink xl:hidden">Storia →</Link>
         </div>
-        {chapter.biblicalText
-          ? <BiblicalTextReader text={chapter.biblicalText} critical={panel === 'critical' || panel === 'sources'} />
-          : <div className="mx-auto max-w-[72ch] py-16 text-center text-ink-faint">Il testo biblico non è ancora collegato a questo capitolo.</div>}
+        {chapter.biblicalText ? <WorkspaceReader text={chapter.biblicalText} /> : <div className="border-y border-papyrus-line py-16 text-center text-sm text-ink-faint">Il testo biblico non è ancora collegato a questo capitolo.</div>}
       </article>
 
-      <aside className="min-w-0 border-t border-papyrus-line pt-5 xl:border-l xl:border-t-0 xl:pl-7 xl:pt-0">
-        <div className="xl:sticky xl:top-6">
-          <div className="flex gap-1 overflow-x-auto border-b border-papyrus-line pb-2 xl:flex-wrap">
-            {labels.map(([id, label]) => <button key={id} onClick={() => setPanel(id)} className={`shrink-0 px-2.5 py-1.5 text-xs transition ${panel === id ? 'bg-ink text-papyrus' : 'text-ink-soft hover:text-ink'}`}>{label}</button>)}
+      <aside className="mt-8 min-w-0 border-t border-papyrus-line pt-5 xl:mt-0 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">
+        <div className="xl:sticky xl:top-28 xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto xl:pb-8">
+          <div className="flex gap-4 overflow-x-auto border-b border-papyrus-line">
+            {labels.map(([id, label]) => <button key={id} type="button" onClick={() => setPanel(id)} className={`shrink-0 border-b-2 px-0.5 pb-2 text-[11px] font-semibold ${panel === id ? 'border-bronze text-ink' : 'border-transparent text-ink-faint hover:text-ink'}`}>{label}</button>)}
           </div>
+          <section className="py-5">
+            <p className="font-mono text-[9px] uppercase tracking-[0.16em] text-bronze">Studio del capitolo</p>
+            <h2 className="mt-1 font-serif text-2xl font-semibold">{labels.find(([id]) => id === panel)?.[1]}</h2>
 
-          <section className="py-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-bronze">Studio</p>
-            <h2 className="mt-2 font-serif text-2xl font-semibold">{labels.find(([id]) => id === panel)?.[1]}</h2>
+            {panel !== 'sources' && panel !== 'bibliography' && <p className="mt-4 whitespace-pre-line text-[0.95rem] leading-7 text-ink-soft">{panelContent[panel]}</p>}
 
-            {panel !== 'sources' && panel !== 'bibliography' && <p className="mt-4 whitespace-pre-line text-[0.98rem] leading-7 text-ink-soft">{panelContent[panel]}</p>}
+            {panel === 'sources' && <div className="mt-4 divide-y divide-papyrus-line border-y border-papyrus-line">{chapter.sourceLayers.length ? chapter.sourceLayers.map((layer: any, index: number) => <article key={layer?._key || index} className="py-4"><div className="flex items-baseline justify-between gap-3"><strong className="font-serif text-lg">{layer?.fonte?.sigla || layer?.fonte?.nome || 'Livello critico'}</strong>{(layer?.versettoInizio != null || layer?.versettoFine != null) && <span className="font-mono text-[9px] text-ink-faint">vv. {layer.versettoInizio ?? '…'}–{layer.versettoFine ?? '…'}</span>}</div>{layer?.fonte?.nome && layer?.fonte?.sigla && <p className="mt-1 text-[11px] text-ink-faint">{layer.fonte.nome}</p>}<p className="mt-2 text-sm leading-6 text-ink-soft">{toText(layer?.descrizione) || toText(layer?.motivazione) || toText(layer?.fonte?.descrizione, 'Attribuzione registrata nel modello critico.')}</p></article>) : <p className="py-4 text-sm text-ink-faint">Nessuna attribuzione strutturata disponibile.</p>}</div>}
 
-            {panel === 'sources' && <div className="mt-5 space-y-5">{chapter.sourceLayers.length ? chapter.sourceLayers.map((layer: any, index: number) => <div key={layer?._key || index} className="border-t border-papyrus-line pt-4 first:border-t-0 first:pt-0"><div className="flex items-baseline justify-between gap-3"><strong className="font-serif text-xl">{layer?.fonte?.sigla || layer?.fonte?.nome || 'Livello critico'}</strong>{(layer?.versettoInizio != null || layer?.versettoFine != null) && <span className="font-mono text-[10px] text-ink-faint">vv. {layer.versettoInizio ?? '…'}–{layer.versettoFine ?? '…'}</span>}</div>{layer?.fonte?.nome && layer?.fonte?.sigla && <p className="mt-1 text-xs text-ink-faint">{layer.fonte.nome}</p>}<p className="mt-2 text-sm leading-6 text-ink-soft">{text(layer?.descrizione) || text(layer?.motivazione) || text(layer?.fonte?.descrizione, 'Attribuzione registrata nel modello critico.')}</p></div>) : <p className="text-sm leading-6 text-ink-faint">Nessuna attribuzione strutturata disponibile.</p>}</div>}
-
-            {panel === 'bibliography' && <div className="mt-5 divide-y divide-papyrus-line border-y border-papyrus-line">{chapter.bibliography.length ? chapter.bibliography.map((item: any, index: number) => <p key={item?._key || index} className="py-3 text-sm leading-6 text-ink-soft">{text(item, 'Riferimento bibliografico')}</p>) : <p className="py-4 text-sm text-ink-faint">Bibliografia specifica non disponibile.</p>}</div>}
+            {panel === 'bibliography' && <div className="mt-4 divide-y divide-papyrus-line border-y border-papyrus-line">{chapter.bibliography.length ? chapter.bibliography.map((item: any, index: number) => <p key={item?._key || index} className="py-3 text-sm leading-6 text-ink-soft">{toText(item, 'Riferimento bibliografico')}</p>) : <p className="py-4 text-sm text-ink-faint">Bibliografia specifica non disponibile.</p>}</div>}
           </section>
         </div>
       </aside>
