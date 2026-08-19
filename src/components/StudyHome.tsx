@@ -8,10 +8,10 @@ import { bookAbbreviation, matchReference, slugFromBookId } from '../lib/bibleRo
 const normalize = (value: string) => value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 const exploreCards = [
-  { title: 'Leggi la Bibbia', desc: 'Sfoglia i libri e apri il percorso di studio capitolo per capitolo.', href: '#bibbia', symbol: '▤' },
-  { title: 'Cronologia', desc: 'Distingui mondo narrato, storia documentabile e formazione del testo.', href: '#cronologia', symbol: '◴' },
-  { title: 'Fonti & modelli', desc: 'Esplora tradizioni, redazioni e modelli della ricerca biblica.', href: '#fonti', symbol: '≋' },
-  { title: 'Confronta', desc: 'Predisposizione al confronto MT ↔ LXX, greco NT e altri testimoni testuali.', href: '#confronta', symbol: '⇄' },
+  { title: 'Bibbia', desc: 'Leggi il corpus e mantieni libro e capitolo come centro del percorso di studio.', href: '#bibbia', symbol: '▤' },
+  { title: 'Historical Explorer', desc: 'Interroga la storia attestata, ricostruita o discussa intorno al testo.', href: '/historical-explorer', symbol: '◎' },
+  { title: 'Fonti', desc: 'Attraversa fonti, tradizioni e modelli critici collegati realmente ai libri e ai capitoli.', href: '/fonti', symbol: '≋' },
+  { title: 'Cerca', desc: 'Cerca nel corpus e raggiungi libri, capitoli e progressivamente entità e testimoni.', href: '/cerca', symbol: '⌕' },
 ];
 
 function CanonSection({ title, subtitle, books, offset = 0 }: { title: string; subtitle: string; books: Libro[]; offset?: number }) {
@@ -71,10 +71,10 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(199,154,74,0.13),transparent_34%),linear-gradient(135deg,transparent,rgba(11,42,74,0.04))] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(211,168,95,0.12),transparent_34%)]" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-[1220px] items-center gap-10 px-5 py-16 md:px-8 md:py-24 lg:grid-cols-[1.15fr_.85fr]">
         <div>
-          <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.22em] text-bronze">Testo · storia · formazione · trasmissione</p>
+          <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.22em] text-bronze">Testo · studio · tempo · storia</p>
           <h1 className="max-w-3xl font-serif text-5xl font-bold leading-[0.98] md:text-7xl">La Scrittura<br />in profondità.</h1>
           <p className="mt-5 font-serif text-2xl italic text-seal dark:text-bronze-light md:text-3xl">Con rigore. Con chiarezza.</p>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-ink-soft">Biblia Fontes è un ambiente di studio pensato per studenti universitari, lettori colti e studiosi: dal quadro essenziale fino all’apparato critico.</p>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-ink-soft">Biblia Fontes è un ambiente integrato di studio: il testo resta il centro, mentre fonti, Timeline e Historical Explorer aprono prospettive diverse senza spezzare il contesto.</p>
 
           <div id="cerca" className="relative mt-9 max-w-2xl">
             <label htmlFor="global-search" className="sr-only">Cerca nella Bibbia</label>
@@ -83,7 +83,7 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
             {query && <div className="absolute left-0 right-0 top-full z-20 mt-2 overflow-hidden rounded-xl border border-papyrus-line bg-paper-card shadow-xl" role="listbox" aria-label="Risultati di ricerca">
               {referenceHit && <Link href={`/bibbia/${referenceHit.slug}/${referenceHit.chapter}`} className="flex items-center justify-between border-b border-papyrus-line/60 px-5 py-4 hover:bg-papyrus-deep/40"><span><span className="block text-[10px] uppercase tracking-widest text-bronze">Passo</span><strong className="font-serif text-xl">{referenceHit.label}</strong></span><span className="text-sm text-ink-faint">Apri →</span></Link>}
               {results.map((libro) => { const slug = slugFromBookId(libro.id); return <Link key={libro.id} href={`/bibbia/${slug}`} className="flex items-center justify-between border-b border-papyrus-line/60 px-5 py-4 last:border-0 hover:bg-papyrus-deep/40"><span><span className="block text-[10px] uppercase tracking-widest text-bronze">Libro</span><strong className="font-serif text-xl">{libro.titolo}</strong></span><span className="text-sm text-ink-faint">{libro.capitoli ?? '—'} capitoli →</span></Link>; })}
-              {!referenceHit && !results.length && <p className="px-5 py-5 text-ink-soft">Nessun libro o riferimento riconosciuto. La ricerca per temi e fonti arriverà nella fase successiva.</p>}
+              {!referenceHit && !results.length && <p className="px-5 py-5 text-ink-soft">Nessun libro o riferimento riconosciuto. La ricerca globale continuerà ad ampliarsi a temi, fonti ed entità storiche.</p>}
             </div>}
             <div className="mt-3 flex flex-wrap gap-2 text-sm text-ink-faint"><span>Prova:</span><Link href="/bibbia/isaia/6" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Is 6</Link><Link href="/bibbia/giovanni/1" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Gv 1</Link><Link href="/bibbia/romani/8" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Rm 8</Link><Link href="/bibbia/apocalisse/13" className="rounded-full border border-papyrus-line px-3 py-1 hover:border-bronze hover:text-bronze">Ap 13</Link></div>
           </div>
@@ -97,7 +97,7 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
       </div>
     </section>
 
-    <section id="esplora" className="mx-auto max-w-[1220px] px-5 py-14 md:px-8 md:py-20"><div className="text-center"><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze">Percorsi</p><h2 className="mt-2 font-serif text-4xl font-bold">Inizia a esplorare</h2></div><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{exploreCards.map((card) => <Link key={card.title} id={card.title === 'Cronologia' ? 'cronologia' : card.title === 'Fonti & modelli' ? 'fonti' : card.title === 'Confronta' ? 'confronta' : undefined} href={card.href} className="group rounded-2xl border border-papyrus-line bg-paper-card/55 p-6 transition hover:-translate-y-0.5 hover:border-bronze hover:shadow-lg"><span className="text-3xl text-bronze" aria-hidden="true">{card.symbol}</span><h3 className="mt-5 font-serif text-2xl font-bold group-hover:text-bronze">{card.title}</h3><p className="mt-3 leading-7 text-ink-soft">{card.desc}</p><span className="mt-6 inline-block text-sm font-semibold text-bronze">Esplora →</span></Link>)}</div></section>
+    <section id="esplora" className="mx-auto max-w-[1220px] px-5 py-14 md:px-8 md:py-20"><div className="text-center"><p className="font-mono text-[10px] uppercase tracking-[0.2em] text-bronze">Ambiente di studio</p><h2 className="mt-2 font-serif text-4xl font-bold">Scegli da dove entrare.</h2><p className="mx-auto mt-4 max-w-2xl leading-7 text-ink-soft">Le funzioni non sono più strumenti isolati: ogni ingresso porta nello stesso sistema di testi, relazioni e contesti.</p></div><div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{exploreCards.map((card) => <Link key={card.title} href={card.href} className="group rounded-2xl border border-papyrus-line bg-paper-card/55 p-6 transition hover:-translate-y-0.5 hover:border-bronze hover:shadow-lg"><span className="text-3xl text-bronze" aria-hidden="true">{card.symbol}</span><h3 className="mt-5 font-serif text-2xl font-bold group-hover:text-bronze">{card.title}</h3><p className="mt-3 leading-7 text-ink-soft">{card.desc}</p><span className="mt-6 inline-block text-sm font-semibold text-bronze">Esplora →</span></Link>)}</div></section>
 
     <section id="bibbia" className="border-y border-papyrus-line bg-paper-card/35"><div className="mx-auto max-w-[1100px] px-5 py-14 md:px-8 md:py-16">
       <CanonSection title="Pentateuco" subtitle="Antico Testamento" books={pentateuco} />
@@ -113,7 +113,7 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
       <div className="border-t border-papyrus-line"><CanonSection title="Lettere Cattoliche" subtitle="Voci, comunità e tradizioni apostoliche" books={cattoliche} offset={offsetCattoliche} /></div>
       <div className="border-t border-papyrus-line"><CanonSection title="Apocalisse" subtitle="Visione, simbolo e resistenza" books={apocalisse} offset={offsetApocalisse} /></div>
 
-      <p className="mt-10 text-sm leading-6 text-ink-faint">L’intero corpus disponibile in Sanity è ora instradato attraverso lo stesso motore, con lenti metodologiche differenziate per famiglia letteraria.</p>
+      <p className="mt-10 text-sm leading-6 text-ink-faint">L’intero corpus disponibile in Sanity è instradato attraverso lo stesso motore, con lenti metodologiche differenziate per famiglia letteraria.</p>
     </div></section>
   </main>;
 }

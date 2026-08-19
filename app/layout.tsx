@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Biblia Fontes",
-  description: "L'atlante cronologico della Bibbia",
+  description: "Ambiente integrato di studio biblico: testo, fonti, formazione, Timeline e Historical Explorer.",
 };
 
 export default function RootLayout({

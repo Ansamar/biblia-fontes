@@ -1,0 +1,121 @@
+'use client';
+
+import Link from 'next/link';
+import { useEffect, useState } from 'react';
+import { studyContextHref } from '../study-context/context';
+
+type StudyMode = 'overview' | 'text' | 'study' | 'history';
+
+type StudyContextNavProps = {
+  bookSlug: string;
+  bookTitle: string;
+  firstChapter?: number;
+  active?: StudyMode;
+  historyAvailable?: boolean;
+};
+
+type HistoryReturnContext = {
+  fromHistory: boolean;
+  originBook?: string;
+  year?: number;
+  entity?: string;
+};
+
+const baseItem = 'inline-flex min-h-10 items-center rounded-full px-4 py-2 text-sm font-medium transition';
+const activeItem = `${baseItem} bg-ink text-papyrus`;
+const idleItem = `${baseItem} text-ink-soft hover:bg-papyrus-deep/60 hover:text-bronze`;
+const disabledItem = `${baseItem} cursor-default text-ink-faint/60`;
+
+function modeFromLocation(fallback: StudyMode): StudyMode {
+  if (typeof window === 'undefined') return fallback;
+  if (window.location.pathname.startsWith('/historical-explorer/')) return 'history';
+  const hash = window.location.hash;
+  if (hash === '#testo') return 'text';
+  if (hash === '#studio') return 'study';
+  if (hash === '#panoramica' || !hash) return fallback;
+  return fallback;
+}
+
+function historyContextFromLocation(): HistoryReturnContext {
+  if (typeof window === 'undefined') return { fromHistory: false };
+  const params = new URLSearchParams(window.location.search);
+  const yearRaw = params.get('year');
+  const year = yearRaw !== null && Number.isFinite(Number(yearRaw)) ? Number(yearRaw) : undefined;
+  return {
+    fromHistory: params.get('source') === 'history',
+    originBook: params.get('book') || undefined,
+    year,
+    entity: params.get('entity') || undefined,
+  };
+}
+
+export default function StudyContextNav({
+  bookSlug,
+  bookTitle,
+  firstChapter = 1,
+  active = 'overview',
+  historyAvailable = false,
+}: StudyContextNavProps) {
+  const [currentMode, setCurrentMode] = useState<StudyMode>(active);
+  const [historyReturn, setHistoryReturn] = useState<HistoryReturnContext>({ fromHistory: false });
+
+  useEffect(() => {
+    const sync = () => {
+      setCurrentMode(modeFromLocation(active));
+      setHistoryReturn(historyContextFromLocation());
+    };
+    sync();
+    window.addEventListener('hashchange', sync);
+    window.addEventListener('popstate', sync);
+    return () => {
+      window.removeEventListener('hashchange', sync);
+      window.removeEventListener('popstate', sync);
+    };
+  }, [active]);
+
+  const historicalOriginBook = historyReturn.fromHistory && historyReturn.originBook ? historyReturn.originBook : bookSlug;
+  const contextualHref = (pathname: string, hash: string, chapter?: number) => historyReturn.fromHistory
+    ? `${studyContextHref(pathname, { book: historicalOriginBook, chapter, source: 'history', year: historyReturn.year, entity: historyReturn.entity })}${hash}`
+    : `${pathname}${hash}`;
+
+  const items = [
+    { key: 'overview' as const, label: 'Panoramica', href: contextualHref(`/bibbia/${bookSlug}`, '#panoramica') },
+    { key: 'text' as const, label: 'Testo', href: contextualHref(`/bibbia/${bookSlug}/${firstChapter}`, '#testo', firstChapter) },
+    { key: 'study' as const, label: 'Studio', href: contextualHref(`/bibbia/${bookSlug}`, '#studio') },
+  ];
+
+  const canOpenHistory = historyAvailable || historyReturn.fromHistory;
+  const historyHref = studyContextHref(`/historical-explorer/${historicalOriginBook}`, historyReturn.fromHistory
+    ? { book: historicalOriginBook, source: 'history', year: historyReturn.year, entity: historyReturn.entity }
+    : { book: bookSlug, source: 'book' });
+
+  return (
+    <div className="sticky top-[72px] z-30 border-b border-papyrus-line/80 bg-papyrus/95 backdrop-blur">
+      <div className="mx-auto flex max-w-[1180px] items-center gap-3 overflow-x-auto px-5 py-3 md:px-8">
+        <div className="mr-2 hidden shrink-0 border-r border-papyrus-line pr-5 lg:block">
+          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-bronze">Contesto di studio</p>
+          <p className="mt-0.5 max-w-[180px] truncate font-serif text-sm font-semibold text-ink">{bookTitle}</p>
+        </div>
+
+        <nav aria-label={`Modalità di studio di ${bookTitle}`} className="flex shrink-0 items-center gap-1 rounded-full border border-papyrus-line bg-paper-card/65 p-1">
+          {items.map((item) => (
+            <Link key={item.key} href={item.href} aria-current={currentMode === item.key ? 'page' : undefined} className={currentMode === item.key ? activeItem : idleItem} onClick={() => setCurrentMode(item.key)}>
+              {item.label}
+            </Link>
+          ))}
+          {canOpenHistory ? (
+            <Link href={historyHref} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')} title={historyReturn.fromHistory ? 'Torna alla scena storica da cui hai aperto il testo' : 'Esplora la storia intorno al testo'}>
+              {historyReturn.fromHistory ? '← Storia' : 'Storia'}
+            </Link>
+          ) : (
+            <span className={disabledItem} title="Historical Explorer non ancora modellato per questo libro">Storia</span>
+          )}
+        </nav>
+
+        <p className="ml-auto hidden max-w-[310px] text-right text-xs leading-5 text-ink-faint xl:block">
+          {historyReturn.fromHistory ? `Contesto storico conservato: puoi cambiare modalità e tornare all’Explorer di ${historyReturn.originBook || historicalOriginBook}.` : 'Testo, studio e storia restano prospettive distinte dello stesso libro.'}
+        </p>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,82 @@
+export const historicalExplorerDatasetQuery = `
+*[_type == "historicalExplorerDataset" && id == $datasetId][0]{
+  _id,
+  id,
+  title,
+  subtitle,
+  defaultRange{
+    start,
+    end
+  },
+  quickYears[],
+  scenarios[]{
+    id,
+    start,
+    end,
+    title,
+    summary
+  },
+  "entities": entities[]->{
+    id,
+    type,
+    label,
+    summary,
+    temporal{
+      start,
+      end,
+      precision
+    },
+    spatial{
+      point,
+      region
+    },
+    epistemicStatus,
+    biblicalRefs[]{
+      display,
+      bookSlug,
+      chapterStart,
+      chapterEnd,
+      verseStart,
+      verseEnd
+    },
+    relations[]{
+      kind,
+      label,
+      "target": target->{id}
+    },
+    sources[]{
+      label,
+      kind,
+      citation,
+      locator,
+      url,
+      note
+    }
+  },
+  "areas": areas[]->{
+    id,
+    label,
+    temporal{
+      start,
+      end
+    },
+    confidence,
+    note,
+    geometry{
+      type,
+      rings[]{
+        points[]
+      }
+    },
+    "entity": entity->{id},
+    sources[]{
+      label,
+      kind,
+      citation,
+      locator,
+      url,
+      note
+    }
+  }
+}
+`;
