@@ -49,13 +49,11 @@ export default async function DynamicHistoricalExplorerPage({
   const diagnostics = diagnoseHistoricalDataset(dataset);
   const bookTitle = libro.titolo || slug;
 
-  const entryLabel = context.source === 'timeline'
-    ? 'Aperto dalla Timeline del testo'
-    : context.source === 'chapter'
-      ? `Aperto dal capitolo ${context.chapter ?? ''}`.trim()
-      : context.source === 'history'
-        ? 'Ripristino della scena storica'
-        : 'Aperto dal contesto del libro';
+  const entryLabel = context.source === 'chapter'
+    ? `Aperto dal capitolo ${context.chapter ?? ''}`.trim()
+    : context.source === 'history'
+      ? 'Ripristino della scena storica'
+      : 'Aperto dal contesto del libro';
 
   return (
     <AppShell>
@@ -88,7 +86,7 @@ export default async function DynamicHistoricalExplorerPage({
 
               <div className="flex flex-wrap items-center gap-2">
                 <ExplorerShareButton />
-                <Link href={`/bibbia/${slug}#timeline`} className="rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">← Torna alla Timeline del testo</Link>
+                <Link href={`/bibbia/${slug}#studio`} className="rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">← Torna allo studio del libro</Link>
               </div>
             </div>
           </div>
