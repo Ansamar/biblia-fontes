@@ -7,6 +7,7 @@ type ReaderWitness = BiblicalTextUnit & { _id?: string };
 
 const query = `{
   "libro": *[_id == $bookId][0]{_id, titolo, categoriaId, capitoli},
+  "capitoli": *[_type == "capitolo" && libro._ref == $bookId] | order(numero asc){_id,numero,titolo},
   "capitolo": *[_type == "capitolo" && libro._ref == $bookId && numero == $numero][0]{
     _id, numero, titolo, sintesi, struttura, analisiLetteraria, analisiStoricoCritica,
     tradizione, redazione, contestoStorico, testoCritico,
@@ -51,7 +52,7 @@ function witnesses(items: ReaderWitness[]) {
   const seen = new Set<string>();
   return items
     .filter((item) => {
-      const key = [normalized(item.tradizione), normalized(item.lingua), normalized(item.edizione), fingerprint(item)].join('|');
+      const key = [normalized(item.tradizione), normalized(item.lingua), normalized(item.testimone), normalized(item.edizione), fingerprint(item)].join('|');
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -78,6 +79,7 @@ export async function fetchChapterView(slug: string, numero: number) {
     abbreviation: bookAbbreviation(slug, book.titolo),
     number: numero,
     totalChapters: book.capitoli || numero,
+    chapters: Array.isArray(data.capitoli) ? data.capitoli : [],
     title: chapter.titolo || `Capitolo ${numero}`,
     summary: text(chapter.sintesi, 'Sintesi didattica in preparazione.'),
     structure: text(chapter.struttura) || text(chapter.analisiLetteraria?.storiaCompositiva) || text(chapter.analisiLetteraria?.strutturaPoetica),
