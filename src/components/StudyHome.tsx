@@ -9,7 +9,7 @@ const normalize = (value: string) => value.toLowerCase().normalize('NFD').replac
 
 const exploreCards = [
   { title: 'Bibbia', desc: 'Leggi il corpus e mantieni libro e capitolo come centro del percorso di studio.', href: '#bibbia', symbol: '▤' },
-  { title: 'Historical Explorer', desc: 'Interroga la storia attestata, ricostruita o discussa intorno al testo.', href: '/historical-explorer', symbol: '◎' },
+  { title: 'Esploratore storico', desc: 'Interroga la storia attestata, ricostruita o discussa intorno al testo.', href: '/historical-explorer', symbol: '◎' },
   { title: 'Fonti', desc: 'Attraversa fonti, tradizioni e modelli critici collegati realmente ai libri e ai capitoli.', href: '/fonti', symbol: '≋' },
   { title: 'Cerca', desc: 'Cerca nel corpus e raggiungi libri, capitoli e progressivamente entità e testimoni.', href: '/cerca', symbol: '⌕' },
 ];
@@ -71,10 +71,10 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(199,154,74,0.13),transparent_34%),linear-gradient(135deg,transparent,rgba(11,42,74,0.04))] dark:bg-[radial-gradient(circle_at_80%_20%,rgba(211,168,95,0.12),transparent_34%)]" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-[1220px] items-center gap-10 px-5 py-16 md:px-8 md:py-24 lg:grid-cols-[1.15fr_.85fr]">
         <div>
-          <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.22em] text-bronze">Testo · studio · tempo · storia</p>
+          <p className="mb-5 font-mono text-[11px] uppercase tracking-[0.22em] text-bronze">Testo · studio · storia · fonti</p>
           <h1 className="max-w-3xl font-serif text-5xl font-bold leading-[0.98] md:text-7xl">La Scrittura<br />in profondità.</h1>
           <p className="mt-5 font-serif text-2xl italic text-seal dark:text-bronze-light md:text-3xl">Con rigore. Con chiarezza.</p>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-ink-soft">Biblia Fontes è un ambiente integrato di studio: il testo resta il centro, mentre fonti, Timeline e Historical Explorer aprono prospettive diverse senza spezzare il contesto.</p>
+          <p className="mt-6 max-w-2xl text-lg leading-8 text-ink-soft">Biblia Fontes è un ambiente integrato di studio: il testo resta il centro, mentre fonti, studio critico ed esplorazione storica aprono prospettive diverse senza spezzare il contesto.</p>
 
           <div id="cerca" className="relative mt-9 max-w-2xl">
             <label htmlFor="global-search" className="sr-only">Cerca nella Bibbia</label>
@@ -105,7 +105,7 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
       <div className="border-t border-papyrus-line"><CanonSection title="Sapienziali e poetici" subtitle="Poesia, sapienza e voce" books={sapienziali} offset={offsetSapienziali} /></div>
       <div className="border-t border-papyrus-line"><CanonSection title="Profeti" subtitle="Oracolo, storia, raccolte e redazione" books={profeti} offset={offsetProfeti} /></div>
 
-      <div className="my-12 border-t-2 border-bronze/40 pt-12"><p className="font-mono text-[11px] uppercase tracking-[0.24em] text-bronze">Nuovo Testamento</p><p className="mt-3 max-w-2xl text-ink-soft">Il Reader conserva la stessa grammatica, ma cambia lente: tradizioni evangeliche, storia della missione, retorica epistolare, autorialità, comunità e trasmissione del testo greco.</p></div>
+      <div className="my-12 border-t-2 border-bronze/40 pt-12"><p className="font-mono text-[11px] uppercase tracking-[0.24em] text-bronze">Nuovo Testamento</p><p className="mt-3 max-w-2xl text-ink-soft">Il lettore conserva la stessa grammatica, ma cambia prospettiva: tradizioni evangeliche, storia della missione, retorica epistolare, autorialità, comunità e trasmissione del testo greco.</p></div>
       <CanonSection title="Vangeli" subtitle="Gesù, tradizioni e redazione evangelica" books={vangeli} offset={offsetVangeli} />
       <div className="border-t border-papyrus-line"><CanonSection title="Atti degli Apostoli" subtitle="Missione, narrazione e storia testuale" books={atti} offset={offsetAtti} /></div>
       <div className="border-t border-papyrus-line"><CanonSection title="Lettere Paoline" subtitle="Comunità, argomentazione e tradizione paolina" books={paoline} offset={offsetPaoline} /></div>
@@ -113,7 +113,7 @@ export default function StudyHome({ libri }: { libri: Libro[] }) {
       <div className="border-t border-papyrus-line"><CanonSection title="Lettere Cattoliche" subtitle="Voci, comunità e tradizioni apostoliche" books={cattoliche} offset={offsetCattoliche} /></div>
       <div className="border-t border-papyrus-line"><CanonSection title="Apocalisse" subtitle="Visione, simbolo e resistenza" books={apocalisse} offset={offsetApocalisse} /></div>
 
-      <p className="mt-10 text-sm leading-6 text-ink-faint">L’intero corpus disponibile in Sanity è instradato attraverso lo stesso motore, con lenti metodologiche differenziate per famiglia letteraria.</p>
+      <p className="mt-10 text-sm leading-6 text-ink-faint">L’intero corpus disponibile nell’archivio editoriale è instradato attraverso lo stesso motore, con prospettive metodologiche differenziate per famiglia letteraria.</p>
     </div></section>
   </main>;
 }
