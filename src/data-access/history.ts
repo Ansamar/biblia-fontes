@@ -22,6 +22,15 @@ const historyIndexQuery = `*[_type == "historicalExplorerDataset"]{
   }
 }`;
 
+type HistoryIndexEntity = {
+  id: string;
+  label: string;
+  type: string;
+  epistemicStatus: string;
+  start?: number;
+  end?: number;
+};
+
 function slugFromDataset(item: any) {
   if (item?.book?._id?.startsWith('libro-')) return item.book._id.slice('libro-'.length);
   if (typeof item?.id === 'string' && item.id.endsWith('-history')) return item.id.slice(0, -'-history'.length);
@@ -37,7 +46,7 @@ export async function fetchHistoryIndexView() {
   const datasets = (Array.isArray(raw) ? raw : []).flatMap((item: any) => {
     const slug = slugFromDataset(item);
     if (!slug) return [];
-    const entities = (Array.isArray(item.entities) ? item.entities : []).flatMap((entity: any) => {
+    const entities: HistoryIndexEntity[] = (Array.isArray(item.entities) ? item.entities : []).flatMap((entity: any) => {
       const start = entity?.temporal?.start;
       const end = entity?.temporal?.end;
       return [{
@@ -49,8 +58,8 @@ export async function fetchHistoryIndexView() {
         end: finite(end) ? end : finite(start) ? start : undefined,
       }];
     });
-    const starts = entities.map((entity) => entity.start).filter(finite);
-    const ends = entities.map((entity) => entity.end).filter(finite);
+    const starts = entities.map((entity: HistoryIndexEntity) => entity.start).filter(finite);
+    const ends = entities.map((entity: HistoryIndexEntity) => entity.end).filter(finite);
     const fallbackStart = item?.defaultRange?.start;
     const fallbackEnd = item?.defaultRange?.end;
     const start = starts.length ? Math.min(...starts) : finite(fallbackStart) ? fallbackStart : undefined;
