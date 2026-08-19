@@ -1,8 +1,8 @@
 import AppFrame from '../../../src/ui-next/AppFrame';
 import HistoryIndexSurface from '../../../src/ui-next/HistoryIndexSurface';
-import { fetchCorpusView } from '../../../src/data-access/corpus';
+import { fetchHistoryIndexView } from '../../../src/data-access/history';
 
 export default async function RebuiltHistoricalExplorerIndexPage() {
-  const corpus = await fetchCorpusView();
-  return <AppFrame><HistoryIndexSurface corpus={corpus} /></AppFrame>;
+  const history = await fetchHistoryIndexView();
+  return <AppFrame><HistoryIndexSurface history={history} /></AppFrame>;
 }
