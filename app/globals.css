@@ -30,11 +30,6 @@
   --paper-card: #14232D;
 }
 
-/*
- * Reading preferences are global. Tailwind text utilities are expressed in rem,
- * so scaling the root font-size makes headings, cards, apparatus, Explorer and
- * biblical text respond coherently to the same control.
- */
 html[data-font-scale='normal'] { font-size: 100%; }
 html[data-font-scale='large'] { font-size: 112%; }
 html[data-font-scale='xlarge'] { font-size: 125%; }
@@ -43,7 +38,6 @@ html[data-font-scale='xlarge'] { font-size: 125%; }
   --font-serif: 'Cormorant Garamond', serif;
   --font-sans: 'Crimson Pro', serif;
   --font-mono: 'IBM Plex Mono', monospace;
-
   --color-papyrus: var(--papyrus);
   --color-papyrus-deep: var(--papyrus-deep);
   --color-papyrus-line: var(--papyrus-line);
@@ -56,25 +50,31 @@ html[data-font-scale='xlarge'] { font-size: 125%; }
   --color-paper-card: var(--paper-card);
 }
 
-html {
-  color-scheme: light;
-}
-
-html.dark {
-  color-scheme: dark;
-}
+html { color-scheme: light; scroll-behavior: smooth; }
+html.dark { color-scheme: dark; }
 
 body {
+  margin: 0;
   background-color: var(--papyrus);
   color: var(--ink);
   font-family: var(--font-sans);
   font-size: 1rem;
   line-height: 1.62;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-h1, h2, h3, h4 {
-  font-family: var(--font-serif);
+h1, h2, h3, h4 { font-family: var(--font-serif); text-wrap: balance; }
+p { text-wrap: pretty; }
+a, button, input, select { -webkit-tap-highlight-color: transparent; }
+button, select { font: inherit; }
+
+::selection { background: color-mix(in srgb, var(--bronze) 28%, transparent); color: var(--ink); }
+
+:focus-visible {
+  outline: 2px solid var(--bronze);
+  outline-offset: 3px;
 }
 
 .reading-text {
@@ -83,11 +83,14 @@ h1, h2, h3, h4 {
   max-width: 72ch;
 }
 
-/* Keep dense controls usable at the largest scale without opting them out of accessibility scaling. */
+/* New workspace: a quiet editorial surface rather than stacked cards. */
+[data-workspace='true'] {
+  min-height: 100vh;
+  background: var(--papyrus);
+}
+
 @media (max-width: 760px) {
-  html[data-font-scale='xlarge'] {
-    font-size: 118%;
-  }
+  html[data-font-scale='xlarge'] { font-size: 118%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
