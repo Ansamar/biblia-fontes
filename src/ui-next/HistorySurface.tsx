@@ -19,6 +19,7 @@ const statusLabel: Record<HistoricalEntity['epistemicStatus'], string> = {
 function formatYear(year?: number) {
   if (year === undefined) return 'non databile';
   if (year < 0) return `${Math.abs(year)} a.C.`;
+  if (year === 0) return '0';
   return `${year} d.C.`;
 }
 
@@ -27,11 +28,26 @@ function activeAt(entity: HistoricalEntity, year: number) {
   return entity.temporal.start <= year && (entity.temporal.end ?? entity.temporal.start) >= year;
 }
 
-export default function HistorySurface({ view }: { view: HistoryView }) {
+export default function HistorySurface({
+  view,
+  initialYear,
+  initialEntityId,
+}: {
+  view: HistoryView;
+  initialYear?: number;
+  initialEntityId?: string;
+}) {
   const { dataset } = view;
-  const initialYear = Math.round((dataset.defaultRange[0] + dataset.defaultRange[1]) / 2);
-  const [year, setYear] = useState(initialYear);
-  const [selectedId, setSelectedId] = useState(dataset.entities[0]?.id || '');
+  const fallbackYear = Math.round((dataset.defaultRange[0] + dataset.defaultRange[1]) / 2);
+  const clampedInitialYear = initialYear === undefined
+    ? fallbackYear
+    : Math.max(dataset.defaultRange[0], Math.min(dataset.defaultRange[1], Math.round(initialYear)));
+  const validInitialEntity = initialEntityId && dataset.entities.some((entity) => entity.id === initialEntityId)
+    ? initialEntityId
+    : dataset.entities[0]?.id || '';
+
+  const [year, setYear] = useState(clampedInitialYear);
+  const [selectedId, setSelectedId] = useState(validInitialEntity);
   const [layers, setLayers] = useState<ExplorerLayer[]>(['politics', 'places', 'events', 'institutions', 'texts']);
 
   const visible = useMemo(() => dataset.entities.filter((entity) => layers.includes(typeToLayer[entity.type])), [dataset.entities, layers]);
@@ -44,8 +60,8 @@ export default function HistorySurface({ view }: { view: HistoryView }) {
   return <main className="mx-auto max-w-[1560px] px-4 py-6 md:px-7 md:py-8">
     <nav className="mb-6 flex flex-wrap items-center gap-2 text-xs text-ink-faint" aria-label="Percorso">
       <Link href="/rebuild" className="hover:text-ink">Bibbia</Link><span>/</span>
-      <Link href={`/rebuild/bibbia/${view.slug}`} className="hover:text-ink">{view.bookTitle}</Link><span>/</span>
-      <span className="text-ink">Storia</span>
+      <Link href="/rebuild/historical-explorer" className="hover:text-ink">Storia</Link><span>/</span>
+      <span className="text-ink">{view.bookTitle}</span>
     </nav>
 
     <header className="grid gap-7 border-b border-papyrus-line pb-7 lg:grid-cols-[minmax(0,1fr)_360px] lg:items-end">
@@ -102,7 +118,7 @@ export default function HistorySurface({ view }: { view: HistoryView }) {
 
     <footer className="flex flex-col gap-3 py-6 text-sm sm:flex-row sm:items-center sm:justify-between">
       <Link href={`/rebuild/bibbia/${view.slug}`} className="text-ink-soft hover:text-ink">← Torna a {view.bookTitle}</Link>
-      <span className="text-ink-faint">Dati Historical Explorer da Sanity production</span>
+      <Link href="/rebuild/historical-explorer" className="text-ink-faint hover:text-ink">Cambia libro o data</Link>
     </footer>
   </main>;
 }
