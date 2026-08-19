@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { studyContextHref } from '../study-context/context';
 
-type StudyMode = 'overview' | 'text' | 'study' | 'timeline' | 'history';
+type StudyMode = 'overview' | 'text' | 'study' | 'history';
 
 type StudyContextNavProps = {
   bookSlug: string;
@@ -32,7 +32,6 @@ function modeFromLocation(fallback: StudyMode): StudyMode {
   const hash = window.location.hash;
   if (hash === '#testo') return 'text';
   if (hash === '#studio') return 'study';
-  if (hash === '#timeline') return 'timeline';
   if (hash === '#panoramica' || !hash) return fallback;
   return fallback;
 }
@@ -83,13 +82,12 @@ export default function StudyContextNav({
     { key: 'overview' as const, label: 'Panoramica', href: contextualHref(`/bibbia/${bookSlug}`, '#panoramica') },
     { key: 'text' as const, label: 'Testo', href: contextualHref(`/bibbia/${bookSlug}/${firstChapter}`, '#testo', firstChapter) },
     { key: 'study' as const, label: 'Studio', href: contextualHref(`/bibbia/${bookSlug}`, '#studio') },
-    { key: 'timeline' as const, label: 'Timeline', href: contextualHref(`/bibbia/${bookSlug}`, '#timeline') },
   ];
 
   const canOpenHistory = historyAvailable || historyReturn.fromHistory;
   const historyHref = studyContextHref(`/historical-explorer/${historicalOriginBook}`, historyReturn.fromHistory
     ? { book: historicalOriginBook, source: 'history', year: historyReturn.year, entity: historyReturn.entity }
-    : { book: bookSlug, source: currentMode === 'timeline' ? 'timeline' : 'book' });
+    : { book: bookSlug, source: 'book' });
 
   return (
     <div className="sticky top-[72px] z-30 border-b border-papyrus-line/80 bg-papyrus/95 backdrop-blur">
@@ -106,7 +104,7 @@ export default function StudyContextNav({
             </Link>
           ))}
           {canOpenHistory ? (
-            <Link href={historyHref} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')} title={historyReturn.fromHistory ? 'Torna alla scena storica da cui hai aperto il testo' : undefined}>
+            <Link href={historyHref} aria-current={currentMode === 'history' ? 'page' : undefined} className={currentMode === 'history' ? activeItem : idleItem} onClick={() => setCurrentMode('history')} title={historyReturn.fromHistory ? 'Torna alla scena storica da cui hai aperto il testo' : 'Esplora la storia intorno al testo'}>
               {historyReturn.fromHistory ? '← Storia' : 'Storia'}
             </Link>
           ) : (
@@ -115,7 +113,7 @@ export default function StudyContextNav({
         </nav>
 
         <p className="ml-auto hidden max-w-[310px] text-right text-xs leading-5 text-ink-faint xl:block">
-          {historyReturn.fromHistory ? `Contesto storico conservato: puoi cambiare modalità e tornare all’Explorer di ${historyReturn.originBook || historicalOriginBook}.` : 'Cambia prospettiva senza perdere il libro che stai studiando.'}
+          {historyReturn.fromHistory ? `Contesto storico conservato: puoi cambiare modalità e tornare all’Explorer di ${historyReturn.originBook || historicalOriginBook}.` : 'Testo, studio e storia restano prospettive distinte dello stesso libro.'}
         </p>
       </div>
     </div>
