@@ -3,9 +3,11 @@ import { historicalExplorerDatasetQuery } from '../historical-explorer/sanityQue
 import { historicalExplorerDatasetFromSanity } from '../historical-explorer/sanityAdapter';
 import { bookIdFromSlug, categoryLabel } from '../lib/bibleRouting';
 import { canonicalBookOrder } from '../lib/canon';
+import { canonicalHistoricalBookSlug, historicalDatasetIdCandidates } from '../lib/historicalRouting';
+import { italianizeVisibleCopy } from '../lib/italianUi';
 
 const bookQuery = `*[_id == $bookId][0]{_id,titolo,capitoli}`;
-const historyDatasetResolverQuery = `*[_type == "historicalExplorerDataset" && (bookRef._ref == $bookId || id == $legacyId)]{id,"direct":bookRef._ref == $bookId}`;
+const historyDatasetResolverQuery = `*[_type == "historicalExplorerDataset" && (bookRef._ref == $bookId || id in $candidateIds)]{id,"direct":bookRef._ref == $bookId}`;
 
 const historyIndexQuery = `*[_type == "historicalExplorerDataset"]{
   _id,
@@ -35,9 +37,9 @@ type HistoryIndexEntity = {
 };
 
 function slugFromDataset(item: any) {
-  if (typeof item?.bookId === 'string' && item.bookId.startsWith('libro-')) return item.bookId.slice('libro-'.length);
-  if (item?.book?._id?.startsWith('libro-')) return item.book._id.slice('libro-'.length);
-  if (typeof item?.id === 'string' && item.id.endsWith('-history')) return item.id.slice(0, -'-history'.length);
+  if (typeof item?.bookId === 'string') return canonicalHistoricalBookSlug(item.bookId);
+  if (typeof item?.book?._id === 'string') return canonicalHistoricalBookSlug(item.book._id);
+  if (typeof item?.id === 'string') return canonicalHistoricalBookSlug(item.id);
   return '';
 }
 
@@ -55,7 +57,7 @@ export async function fetchHistoryIndexView() {
       const end = entity?.temporal?.end;
       return {
         id: entity?.id || '',
-        label: entity?.label || 'Entità storica',
+        label: italianizeVisibleCopy(entity?.label || 'Entità storica'),
         type: entity?.type || 'event',
         epistemicStatus: entity?.epistemicStatus || 'debated',
         start: finite(start) ? start : undefined,
@@ -72,10 +74,10 @@ export async function fetchHistoryIndexView() {
       id: item._id,
       datasetId: item.id,
       slug,
-      title: item.book?.titolo || item.title || slug,
+      title: italianizeVisibleCopy(item.book?.titolo || item.title || slug),
       category: categoryLabel(item.book?.categoriaId),
       order: canonicalBookOrder(slug, finite(item.book?.ordine) ? item.book.ordine : 999),
-      subtitle: item.subtitle || '',
+      subtitle: italianizeVisibleCopy(item.subtitle || ''),
       start,
       end,
       entities,
@@ -93,10 +95,10 @@ export async function fetchHistoryIndexView() {
 
 export async function fetchHistoryView(slug: string) {
   const bookId = bookIdFromSlug(slug);
-  const legacyId = `${slug}-history`;
+  const candidateIds = historicalDatasetIdCandidates(slug);
   const [book, candidates] = await Promise.all([
     client.fetch(bookQuery, { bookId }),
-    client.fetch(historyDatasetResolverQuery, { bookId, legacyId }).catch(() => []),
+    client.fetch(historyDatasetResolverQuery, { bookId, candidateIds }).catch(() => []),
   ]);
   const options = Array.isArray(candidates) ? candidates : [];
   const resolved = options.find((item: any) => item?.direct) || options[0];
@@ -105,11 +107,23 @@ export async function fetchHistoryView(slug: string) {
   if (!book || !rawDataset) return null;
 
   try {
+    const dataset = historicalExplorerDatasetFromSanity(rawDataset);
     return {
       slug,
-      bookTitle: book.titolo || slug,
+      bookTitle: italianizeVisibleCopy(book.titolo || slug),
       chapterCount: book.capitoli || 0,
-      dataset: historicalExplorerDatasetFromSanity(rawDataset),
+      dataset: {
+        ...dataset,
+        title: italianizeVisibleCopy(dataset.title),
+        subtitle: italianizeVisibleCopy(dataset.subtitle),
+        entities: dataset.entities.map((entity) => ({
+          ...entity,
+          label: italianizeVisibleCopy(entity.label),
+          summary: italianizeVisibleCopy(entity.summary),
+          relations: entity.relations.map((relation) => ({ ...relation, label: italianizeVisibleCopy(relation.label) })),
+        })),
+        scenarios: dataset.scenarios?.map((scenario) => ({ ...scenario, title: italianizeVisibleCopy(scenario.title), summary: italianizeVisibleCopy(scenario.summary) })),
+      },
     };
   } catch {
     return null;
