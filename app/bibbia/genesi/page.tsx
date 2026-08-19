@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AppShell from '../../../src/components/AppShell';
-import LiteraryArchitectureMap from '../../../src/components/LiteraryArchitectureMap';
+import BookNavigator from '../../../src/components/BookNavigator';
 import StudyContextNav from '../../../src/components/StudyContextNav';
 import { client } from '../../../src/sanity/client';
 
@@ -22,8 +22,8 @@ export default async function GenesisPage() {
   const { libro, capitoli } = data;
   const macro = libro.macroSezioni?.length ? libro.macroSezioni : [
     {capitoloInizio:1, capitoloFine:11, etichetta:'Storia delle origini'},
-    {capitoloInizio:12, capitoloFine:25, etichetta:'Abramo'},
-    {capitoloInizio:26, capitoloFine:36, etichetta:'Isacco e Giacobbe'},
+    {capitoloInizio:12, capitoloFine:25, etichetta:'Abramo e Sara'},
+    {capitoloInizio:26, capitoloFine:36, etichetta:'Isacco, Giacobbe ed Esaù'},
     {capitoloInizio:37, capitoloFine:50, etichetta:'Giuseppe e la famiglia di Giacobbe'},
   ];
   const formationLabel = [libro.datazione?.etichettaInizio, libro.datazione?.etichettaFine].filter(Boolean).join(' — ') || 'Processo compositivo pluristratificato, con fasi e datazioni discusse.';
@@ -37,7 +37,6 @@ export default async function GenesisPage() {
             <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-bronze">Pentateuco · {libro.capitoli ?? 50} capitoli</p>
             <div className="mt-4 flex flex-wrap items-end gap-x-5 gap-y-2"><h1 className="font-serif text-6xl font-bold leading-none md:text-7xl">{libro.titolo}</h1>{libro.titoloEbraico && <span lang="he" dir="rtl" className="font-serif text-2xl text-seal md:text-3xl">{libro.titoloEbraico}</span>}</div>
             <p className="reading-text mt-7 max-w-3xl text-ink-soft">{libro.descrizione || 'Dalle origini del mondo alle tradizioni patriarcali e alla discesa della famiglia di Giacobbe in Egitto.'}</p>
-            <div className="mt-8 flex flex-wrap gap-3"><Link href="/bibbia/genesi/1#testo" className="min-h-11 rounded-full bg-ink px-5 py-3 text-sm font-semibold text-papyrus transition hover:opacity-90">Inizia dal capitolo 1 →</Link><Link href="/historical-explorer/genesi" className="min-h-11 rounded-full border border-papyrus-line px-5 py-3 text-sm text-ink-soft hover:border-bronze hover:text-bronze">Esplora la storia →</Link></div>
           </div>
           <div className="rounded-2xl border border-papyrus-line bg-papyrus/70 p-5 shadow-sm">
             <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Quadro rapido</p>
@@ -54,35 +53,28 @@ export default async function GenesisPage() {
 
     <StudyContextNav bookSlug="genesi" bookTitle={libro.titolo} firstChapter={1} active="overview" historyAvailable />
 
-    <section id="studio" className="scroll-mt-36 mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
-      <div className="flex items-end justify-between gap-4"><div><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Architettura letteraria</p><h2 className="mt-2 font-serif text-3xl font-bold md:text-4xl">Struttura del libro</h2></div><span className="hidden text-sm text-ink-faint md:block">4 grandi movimenti narrativi</span></div>
-      <p className="mt-3 max-w-3xl text-base leading-7 text-ink-soft">La mappa rende visibile il peso relativo delle grandi unità narrative e permette di entrare direttamente nella sezione che si vuole studiare.</p>
-      <LiteraryArchitectureMap
-        bookSlug="genesi"
-        bookAbbreviation="Gen"
-        totalChapters={libro.capitoli ?? 50}
-        sections={macro}
-        fallback={libro.profiloLetterario?.strutturaGenerale}
-      />
-    </section>
+    <BookNavigator
+      bookSlug="genesi"
+      bookAbbreviation="Gen"
+      chapters={capitoli ?? []}
+      sections={macro}
+    />
 
-    <section className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <section id="studio" className="scroll-mt-36 border-t border-papyrus-line bg-paper-card/25">
+      <div className="mx-auto grid max-w-[1180px] gap-10 px-5 py-12 md:px-8 md:py-16 lg:grid-cols-[minmax(0,1fr)_340px]">
         <div>
-          <div className="mb-6 flex items-end justify-between"><div><p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Navigazione</p><h2 className="mt-2 font-serif text-3xl font-bold">Capitoli</h2></div><span className="text-sm text-ink-faint">{capitoli?.length ?? 0} disponibili</span></div>
-          <div className="divide-y divide-papyrus-line border-y border-papyrus-line">{(capitoli ?? []).map((c:any) => <Link key={c._id} href={`/bibbia/genesi/${c.numero}`} className="group grid min-h-16 grid-cols-[3.4rem_1fr_auto] items-center gap-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-bronze"><span className="font-mono text-xs text-ink-faint">{String(c.numero).padStart(2,'0')}</span><span className="font-serif text-xl font-semibold group-hover:text-bronze">{c.titolo || `Capitolo ${c.numero}`}</span><span className="text-xs text-ink-faint">Gen {c.numero} →</span></Link>)}</div>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-bronze">Comprendere il libro</p>
+          <h2 className="mt-2 font-serif text-3xl font-bold md:text-4xl">Genesi come testo</h2>
+          <p className="mt-4 max-w-3xl text-base leading-7 text-ink-soft">L’indice segue le grandi unità letterarie del libro e le usa come orientamento per la lettura. Le ipotesi su fonti, livelli compositivi e redazione restano invece materia dello Studio critico e non vengono confuse con la semplice navigazione.</p>
         </div>
-
-        <aside className="h-fit rounded-2xl border border-papyrus-line bg-paper-card p-6 lg:sticky lg:top-36">
-          <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Come studiare Genesi</p>
-          <h2 className="mt-2 font-serif text-2xl font-bold">Tre profondità, più prospettive</h2>
-          <div className="mt-6 space-y-5">
-            <div><strong className="text-ink">Essenziale</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Sintesi, struttura e orientamento rapido.</p></div>
-            <div><strong className="text-ink">Studio</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Architettura letteraria, contesto, tradizione e formazione.</p></div>
-            <div><strong className="text-ink">Critica</strong><p className="mt-1 text-sm leading-6 text-ink-soft">Livelli compositivi, certezza, motivazioni e bibliografia.</p></div>
-          </div>
-          <Link href="/bibbia/genesi/1#testo" className="mt-7 inline-flex min-h-11 items-center rounded-full border border-bronze px-4 py-2 text-sm text-bronze hover:bg-bronze hover:text-papyrus">Apri Genesi 1 →</Link>
-          <Link href="/historical-explorer/genesi" className="mt-3 inline-flex min-h-11 items-center rounded-full border border-papyrus-line px-4 py-2 text-sm text-ink-soft hover:border-bronze hover:text-bronze">Apri Historical Explorer →</Link>
+        <aside className="border-l border-papyrus-line pl-6">
+          <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Prospettive</p>
+          <dl className="mt-5 space-y-5 text-sm">
+            <div><dt className="font-semibold text-ink">Formazione</dt><dd className="mt-1 leading-6 text-ink-soft">{formationLabel}</dd></div>
+            <div><dt className="font-semibold text-ink">Studio</dt><dd className="mt-1 leading-6 text-ink-soft">Fonti, redazione, critica testuale e contesto nei singoli capitoli.</dd></div>
+            <div><dt className="font-semibold text-ink">Storia</dt><dd className="mt-1 leading-6 text-ink-soft">Historical Explorer interroga luoghi, culture, cronologie e relazioni intorno al testo.</dd></div>
+          </dl>
+          <Link href="/historical-explorer/genesi" className="mt-6 inline-flex text-sm font-semibold text-bronze hover:underline">Esplora la storia di Genesi →</Link>
         </aside>
       </div>
     </section>
