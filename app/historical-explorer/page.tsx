@@ -1,12 +1,12 @@
 import WorkspaceFrame from '../../src/ui-next/WorkspaceFrame';
-import HistoryIndexSurface from '../../src/ui-next/HistoryIndexSurface';
+import HistoryHubSurface from '../../src/ui-next/HistoryHubSurface';
 import { fetchHistoryIndexView } from '../../src/data-access/history';
 
 export default async function HistoricalExplorerLanding() {
   const history = await fetchHistoryIndexView();
   return (
     <WorkspaceFrame active="history">
-      <HistoryIndexSurface history={history} basePath="/historical-explorer" corpusPath="/" />
+      <HistoryHubSurface history={history} basePath="/historical-explorer" corpusPath="/" />
     </WorkspaceFrame>
   );
 }
