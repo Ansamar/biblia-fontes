@@ -10,7 +10,7 @@ const query = `{
     "libro": libro->{_id, titolo, categoriaId},
     "sourceIds": attribuzioniFonti[].fonte._ref
   },
-  "books": *[_type == "libro"] | order(ordine asc, titolo asc){_id, titolo, categoriaId, datazione}
+  "books": *[_type == "libro"]{_id, titolo, categoriaId, datazione}
 }`;
 
 export default async function SourcesPage() {
@@ -27,7 +27,7 @@ export default async function SourcesPage() {
           <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
             <p className="font-mono text-[10px] uppercase tracking-[.22em] text-bronze">Biblia Fontes · apparato trasversale</p>
             <h1 className="mt-4 max-w-4xl font-serif text-5xl font-bold leading-[.95] md:text-7xl">Fonti, tradizioni e formazione.</h1>
-            <p className="reading-text mt-7 max-w-3xl text-ink-soft">Qui confluiscono le dimensioni trasversali che appartengono alla storia dei testi: fonti, modelli critici e formazione del corpus. La storia politica, sociale e geografica resta invece nell’Historical Explorer.</p>
+            <p className="reading-text mt-7 max-w-3xl text-ink-soft">Uno spazio per seguire la formazione letteraria dei testi, le tradizioni che li attraversano e i modelli proposti dalla ricerca critica. La ricostruzione dei contesti storici è sviluppata nell’Esploratore storico.</p>
           </div>
         </section>
 
@@ -37,9 +37,9 @@ export default async function SourcesPage() {
 
         <section id="formazione" className="scroll-mt-28 border-t border-papyrus-line bg-paper-card/35">
           <div className="mx-auto max-w-[1180px] px-5 py-12 md:px-8 md:py-16">
-            <p className="font-mono text-[10px] uppercase tracking-[.22em] text-bronze">Formazione del corpus</p>
-            <h2 className="mt-3 font-serif text-4xl font-bold md:text-5xl">Quando prendono forma i testi?</h2>
-            <p className="mt-4 max-w-3xl text-base leading-7 text-ink-soft">Questa è la parte utile della vecchia cronologia globale: confrontare gli intervalli compositivi registrati per i libri. Non mescola più eventi narrati, storia reale e formazione letteraria.</p>
+            <p className="font-mono text-[10px] uppercase tracking-[.22em] text-bronze">Cronologia della formazione</p>
+            <h2 className="mt-3 max-w-4xl font-serif text-4xl font-bold md:text-5xl">Quando prendono forma i libri biblici?</h2>
+            <p className="mt-4 max-w-3xl text-base leading-7 text-ink-soft">Una lettura cronologica degli intervalli di composizione e redazione: dai nuclei più antichi alle forme letterarie più tarde. Le sovrapposizioni rendono visibile che la formazione del corpus è un processo lungo, stratificato e non lineare.</p>
             <div className="mt-8"><CorpusFormationOverview books={data?.books || []} /></div>
           </div>
         </section>
