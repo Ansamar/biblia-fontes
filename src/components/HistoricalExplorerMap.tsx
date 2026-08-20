@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
 import type { HistoricalArea, HistoricalEntity } from '../historical-explorer/types';
 import HistoricalProvenance from './HistoricalProvenance';
 
@@ -12,57 +11,29 @@ type HistoricalExplorerMapProps = {
   onSelect: (id: string) => void;
 };
 
-type GeoJsonSource = {
-  setData: (data: unknown) => void;
+type Point = {
+  id: string;
+  label: string;
+  type: HistoricalEntity['type'];
+  lat: number;
+  lng: number;
+  active: boolean;
+  selected: boolean;
 };
 
-type MapInstance = {
-  addControl: (control: unknown, position?: string) => void;
-  fitBounds: (bounds: unknown, options?: Record<string, unknown>) => void;
-  flyTo: (options: Record<string, unknown>) => void;
-  addSource: (id: string, source: Record<string, unknown>) => void;
-  getSource: (id: string) => GeoJsonSource | undefined;
-  addLayer: (layer: Record<string, unknown>) => void;
-  on: (...args: any[]) => void;
-  getCanvas: () => HTMLCanvasElement;
-  remove: () => void;
-  resize: () => void;
-};
-
-type MarkerInstance = {
-  setLngLat: (lngLat: [number, number]) => MarkerInstance;
-  addTo: (map: MapInstance) => MarkerInstance;
-  remove: () => void;
-};
-
-type BoundsInstance = {
-  extend: (lngLat: [number, number]) => BoundsInstance;
-};
-
-type MapLibreGlobal = {
-  Map: new (options: Record<string, unknown>) => MapInstance;
-  Marker: new (options?: Record<string, unknown>) => MarkerInstance;
-  NavigationControl: new (options?: Record<string, unknown>) => unknown;
-  LngLatBounds: new () => BoundsInstance;
-};
-
-declare global {
-  interface Window {
-    maplibregl?: MapLibreGlobal;
-  }
-}
-
-const MAPLIBRE_VERSION = '5.6.0';
-const MAPLIBRE_SCRIPT_ID = 'biblia-fontes-maplibre-script';
-const MAPLIBRE_STYLE_ID = 'biblia-fontes-maplibre-style';
-const HISTORICAL_AREAS_SOURCE = 'biblia-fontes-historical-areas';
-const HISTORICAL_AREAS_FILL = 'biblia-fontes-historical-areas-fill';
-const HISTORICAL_AREAS_LINE = 'biblia-fontes-historical-areas-line';
+const WIDTH = 1000;
+const HEIGHT = 530;
+const PAD_X = 72;
+const PAD_Y = 48;
 
 function activeAt(entity: HistoricalEntity, year: number) {
   const { start, end, precision } = entity.temporal;
   if (precision === 'unknown' || start === undefined) return true;
   return start <= year && (end ?? start) >= year;
+}
+
+function finite(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
 }
 
 function markerLabel(entity: HistoricalEntity) {
@@ -75,271 +46,173 @@ function markerLabel(entity: HistoricalEntity) {
   return entity.type;
 }
 
-function markerStyle(entity: HistoricalEntity, selected: boolean) {
-  if (selected) return { background: '#9b6a38', color: '#fff', border: '#9b6a38', dot: '#fff' };
-  if (entity.type === 'event') return { background: 'rgba(112,48,38,.95)', color: '#fff', border: 'rgba(112,48,38,1)', dot: '#fff' };
-  if (entity.type === 'city') return { background: 'rgba(250,247,240,.96)', color: '#30271f', border: 'rgba(80,63,47,.38)', dot: '#30271f' };
-  if (entity.type === 'empire') return { background: 'rgba(68,50,34,.94)', color: '#fff', border: 'rgba(68,50,34,.95)', dot: '#d9b07d' };
-  if (entity.type === 'region') return { background: 'rgba(239,229,210,.94)', color: '#4f4032', border: 'rgba(155,106,56,.45)', dot: '#9b6a38' };
-  if (entity.type === 'redaction' || entity.type === 'text') return { background: 'rgba(255,249,238,.96)', color: '#6e4b29', border: 'rgba(155,106,56,.65)', dot: '#9b6a38' };
-  return { background: 'rgba(250,247,240,.94)', color: '#30271f', border: 'rgba(80,63,47,.34)', dot: '#9b6a38' };
-}
-
-function loadMapLibre(): Promise<MapLibreGlobal> {
-  if (window.maplibregl) return Promise.resolve(window.maplibregl);
-
-  if (!document.getElementById(MAPLIBRE_STYLE_ID)) {
-    const link = document.createElement('link');
-    link.id = MAPLIBRE_STYLE_ID;
-    link.rel = 'stylesheet';
-    link.href = `https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.css`;
-    document.head.appendChild(link);
-  }
-
-  return new Promise((resolve, reject) => {
-    const existing = document.getElementById(MAPLIBRE_SCRIPT_ID) as HTMLScriptElement | null;
-    if (existing) {
-      existing.addEventListener('load', () => window.maplibregl ? resolve(window.maplibregl) : reject(new Error('MapLibre non disponibile')), { once: true });
-      existing.addEventListener('error', () => reject(new Error('Impossibile caricare MapLibre')), { once: true });
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.id = MAPLIBRE_SCRIPT_ID;
-    script.src = `https://unpkg.com/maplibre-gl@${MAPLIBRE_VERSION}/dist/maplibre-gl.js`;
-    script.async = true;
-    script.onload = () => window.maplibregl ? resolve(window.maplibregl) : reject(new Error('MapLibre non disponibile'));
-    script.onerror = () => reject(new Error('Impossibile caricare MapLibre'));
-    document.head.appendChild(script);
-  });
+function markerAppearance(type: HistoricalEntity['type'], selected: boolean) {
+  if (selected) return { fill: '#9b6a38', stroke: '#6e4b29', text: '#30271f', radius: 10 };
+  if (type === 'event') return { fill: '#703026', stroke: '#4f211b', text: '#5b2821', radius: 8 };
+  if (type === 'city') return { fill: '#30271f', stroke: '#30271f', text: '#30271f', radius: 7 };
+  if (type === 'empire') return { fill: '#443222', stroke: '#30271f', text: '#443222', radius: 9 };
+  if (type === 'region') return { fill: '#9b6a38', stroke: '#6e4b29', text: '#6e4b29', radius: 8 };
+  if (type === 'redaction' || type === 'text') return { fill: '#9b6a38', stroke: '#6e4b29', text: '#6e4b29', radius: 8 };
+  return { fill: '#6e4b29', stroke: '#443222', text: '#443222', radius: 8 };
 }
 
 export default function HistoricalExplorerMap({ entities, areas = [], selectedId, year, onSelect }: HistoricalExplorerMapProps) {
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const mapRef = useRef<MapInstance | null>(null);
-  const markersRef = useRef<MarkerInstance[]>([]);
-  const mapLibreRef = useRef<MapLibreGlobal | null>(null);
-  const fittedRef = useRef(false);
-  const onSelectRef = useRef(onSelect);
-  const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const points: Point[] = entities.flatMap((entity) => {
+    const lat = entity.spatial?.lat;
+    const lng = entity.spatial?.lng;
+    if (!finite(lat) || !finite(lng)) return [];
+    return [{
+      id: entity.id,
+      label: entity.label,
+      type: entity.type,
+      lat,
+      lng,
+      active: activeAt(entity, year),
+      selected: entity.id === selectedId,
+    }];
+  });
 
-  onSelectRef.current = onSelect;
-
-  const mapped = entities.filter((entity) => entity.spatial?.lat !== undefined && entity.spatial?.lng !== undefined);
   const activeAreaRecords = areas.filter((area) => area.temporal.start <= year && area.temporal.end >= year);
+  const areaCoordinates = activeAreaRecords.flatMap((area) => area.geometry.coordinates.flatMap((ring) => ring));
+  const lngValues = [
+    ...points.map((point) => point.lng),
+    ...areaCoordinates.map(([lng]) => lng).filter(finite),
+  ];
+  const latValues = [
+    ...points.map((point) => point.lat),
+    ...areaCoordinates.map(([, lat]) => lat).filter(finite),
+  ];
 
-  useEffect(() => {
-    let cancelled = false;
+  const minLng = lngValues.length ? Math.min(...lngValues) : 25;
+  const maxLng = lngValues.length ? Math.max(...lngValues) : 52;
+  const minLat = latValues.length ? Math.min(...latValues) : 22;
+  const maxLat = latValues.length ? Math.max(...latValues) : 40;
+  const lngSpan = Math.max(1, maxLng - minLng);
+  const latSpan = Math.max(1, maxLat - minLat);
 
-    loadMapLibre()
-      .then((maplibre) => {
-        if (cancelled || !containerRef.current || mapRef.current) return;
-        mapLibreRef.current = maplibre;
-
-        const map = new maplibre.Map({
-          container: containerRef.current,
-          center: [36.5, 31.8],
-          zoom: 3.35,
-          minZoom: 2.2,
-          maxZoom: 10,
-          attributionControl: true,
-          style: {
-            version: 8,
-            sources: {
-              osm: {
-                type: 'raster',
-                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-                tileSize: 256,
-                attribution: '© OpenStreetMap contributors',
-              },
-            },
-            layers: [
-              {
-                id: 'osm-basemap',
-                type: 'raster',
-                source: 'osm',
-                paint: {
-                  'raster-saturation': -0.78,
-                  'raster-contrast': -0.1,
-                  'raster-brightness-max': 0.9,
-                },
-              },
-            ],
-          },
-        });
-
-        map.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
-        mapRef.current = map;
-        map.on('load', () => {
-          if (cancelled) return;
-          setStatus('ready');
-          window.setTimeout(() => map.resize(), 50);
-        });
-      })
-      .catch(() => {
-        if (!cancelled) setStatus('error');
-      });
-
-    return () => {
-      cancelled = true;
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current = [];
-      mapRef.current?.remove();
-      mapRef.current = null;
-      fittedRef.current = false;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (status !== 'ready' || !mapRef.current) return;
-    const map = mapRef.current;
-    const visibleIds = new Set(entities.map((entity) => entity.id));
-    const activeAreas = areas.filter(
-      (area) => visibleIds.has(area.entityId) && area.temporal.start <= year && area.temporal.end >= year,
-    );
-
-    const featureCollection = {
-      type: 'FeatureCollection',
-      features: activeAreas.map((area) => ({
-        type: 'Feature',
-        id: area.id,
-        properties: {
-          entityId: area.entityId,
-          label: area.label,
-          confidence: area.confidence,
-          note: area.note,
-        },
-        geometry: area.geometry,
-      })),
-    };
-
-    const existing = map.getSource(HISTORICAL_AREAS_SOURCE);
-    if (existing) {
-      existing.setData(featureCollection);
-      return;
-    }
-
-    map.addSource(HISTORICAL_AREAS_SOURCE, { type: 'geojson', data: featureCollection });
-    map.addLayer({
-      id: HISTORICAL_AREAS_FILL,
-      type: 'fill',
-      source: HISTORICAL_AREAS_SOURCE,
-      paint: {
-        'fill-color': '#9b6a38',
-        'fill-opacity': 0.13,
-      },
-    });
-    map.addLayer({
-      id: HISTORICAL_AREAS_LINE,
-      type: 'line',
-      source: HISTORICAL_AREAS_SOURCE,
-      paint: {
-        'line-color': '#9b6a38',
-        'line-width': 1.5,
-        'line-opacity': 0.72,
-        'line-dasharray': [3, 2],
-      },
-    });
-
-    map.on('click', HISTORICAL_AREAS_FILL, (event: any) => {
-      const entityId = event?.features?.[0]?.properties?.entityId;
-      if (typeof entityId === 'string') onSelectRef.current(entityId);
-    });
-    map.on('mouseenter', HISTORICAL_AREAS_FILL, () => {
-      map.getCanvas().style.cursor = 'pointer';
-    });
-    map.on('mouseleave', HISTORICAL_AREAS_FILL, () => {
-      map.getCanvas().style.cursor = '';
-    });
-  }, [areas, entities, status, year]);
-
-  useEffect(() => {
-    if (status !== 'ready' || !mapRef.current || !mapLibreRef.current) return;
-
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current = [];
-
-    const map = mapRef.current;
-    const maplibre = mapLibreRef.current;
-    const bounds = new maplibre.LngLatBounds();
-    let boundsCount = 0;
-
-    mapped.forEach((entity) => {
-      const lat = entity.spatial?.lat;
-      const lng = entity.spatial?.lng;
-      if (lat === undefined || lng === undefined) return;
-
-      const selected = entity.id === selectedId;
-      const active = activeAt(entity, year);
-      const style = markerStyle(entity, selected);
-      const button = document.createElement('button');
-      button.type = 'button';
-      button.setAttribute('aria-label', `${entity.label} · ${markerLabel(entity)}`);
-      button.title = `${entity.label} · ${markerLabel(entity)}`;
-      button.style.display = 'flex';
-      button.style.alignItems = 'center';
-      button.style.gap = entity.type === 'city' ? '5px' : '6px';
-      button.style.padding = selected ? '7px 10px' : entity.type === 'city' ? '5px 8px' : '6px 9px';
-      button.style.borderRadius = entity.type === 'city' ? '9px' : '999px';
-      button.style.border = `${selected ? 2 : 1}px solid ${style.border}`;
-      button.style.background = style.background;
-      button.style.color = style.color;
-      button.style.boxShadow = selected ? '0 8px 22px rgba(48,39,31,.24)' : '0 3px 10px rgba(48,39,31,.13)';
-      button.style.cursor = 'pointer';
-      button.style.opacity = active ? '1' : '.32';
-      button.style.whiteSpace = 'nowrap';
-      button.style.fontSize = entity.type === 'city' ? '11px' : '12px';
-      button.style.fontWeight = '700';
-      button.style.fontFamily = 'Georgia, serif';
-      button.style.transition = 'opacity 150ms ease, transform 150ms ease, box-shadow 150ms ease';
-
-      const dot = document.createElement('span');
-      dot.style.width = entity.type === 'city' ? '6px' : selected ? '8px' : '7px';
-      dot.style.height = dot.style.width;
-      dot.style.borderRadius = entity.type === 'city' ? '2px' : '999px';
-      dot.style.background = style.dot;
-      dot.style.flex = '0 0 auto';
-
-      const text = document.createElement('span');
-      text.textContent = entity.label;
-      button.append(dot, text);
-      button.addEventListener('click', () => onSelectRef.current(entity.id));
-      button.addEventListener('mouseenter', () => { button.style.opacity = '1'; });
-      button.addEventListener('mouseleave', () => { button.style.opacity = active ? '1' : '.32'; });
-
-      const marker = new maplibre.Marker({ element: button, anchor: 'bottom' })
-        .setLngLat([lng, lat])
-        .addTo(map);
-
-      markersRef.current.push(marker);
-      bounds.extend([lng, lat]);
-      boundsCount += 1;
-    });
-
-    if (!fittedRef.current && boundsCount > 1) {
-      map.fitBounds(bounds, { padding: 55, maxZoom: 4.6, duration: 0 });
-      fittedRef.current = true;
-    }
-  }, [mapped, selectedId, status, year]);
-
-  useEffect(() => {
-    if (status !== 'ready' || !mapRef.current || !selectedId) return;
-    const selected = mapped.find((entity) => entity.id === selectedId);
-    const lat = selected?.spatial?.lat;
-    const lng = selected?.spatial?.lng;
-    if (lat === undefined || lng === undefined) return;
-    mapRef.current.flyTo({ center: [lng, lat], duration: 650, essential: true });
-  }, [mapped, selectedId, status]);
+  function project(lng: number, lat: number) {
+    const x = PAD_X + ((lng - minLng) / lngSpan) * (WIDTH - PAD_X * 2);
+    const y = HEIGHT - PAD_Y - ((lat - minLat) / latSpan) * (HEIGHT - PAD_Y * 2);
+    return { x, y };
+  }
 
   return (
     <div className="overflow-hidden rounded-2xl border border-papyrus-line bg-paper-card">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-papyrus-line bg-paper-card/95 px-4 py-2">
-        <span className="font-mono text-[9px] uppercase tracking-wider text-ink-faint">Mappa interattiva · pan + zoom</span>
-        <span className="text-[11px] text-ink-faint">base contemporanea · geometrie storiche temporali</span>
+        <span className="font-mono text-[9px] uppercase tracking-wider text-ink-faint">Mappa storica · coordinate geografiche</span>
+        <span className="text-[11px] text-ink-faint">proiezione schematica · nessuna dipendenza cartografica esterna</span>
       </div>
 
-      <div className="relative h-[430px] md:h-[500px]">
-        <div ref={containerRef} className="absolute inset-0" aria-label="Mappa interattiva del Vicino Oriente" />
+      <div className="relative h-[430px] bg-[#eee5d4] md:h-[500px]">
+        <svg
+          viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
+          className="block h-full w-full"
+          role="img"
+          aria-label="Mappa storica delle entità georeferenziate"
+        >
+          <defs>
+            <pattern id="historical-map-grid" width="50" height="50" patternUnits="userSpaceOnUse">
+              <path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(80,63,47,.08)" strokeWidth="1" />
+            </pattern>
+            <filter id="historical-map-shadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#30271f" floodOpacity="0.18" />
+            </filter>
+          </defs>
+
+          <rect width={WIDTH} height={HEIGHT} fill="#eee5d4" />
+          <rect width={WIDTH} height={HEIGHT} fill="url(#historical-map-grid)" />
+
+          <path d="M55 380 C145 305 215 320 285 250 C350 184 420 176 486 192 C552 208 620 168 688 172 C774 178 835 235 942 238" fill="none" stroke="rgba(155,106,56,.18)" strokeWidth="76" strokeLinecap="round" />
+          <path d="M84 390 C175 314 232 324 302 258 C374 190 432 190 498 202 C570 214 622 184 694 188 C778 194 844 246 928 250" fill="none" stroke="rgba(250,247,240,.55)" strokeWidth="34" strokeLinecap="round" />
+
+          {activeAreaRecords.map((area) => {
+            const ring = area.geometry.coordinates[0] ?? [];
+            const polygonPoints = ring
+              .filter(([lng, lat]) => finite(lng) && finite(lat))
+              .map(([lng, lat]) => {
+                const point = project(lng, lat);
+                return `${point.x},${point.y}`;
+              })
+              .join(' ');
+
+            if (!polygonPoints) return null;
+            return (
+              <polygon
+                key={area.id}
+                points={polygonPoints}
+                fill="rgba(155,106,56,.14)"
+                stroke="rgba(155,106,56,.72)"
+                strokeWidth="2"
+                strokeDasharray="8 6"
+                className="cursor-pointer transition-opacity hover:opacity-75"
+                onClick={() => onSelect(area.entityId)}
+              >
+                <title>{area.label}</title>
+              </polygon>
+            );
+          })}
+
+          {points.map((point, index) => {
+            const { x, y } = project(point.lng, point.lat);
+            const appearance = markerAppearance(point.type, point.selected);
+            const labelAbove = index % 2 === 0;
+            const labelY = labelAbove ? y - 16 : y + 25;
+            const opacity = point.active || point.selected ? 1 : 0.35;
+
+            return (
+              <g
+                key={point.id}
+                role="button"
+                tabIndex={0}
+                aria-label={`${point.label} · ${markerLabel(entities.find((entity) => entity.id === point.id) ?? entities[0])}`}
+                className="cursor-pointer outline-none"
+                opacity={opacity}
+                onClick={() => onSelect(point.id)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onSelect(point.id);
+                  }
+                }}
+              >
+                {point.selected ? <circle cx={x} cy={y} r={18} fill="none" stroke="#9b6a38" strokeWidth="3" opacity=".32" /> : null}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={appearance.radius}
+                  fill={appearance.fill}
+                  stroke={appearance.stroke}
+                  strokeWidth={point.selected ? 3 : 2}
+                  filter="url(#historical-map-shadow)"
+                />
+                <text
+                  x={x}
+                  y={labelY}
+                  textAnchor="middle"
+                  fontSize="13"
+                  fontFamily="Georgia, serif"
+                  fontWeight={point.selected ? 700 : 600}
+                  fill={appearance.text}
+                  stroke="#eee5d4"
+                  strokeWidth="4"
+                  paintOrder="stroke"
+                >
+                  {point.label}
+                </text>
+                <title>{point.label}</title>
+              </g>
+            );
+          })}
+        </svg>
+
+        {points.length === 0 ? (
+          <div className="absolute inset-0 grid place-items-center p-6 text-center">
+            <div>
+              <strong className="font-serif text-lg text-ink">Nessuna coordinata disponibile</strong>
+              <p className="mt-2 max-w-md text-sm leading-6 text-ink-faint">Per questo insieme di dati non risultano entità georeferenziate.</p>
+            </div>
+          </div>
+        ) : null}
 
         <div className="pointer-events-none absolute bottom-3 left-3 z-20 rounded-xl border border-papyrus-line bg-paper-card/92 px-3 py-2 shadow-sm backdrop-blur-sm">
           <p className="font-mono text-[8px] uppercase tracking-wider text-ink-faint">Legenda</p>
@@ -351,24 +224,11 @@ export default function HistoricalExplorerMap({ entities, areas = [], selectedId
             {areas.length > 0 && <span><i className="mr-2 inline-block h-3 w-5 border border-dashed border-[#9b6a38]/70 bg-[#9b6a38]/15" />area storica · cliccabile</span>}
           </div>
         </div>
-
-        {status === 'loading' ? (
-          <div className="absolute inset-0 grid place-items-center bg-paper-card/90 text-sm text-ink-faint">Caricamento della base cartografica…</div>
-        ) : null}
-
-        {status === 'error' ? (
-          <div className="absolute inset-0 grid place-items-center bg-paper-card p-6 text-center">
-            <div>
-              <strong className="font-serif text-lg text-ink">Base cartografica non disponibile</strong>
-              <p className="mt-2 max-w-md text-sm leading-6 text-ink-faint">La componente storica resta valida; la mappa richiede connettività verso il servizio cartografico esterno.</p>
-            </div>
-          </div>
-        ) : null}
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-papyrus-line bg-papyrus/25 px-4 py-2 text-[10px] leading-5 text-ink-faint">
         <span>{areas.length > 0 ? 'Le aree tratteggiate sono ricostruzioni didattiche approssimate: servono a mostrare il mutamento geo-temporale, non frontiere storiche certe.' : 'Questo dataset non espone geometrie territoriali: la mappa mostra soltanto entità georeferenziate.'}</span>
-        <span>Base © OpenStreetMap contributors</span>
+        <span>Coordinate del dataset Biblia Fontes · rappresentazione schematica</span>
       </div>
 
       {activeAreaRecords.length > 0 ? (
