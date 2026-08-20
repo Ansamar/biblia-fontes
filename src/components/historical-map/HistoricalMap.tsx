@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode, type WheelEvent as ReactWheelEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent, type ReactNode } from 'react';
 import { historicalMapPresets, inferHistoricalMapPreset, type HistoricalMapPresetId } from './mapPresets';
 
 export type MapLayer = 'places' | 'powers' | 'events' | 'texts';
@@ -24,7 +24,6 @@ type HistoricalMapProps = {
   onVisibleStatusesChange?: (statuses: MapEpistemicStatus[]) => void;
 };
 type DisplayPoint = HistoricalMapPoint & { x: number; y: number; dx: number; dy: number; groupSize: number };
-
 type Camera = { zoom: number; x: number; y: number };
 
 const W = 1200, H = 680;
@@ -136,7 +135,25 @@ export default function HistoricalMap({ points, areas = [], selectedId, onSelect
     const worldY = (cy - current.y) / current.zoom;
     return { zoom, x: cx - worldX * zoom, y: cy - worldY * zoom };
   });
-  const handleWheel = (event: ReactWheelEvent<SVGSVGElement>) => { event.preventDefault(); zoomBy(event.deltaY < 0 ? 1.16 : .86); };
+
+  useEffect(() => {
+    const node = svgRef.current;
+    if (!node) return;
+    const handleNativeWheel = (event: WheelEvent) => {
+      event.preventDefault();
+      const factor = event.deltaY < 0 ? 1.16 : .86;
+      setCamera((current) => {
+        const zoom = clampZoom(current.zoom * factor);
+        const cx = W / 2, cy = H / 2;
+        const worldX = (cx - current.x) / current.zoom;
+        const worldY = (cy - current.y) / current.zoom;
+        return { zoom, x: cx - worldX * zoom, y: cy - worldY * zoom };
+      });
+    };
+    node.addEventListener('wheel', handleNativeWheel, { passive: false });
+    return () => node.removeEventListener('wheel', handleNativeWheel);
+  }, []);
+
   const handlePointerDown = (event: ReactPointerEvent<SVGSVGElement>) => {
     if (event.button !== 0) return;
     const rect = svgRef.current?.getBoundingClientRect(); if (!rect) return;
@@ -187,8 +204,8 @@ export default function HistoricalMap({ points, areas = [], selectedId, onSelect
         <button type="button" onClick={() => zoomBy(.78)} className="h-9 w-9 border-b border-[#d8cbbb] text-lg font-bold text-[#44382d] hover:bg-white" aria-label="Riduci">−</button>
         <button type="button" onClick={resetCamera} className="h-9 w-9 text-[15px] text-[#44382d] hover:bg-white" aria-label="Mostra intera carta" title="Mostra intera carta">⌂</button>
       </div>
-      <div className="absolute bottom-3 left-3 z-10 rounded-md border border-[#b7aa97] bg-[#f8f2e7]/90 px-2 py-1 text-[9px] text-[#756957] shadow-sm">Trascina per spostare · rotella/pinch per zoom</div>
-      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className={`block h-full w-full touch-none select-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`} role="img" aria-label={`Mappa storica interattiva: ${mapPreset.label}`} onWheel={handleWheel} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp}>
+      <div className="absolute bottom-3 left-3 z-10 rounded-md border border-[#b7aa97] bg-[#f8f2e7]/90 px-2 py-1 text-[9px] text-[#756957] shadow-sm">Trascina per spostare · rotella o +/− per zoom</div>
+      <svg ref={svgRef} viewBox={`0 0 ${W} ${H}`} className={`block h-full w-full touch-none select-none ${dragging ? 'cursor-grabbing' : 'cursor-grab'}`} role="img" aria-label={`Mappa storica interattiva: ${mapPreset.label}`} onPointerDown={handlePointerDown} onPointerMove={handlePointerMove} onPointerUp={handlePointerUp} onPointerCancel={handlePointerUp}>
         <defs><filter id={`shadow-${presetId}`} x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="2" stdDeviation="2.6" floodColor="#30271f" floodOpacity="0.2" /></filter></defs>
         <g transform={`translate(${camera.x} ${camera.y}) scale(${camera.zoom})`}>
           <image href={baseAssets[presetId]} x="0" y="0" width={W} height={H} preserveAspectRatio="none" />
