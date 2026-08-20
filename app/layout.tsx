@@ -14,7 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Biblia Fontes",
+  title: {
+    default: "Biblia Fontes",
+    template: "%s · Biblia Fontes",
+  },
   description: "Ambiente accademico per leggere la Scrittura, confrontarne le tradizioni, studiarne la formazione e interrogare la storia intorno al testo.",
 };
 
