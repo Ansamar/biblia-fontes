@@ -6,11 +6,15 @@ export function useExplorerUrlState({ year, entityId, enabled = true }: { year: 
   useEffect(() => {
     if (!enabled || typeof window === 'undefined') return;
 
-    const url = new URL(window.location.href);
-    url.searchParams.set('year', String(year));
-    if (entityId) url.searchParams.set('entity', entityId);
-    else url.searchParams.delete('entity');
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('year', String(year));
+      if (entityId) url.searchParams.set('entity', entityId);
+      else url.searchParams.delete('entity');
 
-    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+      window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+    } catch (error) {
+      console.warn('Historical Explorer URL state sync skipped', error);
+    }
   }, [enabled, entityId, year]);
 }
