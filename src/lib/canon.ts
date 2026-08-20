@@ -10,3 +10,18 @@ const order = new Map<string, number>(catholicCanonSlugs.map((slug, index) => [s
 export function canonicalBookOrder(slug: string, fallback = 999) {
   return order.get(slug) ?? fallback;
 }
+
+export function canonicalBookCategory(slug: string) {
+  const position = canonicalBookOrder(slug, 999);
+  if (position <= 5) return 'Pentateuco';
+  if (position <= 21) return 'Libri storici';
+  if (position <= 28) return 'Sapienziali e poetici';
+  if (position <= 46) return 'Profeti';
+  if (position <= 50) return 'Vangeli';
+  if (position === 51) return 'Atti degli Apostoli';
+  if (position <= 64) return 'Lettere Paoline';
+  if (position === 65) return 'Ebrei';
+  if (position <= 72) return 'Lettere Cattoliche';
+  if (position === 73) return 'Apocalisse';
+  return 'Altri libri';
+}
