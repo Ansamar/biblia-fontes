@@ -23,7 +23,8 @@ const historyIndexQuery = `*[_type == "historicalExplorerDataset"]{
     label,
     type,
     epistemicStatus,
-    temporal{start,end,precision}
+    temporal{start,end,precision},
+    spatial{lat,lng,region}
   }
 }`;
 
@@ -34,6 +35,8 @@ type HistoryIndexEntity = {
   epistemicStatus: string;
   start?: number;
   end?: number;
+  precision?: string;
+  spatial?: { lat?: number; lng?: number; region?: string };
 };
 
 function slugFromDataset(item: any) {
@@ -63,6 +66,8 @@ export async function fetchHistoryIndexView() {
     const entities: HistoryIndexEntity[] = (Array.isArray(item.entities) ? item.entities : []).map((entity: any) => {
       const start = entity?.temporal?.start;
       const end = entity?.temporal?.end;
+      const lat = entity?.spatial?.lat;
+      const lng = entity?.spatial?.lng;
       return {
         id: entity?.id || '',
         label: italianizeVisibleCopy(entity?.label || 'Entità storica'),
@@ -70,6 +75,8 @@ export async function fetchHistoryIndexView() {
         epistemicStatus: entity?.epistemicStatus || 'debated',
         start: finite(start) ? start : undefined,
         end: finite(end) ? end : finite(start) ? start : undefined,
+        precision: entity?.temporal?.precision || 'unknown',
+        spatial: finite(lat) && finite(lng) ? { lat, lng, region: entity?.spatial?.region } : undefined,
       };
     });
     const starts = entities.map((entity) => entity.start).filter(finite);
