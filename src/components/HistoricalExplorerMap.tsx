@@ -17,7 +17,8 @@ export default function HistoricalExplorerMap({ entities, areas = [], selectedId
   const points: HistoricalMapPoint[] = entities.flatMap((entity) => { const lat = entity.spatial?.lat, lng = entity.spatial?.lng; if (!finite(lat) || !finite(lng)) return []; return [{ id: entity.id, label: entity.label, type: entity.type, lat, lng, active: activeAt(entity, year), selected: entity.id === selectedId, subtitle: entity.spatial?.region }]; });
   const activeAreaRecords = areas.filter((area) => area.temporal.start <= year && area.temporal.end >= year);
   const mapAreas: HistoricalMapArea[] = activeAreaRecords.map((area) => ({ id: area.id, entityId: area.entityId, label: area.label, coordinates: area.geometry.coordinates[0] ?? [] }));
-  const firstBookSlug = entities.flatMap((entity) => entity.biblicalRefs ?? []).find((ref) => ref.bookSlug)?.bookSlug;
+  const firstStructuredRef = entities.flatMap((entity) => entity.biblicalRefs ?? []).find((ref) => typeof ref !== 'string' && Boolean(ref.bookSlug));
+  const firstBookSlug = typeof firstStructuredRef === 'string' ? undefined : firstStructuredRef?.bookSlug;
   const inferredTitle = contextTitle ?? humanizeBookSlug(firstBookSlug);
   const inferredSummary = contextSummary ?? (inferredTitle ? `Questa carta non illustra semplicemente i luoghi citati in ${inferredTitle}: sovrappone geografia, poteri, eventi e contesti di formazione testuale collegati al libro e al periodo selezionato.` : undefined);
 
