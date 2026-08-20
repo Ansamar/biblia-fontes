@@ -24,7 +24,7 @@ const historyIndexQuery = `*[_type == "historicalExplorerDataset"]{
     type,
     epistemicStatus,
     temporal{start,end,precision},
-    spatial{lat,lng,region}
+    spatial{point{lat,lng},region}
   }
 }`;
 
@@ -66,8 +66,8 @@ export async function fetchHistoryIndexView() {
     const entities: HistoryIndexEntity[] = (Array.isArray(item.entities) ? item.entities : []).map((entity: any) => {
       const start = entity?.temporal?.start;
       const end = entity?.temporal?.end;
-      const lat = entity?.spatial?.lat;
-      const lng = entity?.spatial?.lng;
+      const lat = entity?.spatial?.point?.lat;
+      const lng = entity?.spatial?.point?.lng;
       return {
         id: entity?.id || '',
         label: italianizeVisibleCopy(entity?.label || 'Entità storica'),
