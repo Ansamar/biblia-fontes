@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import type { EpistemicStatus, HistoricalArea, HistoricalEntity } from '../historical-explorer/types';
 import HistoricalProvenance from './HistoricalProvenance';
-import HistoricalMap, { type HistoricalMapArea, type HistoricalMapPoint, type MapEpistemicStatus, type MapLayer } from './historical-map/HistoricalMap';
+import HistoricalMap, { type HistoricalMapArea, type HistoricalMapPoint, type MapEpistemicStatus, type MapLayer } from './historical-map/HistoricalMapV2';
 
 function activeAt(entity: HistoricalEntity, year: number) { const { start, end, precision } = entity.temporal; if (precision === 'unknown' || start === undefined) return true; return start <= year && (end ?? start) >= year; }
 function finite(value: unknown): value is number { return typeof value === 'number' && Number.isFinite(value); }
