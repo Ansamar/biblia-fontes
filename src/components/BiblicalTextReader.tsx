@@ -145,6 +145,17 @@ function verseAnchor(prefix: string, verse: BiblicalVerse, index: number) {
   return `${prefix}-v${label}-${index}`;
 }
 
+// Some imported Psalm records contain a leaked run of navigation/parallel-numbering
+// tokens inside the prose (for example: "5 6 7 8 9 10 (115,1) 11 (115,2) ...").
+// They are metadata, not biblical text. Keep real numbers in prose untouched by
+// requiring a run of at least three consecutive verse-number tokens.
+function cleanLeakedParallelNumbering(value: string) {
+  if (!value) return value;
+  const token = String.raw`\d{1,3}(?:\s*\(\d{1,3},\d{1,3}\))?`;
+  const leakedRun = new RegExp(String.raw`(^|\s)${token}(?:\s+${token}){2,}(?=\s|$)`, 'g');
+  return value.replace(leakedRun, '$1').replace(/\s{2,}/g, ' ').trim();
+}
+
 function SingleWitness({
   text,
   critical = false,
@@ -192,16 +203,17 @@ function SingleWitness({
           const label = verseLabel(verse);
           const anchor = verseAnchor(anchorPrefix, verse, index);
           const suffixMarker = verse.marcatoreAlfabetico && !/^[a-z]$/i.test(verse.marcatoreAlfabetico) ? verse.marcatoreAlfabetico : null;
+          const displayText = cleanLeakedParallelNumbering(verse.testo || '');
 
           return (
             <div key={verse._key || `${label}-${index}`} id={anchor} className="scroll-mt-28">
               {verse.metatesto?.testo && <p className="mb-3 text-[0.86em] italic leading-7 text-ink-soft">{verse.metatesto.testo}</p>}
-              {verse.testo && (
+              {displayText && (
                 <div className={critical && altLabel ? 'grid gap-1 md:grid-cols-[minmax(0,1fr)_auto] md:gap-5' : ''}>
                   <p className="min-w-0 break-words">
                     {suffixMarker && <span className="mr-2 font-sans text-[0.58em] font-semibold uppercase tracking-wider text-bronze">{suffixMarker}</span>}
                     <a href={`#${anchor}`} aria-label={`Versetto ${label}`} className="mx-2 inline-block align-[0.12em] font-sans text-[0.62em] font-semibold text-bronze no-underline hover:text-seal" dir="ltr">[{label}]</a>
-                    <span>{verse.testo}</span>
+                    <span>{displayText}</span>
                   </p>
                   {critical && altLabel && (
                     <aside className="self-start pt-1 font-sans text-[0.58em] leading-5 text-ink-faint md:max-w-[150px]" aria-label={`Numerazione parallela del versetto ${label}`} dir="ltr">
@@ -210,7 +222,7 @@ function SingleWitness({
                   )}
                 </div>
               )}
-              {!verse.testo && statusLabel && (
+              {!displayText && statusLabel && (
                 <div className="rounded-xl border border-papyrus-line bg-papyrus/45 px-4 py-3 font-sans text-sm leading-6 text-ink-soft" dir="ltr">
                   <div className="flex flex-wrap items-center gap-2">
                     <a href={`#${anchor}`} aria-label={`Versetto ${label}`} className="font-semibold text-bronze no-underline hover:text-seal">[{label}]</a>
@@ -289,65 +301,33 @@ export default function BiblicalTextReader({ text, critical = false }: { text: B
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="font-mono text-[10px] uppercase tracking-widest text-bronze">Tradizioni testuali</p>
-              <p className="mt-1 text-sm leading-6 text-ink-faint">Leggi un testimone, confrontane due oppure apri la sinossi completa.</p>
+              <p className="mt-1 text-sm leading-6 text-ink-faint">Scegli un testimone oppure affianca più tradizioni.</p>
             </div>
-            <div className="inline-flex max-w-full overflow-x-auto rounded-full border border-papyrus-line bg-paper-card p-1" role="group" aria-label="Modalità del Reader">
-              {([['single', 'Lettura'], ['compare', 'Confronto'], ['synopsis', 'Sinossi']] as const).map(([value, label]) => (
-                <button key={value} type="button" onClick={() => setMode(value)} disabled={value === 'synopsis' && witnesses.length < 3} className={`shrink-0 rounded-full px-3.5 py-2 text-xs font-semibold transition ${mode === value ? 'bg-bronze text-white' : 'text-ink-soft hover:text-bronze'} disabled:cursor-not-allowed disabled:opacity-35`} aria-pressed={mode === value}>
-                  {label}
-                </button>
-              ))}
+            <div className="inline-flex rounded-xl border border-papyrus-line bg-paper-card p-1 text-xs">
+              <button type="button" onClick={() => setMode('single')} className={`rounded-lg px-3 py-2 ${mode === 'single' ? 'bg-bronze text-white' : 'text-ink-soft hover:text-bronze'}`}>Lettura</button>
+              <button type="button" onClick={() => setMode('compare')} className={`rounded-lg px-3 py-2 ${mode === 'compare' ? 'bg-bronze text-white' : 'text-ink-soft hover:text-bronze'}`}>Confronto</button>
+              {witnesses.length >= 3 && <button type="button" onClick={() => setMode('synopsis')} className={`rounded-lg px-3 py-2 ${mode === 'synopsis' ? 'bg-bronze text-white' : 'text-ink-soft hover:text-bronze'}`}>Sinossi</button>}
             </div>
           </div>
 
-          {mode === 'single' && (
-            <div className="mt-4 flex flex-wrap gap-2" role="tablist" aria-label="Testimone testuale">
-              {witnesses.map((witness, index) => {
-                const active = selected === index;
-                return (
-                  <button key={witnessKey(witness, index)} type="button" role="tab" aria-selected={active} onClick={() => setSelected(index)} className={`inline-flex min-w-0 items-center rounded-full border px-3 py-2 transition ${active ? 'border-bronze bg-paper-card text-bronze shadow-sm' : 'border-papyrus-line text-ink-soft hover:border-bronze/60 hover:text-bronze'}`}>
-                    <WitnessIdentityMark text={witness} selected={active} />
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {mode === 'compare' && (
-            <div className="mt-4 flex flex-col gap-3 md:flex-row">
-              <WitnessPicker label="Testo A" value={selected} witnesses={witnesses} onChange={setSelected} disabledIndex={secondary} />
-              <WitnessPicker label="Testo B" value={secondary} witnesses={witnesses} onChange={setSecondary} disabledIndex={selected} />
-            </div>
-          )}
-
-          {mode === 'synopsis' && witnesses.length >= 3 && (
-            <p className="mt-4 text-xs leading-5 text-ink-faint">La sinossi conserva una larghezza minima leggibile per ogni testimone. Su schermi più stretti scorri orizzontalmente.</p>
-          )}
+          {mode === 'single' && <div className="mt-4"><WitnessPicker label="Testo" value={selected} witnesses={witnesses} onChange={setSelected} /></div>}
+          {mode === 'compare' && <div className="mt-4 flex flex-wrap gap-3"><WitnessPicker label="Testo A" value={selected} witnesses={witnesses} onChange={setSelected} disabledIndex={secondary} /><WitnessPicker label="Testo B" value={secondary} witnesses={witnesses} onChange={setSecondary} disabledIndex={selected} /></div>}
         </div>
       )}
 
-      {mode === 'compare' && multiple ? (
-        <div className="overflow-x-auto pb-2">
-          <div className="grid min-w-[760px] grid-cols-2 gap-6">
-            {[current, second].map((witness, index) => (
-              <section key={`${witnessKey(witness, index)}-compare`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5 md:p-6">
-                <SingleWitness text={witness} critical={critical} compact anchorPrefix={`compare-${index}-${witnessKey(witness, index)}`} />
-              </section>
-            ))}
-          </div>
+      {mode === 'single' && <SingleWitness text={current} critical={critical} anchorPrefix="reader-single" />}
+
+      {mode === 'compare' && multiple && (
+        <div className="grid gap-8 xl:grid-cols-2">
+          <div className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/45 p-5 md:p-6"><SingleWitness text={current} critical={critical} compact anchorPrefix="reader-a" /></div>
+          <div className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/45 p-5 md:p-6"><SingleWitness text={second} critical={critical} compact anchorPrefix="reader-b" /></div>
         </div>
-      ) : mode === 'synopsis' && witnesses.length >= 3 ? (
-        <div className="overflow-x-auto pb-3">
-          <div className="grid gap-5" style={{ gridTemplateColumns: `repeat(${witnesses.length}, minmax(320px, 1fr))`, minWidth: `${witnesses.length * 320}px` }}>
-            {witnesses.map((witness, index) => (
-              <section key={`${witnessKey(witness, index)}-synopsis`} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/35 p-5">
-                <SingleWitness text={witness} critical={critical} compact anchorPrefix={`synopsis-${index}-${witnessKey(witness, index)}`} />
-              </section>
-            ))}
-          </div>
+      )}
+
+      {mode === 'synopsis' && witnesses.length >= 3 && (
+        <div className="grid gap-6 xl:grid-cols-3">
+          {witnesses.slice(0, 3).map((witness, index) => <div key={witnessKey(witness, index)} className="min-w-0 rounded-2xl border border-papyrus-line bg-paper-card/45 p-5"><SingleWitness text={witness} critical={critical} compact anchorPrefix={`reader-s${index}`} /></div>)}
         </div>
-      ) : (
-        <SingleWitness text={current} critical={critical} anchorPrefix={`single-${witnessKey(current, selected)}`} />
       )}
     </div>
   );
