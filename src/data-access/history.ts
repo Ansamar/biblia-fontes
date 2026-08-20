@@ -1,8 +1,8 @@
 import { client } from '../sanity/client';
 import { historicalExplorerDatasetQuery } from '../historical-explorer/sanityQuery';
 import { historicalExplorerDatasetFromSanity } from '../historical-explorer/sanityAdapter';
-import { bookIdFromSlug, categoryLabel } from '../lib/bibleRouting';
-import { canonicalBookOrder } from '../lib/canon';
+import { bookIdFromSlug } from '../lib/bibleRouting';
+import { canonicalBookCategory, canonicalBookOrder } from '../lib/canon';
 import { canonicalHistoricalBookSlug, historicalDatasetIdCandidates } from '../lib/historicalRouting';
 import { italianizeVisibleCopy } from '../lib/italianUi';
 
@@ -47,6 +47,14 @@ function finite(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
 }
 
+function cleanBookTitle(value: unknown, slug: string) {
+  const title = italianizeVisibleCopy(typeof value === 'string' ? value : slug);
+  return title
+    .replace(/\s*[·–—-]\s*storia intorno al testo\s*$/i, '')
+    .replace(/\s*[·–—-]\s*esploratore storico\s*$/i, '')
+    .trim();
+}
+
 export async function fetchHistoryIndexView() {
   const raw = await client.fetch(historyIndexQuery).catch(() => []);
   const datasets = (Array.isArray(raw) ? raw : []).flatMap((item: any) => {
@@ -74,8 +82,8 @@ export async function fetchHistoryIndexView() {
       id: item._id,
       datasetId: item.id,
       slug,
-      title: italianizeVisibleCopy(item.book?.titolo || item.title || slug),
-      category: categoryLabel(item.book?.categoriaId),
+      title: cleanBookTitle(item.book?.titolo || item.title, slug),
+      category: canonicalBookCategory(slug),
       order: canonicalBookOrder(slug, finite(item.book?.ordine) ? item.book.ordine : 999),
       subtitle: italianizeVisibleCopy(item.subtitle || ''),
       start,
@@ -114,7 +122,7 @@ export async function fetchHistoryView(slug: string) {
       chapterCount: book.capitoli || 0,
       dataset: {
         ...dataset,
-        title: italianizeVisibleCopy(dataset.title),
+        title: cleanBookTitle(dataset.title, slug),
         subtitle: italianizeVisibleCopy(dataset.subtitle),
         entities: dataset.entities.map((entity) => ({
           ...entity,
