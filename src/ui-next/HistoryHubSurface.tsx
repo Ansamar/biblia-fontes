@@ -14,7 +14,7 @@ function formatYear(y:number){return y<0?`${Math.abs(y)} a.C.`:y===0?'0':`${y} d
 function activeAt(e:{start?:number;end?:number},y:number){return e.start!==undefined&&e.start<=y&&(e.end??e.start)>=y}
 
 export default function HistoryHubSurface({history,basePath='/historical-explorer',corpusPath='/'}:{history:HistoryIndexView;basePath?:string;corpusPath?:string}){
- const [mode,setMode]=useState<Mode>('book');
+ const [mode,setMode]=useState<Mode>('map');
  const initial=history.range[0]<=-586&&history.range[1]>=-586?-586:Math.round((history.range[0]+history.range[1])/2);
  const [year,setYear]=useState(initial);
  const grouped=useMemo(()=>{const m=new Map<string,typeof history.datasets>();for(const f of history.datasets){const k=f.category||'Altri libri';m.set(k,[...(m.get(k)||[]),f])}return [...m.entries()].sort((a,b)=>{const ai=categoryOrder.indexOf(a[0]),bi=categoryOrder.indexOf(b[0]);return (ai<0?99:ai)-(bi<0?99:bi)})},[history.datasets]);
