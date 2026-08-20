@@ -10,7 +10,7 @@ export type WorkspaceContext = {
 };
 
 export function bookHref(bookSlug: string) {
-  return `/rebuild/bibbia/${bookSlug}`;
+  return `/bibbia/${bookSlug}`;
 }
 
 export function chapterHref(bookSlug: string, chapter: number) {
@@ -18,17 +18,17 @@ export function chapterHref(bookSlug: string, chapter: number) {
 }
 
 export function historyHref(context: WorkspaceContext) {
-  if (!context.bookSlug) return '/rebuild/historical-explorer';
+  if (!context.bookSlug) return '/historical-explorer';
   const params = new URLSearchParams();
   if (context.chapter) params.set('chapter', String(context.chapter));
   if (context.year !== undefined) params.set('year', String(context.year));
   if (context.entityId) params.set('entity', context.entityId);
   const query = params.toString();
-  return `/rebuild/historical-explorer/${context.bookSlug}${query ? `?${query}` : ''}`;
+  return `/historical-explorer/${context.bookSlug}${query ? `?${query}` : ''}`;
 }
 
 export function perspectiveHref(context: WorkspaceContext, perspective: WorkspacePerspective) {
-  const base = context.bookSlug ? (context.chapter ? chapterHref(context.bookSlug, context.chapter) : bookHref(context.bookSlug)) : '/rebuild';
+  const base = context.bookSlug ? (context.chapter ? chapterHref(context.bookSlug, context.chapter) : bookHref(context.bookSlug)) : '/';
   if (perspective === 'text') return base;
   if (perspective === 'study') return `${base}?view=study`;
   if (perspective === 'sources') return `${base}?view=sources`;
