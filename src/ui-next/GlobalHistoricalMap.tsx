@@ -30,13 +30,13 @@ export default function GlobalHistoricalMap({history,basePath='/historical-explo
 
   const activeRecords = useMemo(() => records.filter(record => activeAt(record.entity,year)),[records,year]);
   const selected = records.find(record => record.compositeId === selectedId);
-  const points: HistoricalMapPoint[] = records.map(record => ({
+  const points: HistoricalMapPoint[] = activeRecords.map(record => ({
     id: record.compositeId,
     label: record.entity.label,
     type: record.entity.type,
     lat: record.lat,
     lng: record.lng,
-    active: activeAt(record.entity,year),
+    active: true,
     selected: selectedId === record.compositeId,
     subtitle: record.field.title,
     epistemicStatus: record.entity.epistemicStatus as MapEpistemicStatus,
@@ -44,8 +44,8 @@ export default function GlobalHistoricalMap({history,basePath='/historical-explo
 
   return <section className="mt-9">
     <div className="grid gap-6 border-b border-papyrus-line pb-6 lg:grid-cols-[210px_minmax(0,1fr)] lg:gap-12">
-      <header><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-bronze">Tempo sulla mappa</p><h2 className="mt-2 font-serif text-4xl font-semibold">{formatYear(year)}</h2><p className="mt-3 text-xs leading-5 text-ink-faint">La carta mostra le entità georeferenziate del corpus. Livelli e statuto si controllano una sola volta, direttamente nella carta.</p></header>
-      <div><div className="mb-2 flex justify-between text-[10px] text-ink-faint"><span>{formatYear(history.range[0])}</span><span>{formatYear(history.range[1])}</span></div><input type="range" min={history.range[0]} max={history.range[1]} value={year} onChange={e=>setYear(Number(e.target.value))} aria-label="Anno della mappa storica" className="w-full accent-current"/><div className="mt-4 flex flex-wrap gap-2">{presets.filter(p=>p>=history.range[0]&&p<=history.range[1]).map(p=><button key={p} type="button" onClick={()=>setYear(p)} className={`border px-2.5 py-1 text-[10px] ${year===p?'border-ink bg-ink text-papyrus':'border-papyrus-line text-ink-faint hover:border-bronze'}`}>{formatYear(p)}</button>)}</div></div>
+      <header><p className="font-mono text-[9px] uppercase tracking-[0.16em] text-bronze">Tempo sulla mappa</p><h2 className="mt-2 font-serif text-4xl font-semibold">{formatYear(year)}</h2><p className="mt-3 text-xs leading-5 text-ink-faint">La carta mostra le entità georeferenziate pertinenti all’anno selezionato. Livelli e statuto si controllano una sola volta, direttamente nella carta.</p></header>
+      <div><div className="mb-2 flex justify-between text-[10px] text-ink-faint"><span>{formatYear(history.range[0])}</span><span>{formatYear(history.range[1])}</span></div><input type="range" min={history.range[0]} max={history.range[1]} value={year} onChange={e=>{setYear(Number(e.target.value));setSelectedId(undefined);}} aria-label="Anno della mappa storica" className="w-full accent-current"/><div className="mt-4 flex flex-wrap gap-2">{presets.filter(p=>p>=history.range[0]&&p<=history.range[1]).map(p=><button key={p} type="button" onClick={()=>{setYear(p);setSelectedId(undefined);}} className={`border px-2.5 py-1 text-[10px] ${year===p?'border-ink bg-ink text-papyrus':'border-papyrus-line text-ink-faint hover:border-bronze'}`}>{formatYear(p)}</button>)}</div></div>
     </div>
 
     <div className="grid gap-6 py-7 xl:grid-cols-[minmax(0,1fr)_300px]">
@@ -55,8 +55,8 @@ export default function GlobalHistoricalMap({history,basePath='/historical-explo
         onSelect={setSelectedId}
         headerRight={<span>{activeRecords.length} elementi nell’anno selezionato</span>}
         footer="Carta geografica editoriale comune di Biblia Fontes. La base serve all’orientamento storico; i marker derivano dalle coordinate archiviate nei dataset."
-        contextTitle="l’atlante storico"
-        contextSummary="La carta mette in relazione l’intero corpus: a scala generale gli elementi vicini sono raggruppati; aumentando lo zoom emergono marker ed etichette secondo priorità, senza sovrapposizioni."
+        contextTitle="Biblia Fontes"
+        contextSummary="La carta mette in relazione l’intero corpus nel momento selezionato: a scala generale gli elementi vicini sono raggruppati; aumentando lo zoom emergono marker ed etichette secondo priorità, senza sovrapposizioni."
       />
 
       <aside className="border-t border-papyrus-line pt-5 xl:border-l xl:border-t-0 xl:pl-6 xl:pt-0">
