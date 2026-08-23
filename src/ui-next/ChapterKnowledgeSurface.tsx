@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { ChapterView } from '../data-access/chapter';
 import WorkspaceReader from './WorkspaceReader';
-import { bfrgGenesisPilot, claimModeLabels, confidenceLabels, familyLabels, type BfrgPilotRelation } from './bfrgGenesisPilot';
+import { bfrgGenesisPilot, claimModeLabels, confidenceLabels, familyLabels, predicateLabels, type BfrgPilotRelation } from './bfrgGenesisPilot';
 
 type Dimension = 'scrittura' | 'mondo' | 'umanita' | 'tradizione' | 'ricezione';
 
@@ -20,7 +20,6 @@ const intros: Record<Dimension, string> = {
 function firstSourceLabel(chapter: ChapterView) { const first = chapter.sourceLayers?.[0] as any; return first?.fonte?.sigla || first?.fonte?.nome || ''; }
 function verseCount(chapter: ChapterView) { const text:any = chapter.biblicalText; return Array.isArray(text?.versetti) ? text.versetti.length : 0; }
 function witnessCount(chapter: ChapterView) { const text:any = chapter.biblicalText; return Array.isArray(text?.witnesses) ? text.witnesses.length : text ? 1 : 0; }
-
 function relationDimension(relation: BfrgPilotRelation): Dimension {
   if (relation.family === 'HUMANITY') return 'umanita';
   if (relation.family === 'WORLD' || relation.family === 'CULTURE') return 'mondo';
@@ -63,26 +62,37 @@ export default function ChapterKnowledgeSurface({ chapter }: { chapter: ChapterV
       {(Object.keys(labels) as Dimension[]).map(d => <button key={d} type="button" onClick={() => setActive(d)} className={`h-12 shrink-0 border-b-2 px-4 text-xs font-semibold ${active===d?'border-bronze text-ink':'border-transparent text-ink-faint hover:text-ink'}`}>{labels[d]}</button>)}
     </nav>
 
-    {chapterRelations.length > 0 && <section className="mb-10 border-y border-papyrus-line py-6">
-      <div className="mb-5 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-        <div><p className="font-mono text-[9px] uppercase tracking-[0.2em] text-bronze">Relazioni curate · BFRG</p><h2 className="mt-1 font-serif text-3xl font-semibold">Esplora ciò che questo capitolo mette in relazione</h2></div>
-        <p className="max-w-xl text-xs leading-5 text-ink-faint">Ogni relazione è una micro-tesi: distingue dato testuale, interpretazione, confronto culturale e rilettura canonica.</p>
+    {chapterRelations.length > 0 && <section className="mb-8 border-y border-papyrus-line py-5">
+      <div className="mb-4 flex flex-col gap-1 md:flex-row md:items-end md:justify-between">
+        <div>
+          <p className="font-serif text-xs italic text-bronze">Relationes · Relazioni</p>
+          <h2 className="mt-1 font-serif text-2xl font-semibold">Connessioni curate del capitolo</h2>
+        </div>
+        <p className="max-w-lg text-xs leading-5 text-ink-faint">Ogni collegamento distingue dato, interpretazione, confronto culturale e rilettura canonica.</p>
       </div>
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(340px,0.55fr)]">
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          {chapterRelations.map(r => <button key={r.id} type="button" onClick={() => {setSelectedRelationId(r.id); setActive(relationDimension(r));}} className={`min-h-28 border p-4 text-left transition ${selectedRelation?.id===r.id?'border-bronze bg-white/25':'border-papyrus-line hover:border-bronze/60'}`}>
-            <div className="flex items-center justify-between gap-3"><span className="font-mono text-[9px] text-bronze">{r.source}</span><span className="text-[9px] uppercase tracking-[0.12em] text-ink-faint">{familyLabels[r.family]}</span></div>
-            <div className="mt-3 font-serif text-lg font-semibold leading-5">{r.target}</div>
-            <div className="mt-2 text-[10px] text-ink-faint">{r.predicate.replaceAll('_',' ')}</div>
+
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(300px,0.42fr)]">
+        <div className="divide-y divide-papyrus-line border-y border-papyrus-line">
+          {chapterRelations.map(r => <button key={r.id} type="button" onClick={() => {setSelectedRelationId(r.id); setActive(relationDimension(r));}} className={`grid w-full grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-3 px-2 py-2.5 text-left transition ${selectedRelation?.id===r.id?'bg-white/30':'hover:bg-white/15'}`}>
+            <span className="font-mono text-[9px] text-bronze">{r.source}</span>
+            <span className="min-w-0">
+              <span className="block truncate font-serif text-[15px] font-semibold">{r.target}</span>
+              <span className="block truncate text-[10px] text-ink-faint">{predicateLabels[r.predicate] || 'Relazione'} · {claimModeLabels[r.claimMode]}</span>
+            </span>
+            <span className="hidden text-[9px] uppercase tracking-[0.1em] text-ink-faint sm:inline">{familyLabels[r.family]}</span>
           </button>)}
         </div>
-        {selectedRelation && <aside className="border border-bronze/40 p-5">
-          <div className="flex flex-wrap gap-2"><span className="rounded-full border border-papyrus-line px-2 py-1 text-[9px] uppercase tracking-[0.12em]">{claimModeLabels[selectedRelation.claimMode]}</span><span className="rounded-full border border-papyrus-line px-2 py-1 text-[9px] uppercase tracking-[0.12em]">{confidenceLabels[selectedRelation.confidence]}</span></div>
-          <p className="mt-5 font-mono text-[9px] uppercase tracking-[0.16em] text-bronze">{selectedRelation.source} · {selectedRelation.predicate.replaceAll('_',' ')}</p>
-          <h3 className="mt-2 font-serif text-2xl font-semibold">{selectedRelation.target}</h3>
-          <p className="mt-4 text-sm leading-7 text-ink-soft">{selectedRelation.thesis}</p>
-          {selectedRelation.claimMode==='comparative' && <p className="mt-5 border-l-2 border-bronze/40 pl-3 text-xs leading-5 text-ink-faint"><strong className="text-ink-soft">Cautela metodologica.</strong> Il confronto culturale non implica dipendenza diretta né identifica automaticamente una fonte.</p>}
-          {selectedRelation.claimMode==='canonical' && <p className="mt-5 border-l-2 border-bronze/40 pl-3 text-xs leading-5 text-ink-faint"><strong className="text-ink-soft">Livello canonico.</strong> Questa relazione descrive una rilettura interna alla Scrittura, distinta dalla ricostruzione storico-critica del testo di Genesi.</p>}
+
+        {selectedRelation && <aside className="border-l-2 border-bronze/40 pl-4 pr-1 py-1">
+          <div className="flex flex-wrap gap-1.5">
+            <span className="rounded-full border border-papyrus-line px-2 py-0.5 text-[9px]">{claimModeLabels[selectedRelation.claimMode]}</span>
+            <span className="rounded-full border border-papyrus-line px-2 py-0.5 text-[9px]">{confidenceLabels[selectedRelation.confidence]}</span>
+          </div>
+          <p className="mt-4 font-mono text-[9px] uppercase tracking-[0.14em] text-bronze">{selectedRelation.source} · {predicateLabels[selectedRelation.predicate] || 'Relazione'}</p>
+          <h3 className="mt-1 font-serif text-xl font-semibold">{selectedRelation.target}</h3>
+          <p className="mt-3 text-[13px] leading-6 text-ink-soft">{selectedRelation.thesis}</p>
+          {selectedRelation.claimMode==='comparative' && <p className="mt-4 text-[11px] leading-5 text-ink-faint"><strong className="text-ink-soft">Cautela metodologica:</strong> il confronto culturale non implica dipendenza diretta né identifica automaticamente una fonte.</p>}
+          {selectedRelation.claimMode==='canonical' && <p className="mt-4 text-[11px] leading-5 text-ink-faint"><strong className="text-ink-soft">Lettura canonica:</strong> questa relazione descrive una rilettura interna alla Scrittura, distinta dalla ricostruzione storico-critica.</p>}
         </aside>}
       </div>
     </section>}
@@ -91,8 +101,8 @@ export default function ChapterKnowledgeSurface({ chapter }: { chapter: ChapterV
       <article className="border border-papyrus-line p-5 md:p-7">
         <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-bronze">{labels[active]}</p>
         <h2 className="mt-2 font-serif text-2xl font-semibold">{intros[active]}</h2>
-        {active==='scrittura' && <div className="mt-5 text-sm leading-7 text-ink-soft"><p>{witnesses ? `Il corpus mette a disposizione ${witnesses} ${witnesses===1?'testimone':'testimoni'} per questo capitolo.` : 'Il testo biblico non è ancora collegato a questo capitolo.'}</p><p className="mt-3">Il Reader mantiene separata la lettura continua dal confronto testuale.</p></div>}
-        {active==='mondo' && <div className="mt-5 text-sm leading-7 text-ink-soft">{chapter.context ? <p>{chapter.context}</p> : <p className="text-ink-faint">Il dataset non contiene ancora un contesto storico-culturale strutturato per questo capitolo.</p>}<Link href={`/rebuild/historical-explorer/${chapter.slug}?chapter=${chapter.number}`} className="mt-4 inline-flex font-semibold text-bronze hover:text-ink">Apri il mondo storico e geografico →</Link></div>}
+        {active==='scrittura' && <div className="mt-5 text-sm leading-7 text-ink-soft"><p>{witnesses ? `Il corpus mette a disposizione ${witnesses} ${witnesses===1?'testimone':'testimoni'} per questo capitolo.` : 'Il testo biblico non è ancora collegato a questo capitolo.'}</p><p className="mt-3">Il lettore mantiene separata la lettura continua dal confronto testuale.</p></div>}
+        {active==='mondo' && <div className="mt-5 text-sm leading-7 text-ink-soft">{chapter.context ? <p>{chapter.context}</p> : <p className="text-ink-faint">Il corpus non contiene ancora un contesto storico-culturale strutturato per questo capitolo.</p>}<Link href={`/rebuild/historical-explorer/${chapter.slug}?chapter=${chapter.number}`} className="mt-4 inline-flex font-semibold text-bronze hover:text-ink">Apri il mondo storico e geografico →</Link></div>}
         {active==='umanita' && <div className="mt-5 text-sm leading-7 text-ink-soft"><p>{chapter.summary}</p>{chapter.structure && <div className="mt-5 border-l-2 border-bronze/35 pl-4"><strong className="font-serif text-lg text-ink">Come il capitolo costruisce l’esperienza</strong><p className="mt-1">{chapter.structure}</p></div>}</div>}
         {active==='tradizione' && <div className="mt-5"><p className="text-sm leading-7 text-ink-soft">{chapter.formation || chapter.critical || 'La formazione del testo non è ancora strutturata per questo capitolo.'}</p>{chapter.sourceLayers.length>0 && <div className="mt-5 divide-y divide-papyrus-line border-y border-papyrus-line">{chapter.sourceLayers.map((layer:any,index:number) => <article key={layer?._key||index} className="py-4"><div className="flex items-baseline justify-between gap-4"><strong className="font-serif text-lg">{layer?.fonte?.sigla || layer?.fonte?.nome || 'Livello critico'}</strong></div><p className="mt-2 text-sm leading-6 text-ink-soft">{layer?.descrizione || layer?.motivazione || layer?.fonte?.descrizione || 'Attribuzione registrata nel modello critico.'}</p></article>)}</div>}</div>}
         {active==='ricezione' && <div className="mt-5 text-sm leading-7 text-ink-soft"><p>Le riletture canoniche sono mostrate come relazioni esplicite e separate dalla ricostruzione storica.</p></div>}
