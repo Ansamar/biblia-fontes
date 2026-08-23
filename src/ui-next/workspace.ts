@@ -4,6 +4,7 @@ export type WorkspaceContext = {
   bookSlug?: string;
   bookTitle?: string;
   chapter?: number;
+  chapterTitle?: string;
   reference?: string;
   year?: number;
   entityId?: string;
