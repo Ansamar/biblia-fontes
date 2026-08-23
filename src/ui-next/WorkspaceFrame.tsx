@@ -4,14 +4,6 @@ import Link from 'next/link';
 import ReadingPreferences from '../components/ReadingPreferences';
 import { bookHref, perspectiveHref, type WorkspaceContext, type WorkspacePerspective } from './workspace';
 
-const knowledgeDimensions = [
-  ['scrittura', 'Scrittura'],
-  ['mondo', 'Mondo'],
-  ['umanita', 'Umanità'],
-  ['tradizione', 'Tradizione'],
-  ['ricezione', 'Ricezione'],
-] as const;
-
 export default function WorkspaceFrame({ children, context = {}, active = 'text', knowledgeMode = false }: { children: React.ReactNode; context?: WorkspaceContext; active?: WorkspacePerspective; knowledgeMode?: boolean }) {
   const base = context.bookSlug ? bookHref(context.bookSlug) : '/';
   const perspectives: Array<{id: WorkspacePerspective; label: string}> = context.chapter
@@ -36,7 +28,7 @@ export default function WorkspaceFrame({ children, context = {}, active = 'text'
         </div>
         <div className="ml-auto flex items-center gap-3"><Link href="/historical-explorer" className="hidden text-xs text-ink-faint hover:text-ink sm:inline">Storia</Link><Link href="/cerca" className="text-xs text-ink-faint hover:text-ink">Cerca</Link><ReadingPreferences /></div>
       </div>
-      {context.bookSlug && (knowledgeMode ? <nav className="mx-auto flex h-11 max-w-[1600px] items-end gap-5 overflow-x-auto px-4 md:px-6" aria-label="Dimensioni di conoscenza">{knowledgeDimensions.map(([id,label]) => <a key={id} href={`#${id}`} className="h-11 shrink-0 border-b-2 border-transparent px-0.5 pt-3 text-xs font-medium text-ink-faint hover:border-bronze hover:text-ink">{label}</a>)}</nav> : <nav className="mx-auto flex h-11 max-w-[1600px] items-end gap-5 overflow-x-auto px-4 md:px-6" aria-label="Prospettiva di studio">{perspectives.map((item) => <Link key={item.id} href={perspectiveHref(context, item.id)} className={`h-11 shrink-0 border-b-2 px-0.5 pt-3 text-xs font-medium ${active === item.id ? 'border-bronze text-ink' : 'border-transparent text-ink-faint hover:text-ink'}`}>{item.label}</Link>)}</nav>)}
+      {!knowledgeMode && context.bookSlug && <nav className="mx-auto flex h-11 max-w-[1600px] items-end gap-5 overflow-x-auto px-4 md:px-6" aria-label="Prospettiva di studio">{perspectives.map((item) => <Link key={item.id} href={perspectiveHref(context, item.id)} className={`h-11 shrink-0 border-b-2 px-0.5 pt-3 text-xs font-medium ${active === item.id ? 'border-bronze text-ink' : 'border-transparent text-ink-faint hover:text-ink'}`}>{item.label}</Link>)}</nav>}
     </header>
     {children}
   </div>;
