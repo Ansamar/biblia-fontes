@@ -15,7 +15,7 @@ export default async function RebuiltChapterPage({ params, searchParams }: { par
   const active = view === 'sources' ? 'sources' : view === 'study' ? 'study' : 'text';
   const knowledgePrototype = chapter.slug === 'genesi' && chapter.number === 1;
 
-  return <WorkspaceFrame context={{bookSlug: chapter.slug, bookTitle: chapter.bookTitle, chapter: chapter.number, reference: `${chapter.abbreviation} ${chapter.number}`}} active={active} knowledgeMode={knowledgePrototype}>
+  return <WorkspaceFrame context={{bookSlug: chapter.slug, bookTitle: chapter.bookTitle, chapter: chapter.number, chapterTitle: chapter.title, reference: `${chapter.abbreviation} ${chapter.number}`}} active={active} knowledgeMode={knowledgePrototype}>
     {knowledgePrototype ? <GenesisKnowledgeSurface chapter={chapter} /> : <ChapterSurface chapter={chapter} />}
   </WorkspaceFrame>;
 }
