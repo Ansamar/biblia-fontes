@@ -51,3 +51,16 @@ export const bfrgGenesisPilot: BfrgPilotRelation[] = [
 export const familyLabels: Record<BfrgFamily,string> = {HUMANITY:'Umanità',WORLD:'Mondo',CULTURE:'Culture',TRADITION:'Tradizione',TEXT:'Scrittura'};
 export const claimModeLabels: Record<BfrgClaimMode,string> = {textual:'Dato testuale',interpretive:'Interpretazione',comparative:'Confronto culturale',canonical:'Relazione canonica'};
 export const confidenceLabels: Record<BfrgConfidence,string> = {explicit:'Esplicita',strong:'Fortemente sostenuta',plausible:'Plausibile',debated:'Dibattuta'};
+export const predicateLabels: Record<string,string> = {
+  THEMATIZES:'Tematizza',
+  PROBLEMATIZES:'Problematizza',
+  CULTURAL_PARALLEL_WITH:'Confronto culturale',
+  TRANSLATES:'Traduce',
+  REINTERPRETS:'Rilegge',
+  DEPICTS:'Rappresenta',
+  DEVELOPS:'Sviluppa',
+  EMERGES_IN:'Si colloca in',
+  BELONGS_TO:'Appartiene a',
+  PARALLELS_TEXT:'Presenta un parallelo con',
+  RECEIVES:'Riceve'
+};
