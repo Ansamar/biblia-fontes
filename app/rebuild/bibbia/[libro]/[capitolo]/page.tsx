@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import WorkspaceFrame from '../../../../../src/ui-next/WorkspaceFrame';
-import ChapterSurface from '../../../../../src/ui-next/ChapterSurface';
+import ChapterKnowledgeSurface from '../../../../../src/ui-next/ChapterKnowledgeSurface';
 import { fetchChapterView } from '../../../../../src/data-access/chapter';
 
 export default async function RebuiltChapterPage({ params, searchParams }: { params: Promise<{ libro: string; capitolo: string }>; searchParams: Promise<{view?: string}> }) {
@@ -13,5 +13,7 @@ export default async function RebuiltChapterPage({ params, searchParams }: { par
   if (!chapter) notFound();
   const active = view === 'sources' ? 'sources' : view === 'study' ? 'study' : 'text';
 
-  return <WorkspaceFrame context={{bookSlug: chapter.slug, bookTitle: chapter.bookTitle, chapter: chapter.number, reference: `${chapter.abbreviation} ${chapter.number}`}} active={active}><ChapterSurface chapter={chapter} /></WorkspaceFrame>;
+  return <WorkspaceFrame context={{bookSlug: chapter.slug, bookTitle: chapter.bookTitle, chapter: chapter.number, chapterTitle: chapter.title, reference: `${chapter.abbreviation} ${chapter.number}`}} active={active} knowledgeMode>
+    <ChapterKnowledgeSurface chapter={chapter} />
+  </WorkspaceFrame>;
 }
