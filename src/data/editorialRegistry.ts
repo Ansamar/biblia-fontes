@@ -1,4 +1,5 @@
 import { genesisEditorial } from './genesisEditorial';
+import { genesisEditorialSpecific } from './genesisEditorialSpecific';
 import { pentateuchEditorial, type BookEditorialProfile } from './editorialPentateuch';
 import { historicalEditorial } from './editorialHistorical';
 import { wisdomEditorial } from './editorialWisdom';
@@ -41,17 +42,18 @@ function usable(value: unknown) {
 
 export function enrichEditorialChapter(slug: string, chapter: any, numero: number) {
   if (slug === 'genesi') {
-    const e = genesisEditorial[numero];
-    if (!e) return chapter;
+    const base = genesisEditorial[numero];
+    if (!base) return chapter;
+    const specific = genesisEditorialSpecific[numero];
     return {
       ...chapter,
-      sintesi: e.summary,
-      struttura: e.structure,
-      contestoStorico: e.context,
-      tradizione: e.formation,
-      analisiStoricoCritica: e.critical,
-      testoCritico: e.textual,
-      bibliografia: e.bibliography,
+      sintesi: base.summary,
+      struttura: base.structure,
+      contestoStorico: specific?.context || base.context,
+      tradizione: specific?.formation || base.formation,
+      analisiStoricoCritica: base.critical,
+      testoCritico: specific?.textual || base.textual,
+      bibliografia: specific?.bibliography || base.bibliography,
     };
   }
 
