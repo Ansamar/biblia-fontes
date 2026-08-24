@@ -8,6 +8,7 @@ import { client } from '../../../../src/sanity/client';
 import { bookAbbreviation, bookIdFromSlug, categoryLabel } from '../../../../src/lib/bibleRouting';
 import { textFixtureFor } from '../../../../src/data/textFixtures';
 import { genesisEditorial } from '../../../../src/data/genesisEditorial';
+import { genesisEditorialSpecific } from '../../../../src/data/genesisEditorialSpecific';
 import { parseStudyContext, studyContextHref } from '../../../../src/study-context/context';
 
 const DANIEL_SPECIAL_TRADITIONS = ['susanna_og','susanna_teodozione','bel_og','bel_teodozione'];
@@ -28,7 +29,21 @@ function priority(t:ReaderWitness){const l=normalized(t.lingua),r=normalized(t.t
 function orderWitnesses(texts:ReaderWitness[]){const seen=new Set<string>();return texts.filter(t=>{const k=[normalized(t.tradizione),normalized(t.lingua),normalized(t.testimone),normalized(t.edizione),String(t.numero??'')].join('|');if(seen.has(k))return false;seen.add(k);return true;}).map((text,index)=>({text,index})).sort((a,b)=>priority(a.text)-priority(b.text)||a.index-b.index).map(x=>x.text);}
 function relevant(slug:string,n:number,t:ReaderWitness){if(slug!=='daniele')return true;const tr=normalized(t.tradizione);if(n===13)return !DANIEL_SPECIAL_TRADITIONS.includes(tr)||['susanna_og','susanna_teodozione'].includes(tr);if(n===14)return !DANIEL_SPECIAL_TRADITIONS.includes(tr)||['bel_og','bel_teodozione'].includes(tr);return !DANIEL_SPECIAL_TRADITIONS.includes(tr);}
 function titleFromSlug(slug?:string){return slug?slug.split('-').map(p=>p?p[0].toLocaleUpperCase('it-IT')+p.slice(1):p).join(' '):'Historical Explorer';}
-function enrichGenesis(slug:string, chapter:any, numero:number){if(slug!=='genesi')return chapter;const e=genesisEditorial[numero];if(!e)return chapter;return {...chapter,sintesi:e.summary,struttura:e.structure,contestoStorico:e.context,tradizione:e.formation,analisiStoricoCritica:e.critical,testoCritico:e.textual,bibliografia:e.bibliography};}
+function enrichGenesis(slug:string, chapter:any, numero:number){
+  if(slug!=='genesi')return chapter;
+  const base=genesisEditorial[numero];
+  if(!base)return chapter;
+  const specific=genesisEditorialSpecific[numero];
+  return {...chapter,
+    sintesi:base.summary,
+    struttura:base.structure,
+    contestoStorico:specific?.context||base.context,
+    tradizione:specific?.formation||base.formation,
+    analisiStoricoCritica:base.critical,
+    testoCritico:specific?.textual||base.textual,
+    bibliografia:specific?.bibliography||base.bibliography
+  };
+}
 
 export default async function DynamicChapterPage({params,searchParams}:{params:Promise<{libro:string;capitolo:string}>;searchParams:Promise<Record<string,string|string[]|undefined>>}){
   const {libro:slug,capitolo}=await params;const context=parseStudyContext(await searchParams);const numero=Number(capitolo);if(!Number.isInteger(numero)||numero<1)notFound();
