@@ -59,11 +59,16 @@ export function enrichEditorialChapter(slug: string, chapter: any, numero: numbe
 
   const profile = profiles[slug];
   if (!profile) return chapter;
+  const formation = usable(chapter?.tradizione)
+    ? chapter.tradizione
+    : usable(chapter?.redazione)
+      ? chapter.redazione
+      : profile.formation;
 
   return {
     ...chapter,
     contestoStorico: usable(chapter?.contestoStorico) ? chapter.contestoStorico : profile.context,
-    tradizione: usable(chapter?.tradizione) || usable(chapter?.redazione) ? chapter.tradizione : profile.formation,
+    tradizione: formation,
     analisiStoricoCritica: usable(chapter?.analisiStoricoCritica)
       ? chapter.analisiStoricoCritica
       : `Il capitolo va interpretato nel quadro compositivo specifico del libro. ${profile.formation}`,
