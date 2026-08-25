@@ -1,5 +1,6 @@
 import { genesisEditorial } from './genesisEditorial';
 import { genesisEditorialSpecific } from './genesisEditorialSpecific';
+import { exodusEditorial } from './exodusEditorial';
 import { pentateuchEditorial, type BookEditorialProfile } from './editorialPentateuch';
 import { historicalEditorial } from './editorialHistorical';
 import { wisdomEditorial } from './editorialWisdom';
@@ -57,6 +58,21 @@ export function enrichEditorialChapter(slug: string, chapter: any, numero: numbe
     };
   }
 
+  if (slug === 'esodo') {
+    const e = exodusEditorial[numero];
+    if (!e) return chapter;
+    return {
+      ...chapter,
+      sintesi: e.summary,
+      struttura: e.structure,
+      contestoStorico: e.context,
+      tradizione: e.formation,
+      analisiStoricoCritica: e.critical,
+      testoCritico: e.textual,
+      bibliografia: e.bibliography,
+    };
+  }
+
   const profile = profiles[slug];
   if (!profile) return chapter;
   const formation = usable(chapter?.tradizione)
@@ -80,7 +96,7 @@ export function enrichEditorialChapter(slug: string, chapter: any, numero: numbe
 }
 
 export function hasCanonicalEditorialProfile(slug: string) {
-  return slug === 'genesi' || Boolean(profiles[slug]);
+  return slug === 'genesi' || slug === 'esodo' || Boolean(profiles[slug]);
 }
 
 export const canonicalEditorialBookCount = 73;
