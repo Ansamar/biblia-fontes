@@ -1,6 +1,7 @@
 import { genesisEditorial } from './genesisEditorial';
 import { genesisEditorialSpecific } from './genesisEditorialSpecific';
 import { exodusEditorial } from './exodusEditorial';
+import { leviticusEditorialSpecific } from './leviticusEditorialSpecific';
 import { pentateuchEditorial, type BookEditorialProfile } from './editorialPentateuch';
 import { historicalEditorial } from './editorialHistorical';
 import { wisdomEditorial } from './editorialWisdom';
@@ -41,6 +42,22 @@ function usable(value: unknown) {
   return Boolean(text) && !PLACEHOLDER_PATTERNS.some((pattern) => pattern.test(text));
 }
 
+function applySpecific(chapter: any, e: GenesisEditorialChapter | undefined) {
+  if (!e) return chapter;
+  return {
+    ...chapter,
+    sintesi: e.summary,
+    struttura: e.structure,
+    contestoStorico: e.context,
+    tradizione: e.formation,
+    analisiStoricoCritica: e.critical,
+    testoCritico: e.textual,
+    bibliografia: e.bibliography,
+  };
+}
+
+type GenesisEditorialChapter = import('./genesisEditorial').GenesisEditorialChapter;
+
 export function enrichEditorialChapter(slug: string, chapter: any, numero: number) {
   if (slug === 'genesi') {
     const base = genesisEditorial[numero];
@@ -58,20 +75,8 @@ export function enrichEditorialChapter(slug: string, chapter: any, numero: numbe
     };
   }
 
-  if (slug === 'esodo') {
-    const e = exodusEditorial[numero];
-    if (!e) return chapter;
-    return {
-      ...chapter,
-      sintesi: e.summary,
-      struttura: e.structure,
-      contestoStorico: e.context,
-      tradizione: e.formation,
-      analisiStoricoCritica: e.critical,
-      testoCritico: e.textual,
-      bibliografia: e.bibliography,
-    };
-  }
+  if (slug === 'esodo') return applySpecific(chapter, exodusEditorial[numero]);
+  if (slug === 'levitico') return applySpecific(chapter, leviticusEditorialSpecific[numero]);
 
   const profile = profiles[slug];
   if (!profile) return chapter;
@@ -96,7 +101,7 @@ export function enrichEditorialChapter(slug: string, chapter: any, numero: numbe
 }
 
 export function hasCanonicalEditorialProfile(slug: string) {
-  return slug === 'genesi' || slug === 'esodo' || Boolean(profiles[slug]);
+  return slug === 'genesi' || slug === 'esodo' || slug === 'levitico' || Boolean(profiles[slug]);
 }
 
 export const canonicalEditorialBookCount = 73;
