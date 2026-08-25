@@ -9,6 +9,7 @@ import { judgesEditorialSpecific } from './judgesEditorialSpecific';
 import { ruthEditorialSpecific } from './ruthEditorialSpecific';
 import { firstSamuelEditorialSpecific } from './firstSamuelEditorialSpecific';
 import { secondSamuelEditorialSpecific } from './secondSamuelEditorialSpecific';
+import { firstKingsEditorialSpecific } from './firstKingsEditorialSpecific';
 import { pentateuchEditorial, type BookEditorialProfile } from './editorialPentateuch';
 import { historicalEditorial } from './editorialHistorical';
 import { wisdomEditorial } from './editorialWisdom';
@@ -32,8 +33,9 @@ export function enrichEditorialChapter(slug:string,chapter:any,numero:number){
  if(slug==='rut')return applySpecific(chapter,ruthEditorialSpecific[numero]);
  if(slug==='1-samuele')return applySpecific(chapter,firstSamuelEditorialSpecific[numero]);
  if(slug==='2-samuele')return applySpecific(chapter,secondSamuelEditorialSpecific[numero]);
+ if(slug==='1-re')return applySpecific(chapter,firstKingsEditorialSpecific[numero]);
  const profile=profiles[slug];if(!profile)return chapter;const formation=usable(chapter?.tradizione)?chapter.tradizione:usable(chapter?.redazione)?chapter.redazione:profile.formation;
  return {...chapter,contestoStorico:usable(chapter?.contestoStorico)?chapter.contestoStorico:profile.context,tradizione:formation,analisiStoricoCritica:usable(chapter?.analisiStoricoCritica)?chapter.analisiStoricoCritica:`Il capitolo va interpretato nel quadro compositivo specifico del libro. ${profile.formation}`,testoCritico:usable(chapter?.testoCritico)?chapter.testoCritico:profile.textual,bibliografia:Array.isArray(chapter?.bibliografia)&&chapter.bibliografia.length?chapter.bibliografia:profile.bibliography};
 }
-export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici','rut','1-samuele','2-samuele'].includes(slug)||Boolean(profiles[slug]);}
+export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici','rut','1-samuele','2-samuele','1-re'].includes(slug)||Boolean(profiles[slug]);}
 export const canonicalEditorialBookCount=73;
