@@ -5,6 +5,7 @@ import { leviticusEditorialSpecific } from './leviticusEditorialSpecific';
 import { numbersEditorialSpecific } from './numbersEditorialSpecific';
 import { deuteronomyEditorialSpecific } from './deuteronomyEditorialSpecific';
 import { joshuaEditorialSpecific } from './joshuaEditorialSpecific';
+import { judgesEditorialSpecific } from './judgesEditorialSpecific';
 import { pentateuchEditorial, type BookEditorialProfile } from './editorialPentateuch';
 import { historicalEditorial } from './editorialHistorical';
 import { wisdomEditorial } from './editorialWisdom';
@@ -24,8 +25,9 @@ export function enrichEditorialChapter(slug:string,chapter:any,numero:number){
  if(slug==='numeri')return applySpecific(chapter,numbersEditorialSpecific[numero]);
  if(slug==='deuteronomio')return applySpecific(chapter,deuteronomyEditorialSpecific[numero]);
  if(slug==='giosue')return applySpecific(chapter,joshuaEditorialSpecific[numero]);
+ if(slug==='giudici')return applySpecific(chapter,judgesEditorialSpecific[numero]);
  const profile=profiles[slug];if(!profile)return chapter;const formation=usable(chapter?.tradizione)?chapter.tradizione:usable(chapter?.redazione)?chapter.redazione:profile.formation;
  return {...chapter,contestoStorico:usable(chapter?.contestoStorico)?chapter.contestoStorico:profile.context,tradizione:formation,analisiStoricoCritica:usable(chapter?.analisiStoricoCritica)?chapter.analisiStoricoCritica:`Il capitolo va interpretato nel quadro compositivo specifico del libro. ${profile.formation}`,testoCritico:usable(chapter?.testoCritico)?chapter.testoCritico:profile.textual,bibliografia:Array.isArray(chapter?.bibliografia)&&chapter.bibliografia.length?chapter.bibliografia:profile.bibliography};
 }
-export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue'].includes(slug)||Boolean(profiles[slug]);}
+export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici'].includes(slug)||Boolean(profiles[slug]);}
 export const canonicalEditorialBookCount=73;
