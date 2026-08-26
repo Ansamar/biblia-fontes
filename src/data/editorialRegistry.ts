@@ -18,6 +18,7 @@ import { nehemiahEditorialSpecific } from './nehemiahEditorialSpecific';
 import { tobitEditorialSpecific } from './tobitEditorialSpecific';
 import { judithEditorialSpecific } from './judithEditorialSpecific';
 import { estherEditorialSpecific } from './estherEditorialSpecific';
+import { firstMaccabeesEditorialSpecific } from './firstMaccabeesEditorialSpecific';
 import { pentateuchEditorial, type BookEditorialProfile } from './editorialPentateuch';
 import { historicalEditorial } from './editorialHistorical';
 import { wisdomEditorial } from './editorialWisdom';
@@ -50,8 +51,9 @@ export function enrichEditorialChapter(slug:string,chapter:any,numero:number){
  if(slug==='tobia')return applySpecific(chapter,tobitEditorialSpecific[numero]);
  if(slug==='giuditta')return applySpecific(chapter,judithEditorialSpecific[numero]);
  if(slug==='ester')return applySpecific(chapter,estherEditorialSpecific[numero]);
+ if(slug==='1-maccabei')return applySpecific(chapter,firstMaccabeesEditorialSpecific[numero]);
  const profile=profiles[slug];if(!profile)return chapter;const formation=usable(chapter?.tradizione)?chapter.tradizione:usable(chapter?.redazione)?chapter.redazione:profile.formation;
  return {...chapter,contestoStorico:usable(chapter?.contestoStorico)?chapter.contestoStorico:profile.context,tradizione:formation,analisiStoricoCritica:usable(chapter?.analisiStoricoCritica)?chapter.analisiStoricoCritica:`Il capitolo va interpretato nel quadro compositivo specifico del libro. ${profile.formation}`,testoCritico:usable(chapter?.testoCritico)?chapter.testoCritico:profile.textual,bibliografia:Array.isArray(chapter?.bibliografia)&&chapter.bibliografia.length?chapter.bibliografia:profile.bibliography};
 }
-export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici','rut','1-samuele','2-samuele','1-re','2-re','1-cronache','2-cronache','esdra','neemia','tobia','giuditta','ester'].includes(slug)||Boolean(profiles[slug]);}
+export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici','rut','1-samuele','2-samuele','1-re','2-re','1-cronache','2-cronache','esdra','neemia','tobia','giuditta','ester','1-maccabei'].includes(slug)||Boolean(profiles[slug]);}
 export const canonicalEditorialBookCount=73;
