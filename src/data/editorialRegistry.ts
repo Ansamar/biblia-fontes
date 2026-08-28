@@ -31,6 +31,7 @@ import { isaiahEditorialSpecific } from './isaiahEditorialSpecific';
 import { jeremiahEditorialSpecific } from './jeremiahEditorialSpecific';
 import { lamentationsEditorialSpecific } from './lamentationsEditorialSpecific';
 import { baruchEditorialSpecific } from './baruchEditorialSpecific';
+import { ezekielEditorialSpecific } from './ezekielEditorialSpecific';
 import { pentateuchEditorial, type BookEditorialProfile } from './editorialPentateuch';
 import { historicalEditorial } from './editorialHistorical';
 import { wisdomEditorial } from './editorialWisdom';
@@ -76,8 +77,9 @@ export function enrichEditorialChapter(slug:string,chapter:any,numero:number){
  if(slug==='geremia')return applySpecific(chapter,jeremiahEditorialSpecific[numero]);
  if(slug==='lamentazioni')return applySpecific(chapter,lamentationsEditorialSpecific[numero]);
  if(slug==='baruc')return applySpecific(chapter,baruchEditorialSpecific[numero]);
+ if(slug==='ezechiele')return applySpecific(chapter,ezekielEditorialSpecific[numero]);
  const profile=profiles[slug];if(!profile)return chapter;const formation=usable(chapter?.tradizione)?chapter.tradizione:usable(chapter?.redazione)?chapter.redazione:profile.formation;
  return {...chapter,contestoStorico:usable(chapter?.contestoStorico)?chapter.contestoStorico:profile.context,tradizione:formation,analisiStoricoCritica:usable(chapter?.analisiStoricoCritica)?chapter.analisiStoricoCritica:`Il capitolo va interpretato nel quadro compositivo specifico del libro. ${profile.formation}`,testoCritico:usable(chapter?.testoCritico)?chapter.testoCritico:profile.textual,bibliografia:Array.isArray(chapter?.bibliografia)&&chapter.bibliografia.length?chapter.bibliografia:profile.bibliography};
 }
-export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici','rut','1-samuele','2-samuele','1-re','2-re','1-cronache','2-cronache','esdra','neemia','tobia','giuditta','ester','1-maccabei','2-maccabei','giobbe','salmi','proverbi','qoelet','cantico-dei-cantici','sapienza','siracide','isaia','geremia','lamentazioni','baruc'].includes(slug)||Boolean(profiles[slug]);}
+export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici','rut','1-samuele','2-samuele','1-re','2-re','1-cronache','2-cronache','esdra','neemia','tobia','giuditta','ester','1-maccabei','2-maccabei','giobbe','salmi','proverbi','qoelet','cantico-dei-cantici','sapienza','siracide','isaia','geremia','lamentazioni','baruc','ezechiele'].includes(slug)||Boolean(profiles[slug]);}
 export const canonicalEditorialBookCount=73;
