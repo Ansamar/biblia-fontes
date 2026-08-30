@@ -2,6 +2,7 @@ import { client } from '../sanity/client';
 import { bookAbbreviation, bookIdFromSlug, categoryLabel } from '../lib/bibleRouting';
 import type { BiblicalTextUnit } from '../components/BiblicalTextReader';
 import { textFixtureFor } from '../data/textFixtures';
+import { enrichEditorialChapter } from '../data/editorialRegistry';
 
 type ReaderWitness = BiblicalTextUnit & { _id?: string };
 
@@ -69,7 +70,7 @@ export async function fetchChapterView(slug: string, numero: number) {
   const sanityWitnesses: ReaderWitness[] = Array.isArray(data.testiBiblici) ? data.testiBiblici : [];
   const hasItalian = sanityWitnesses.some((item) => witnessPriority(item) === 0);
   const orderedWitnesses = witnesses([...(!hasItalian && fixture ? [fixture] : []), ...sanityWitnesses]);
-  const chapter = data.capitolo;
+  const chapter = enrichEditorialChapter(slug, data.capitolo, numero);
   const book = data.libro;
 
   return {
