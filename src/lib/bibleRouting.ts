@@ -1,3 +1,5 @@
+import { canonicalBookSlug } from './canon';
+
 export const categoryLabels: Record<string, string> = {
   pentateuco: 'Pentateuco',
   storici: 'Libri storici',
@@ -46,7 +48,7 @@ export const referenceAliases: Record<string, string[]> = {
   isaia: ['is', 'isaia'], geremia: ['ger', 'geremia'], lamentazioni: ['lam', 'lamentazioni'], baruc: ['bar', 'baruc'], ezechiele: ['ez', 'ezechiele'], daniele: ['dn', 'dan', 'daniele'],
   osea: ['os', 'osea'], gioele: ['gl', 'gioele'], amos: ['am', 'amos'], abdia: ['abd', 'abdia'], giona: ['gio', 'giona'], michea: ['mi', 'michea'], naum: ['na', 'naum'], abacuc: ['ab', 'abacuc'], sofia: ['sof', 'sofonia', 'sofia'], aggeo: ['ag', 'aggeo'], zaccaria: ['zc', 'zaccaria'], malachia: ['ml', 'malachia'],
   matteo: ['mt', 'matteo'], marco: ['mc', 'marco'], luca: ['lc', 'luca'], giovanni: ['gv', 'giovanni'], atti: ['at', 'atti', 'atti degli apostoli'],
-  romani: ['rm', 'rom', 'romani'], '1-corinzi': ['1cor', '1 cor', '1corinzi', '1 corinzi'], '2-corinzi': ['2cor', '2 cor', '2corinzi', '2 corinzi'],
+  romani: ['rm', 'rom', 'romani'], '1-corinzi': ['1cor', '1 cor', '1corinzi', '1 corinzi', '1corinti', '1 corinti'], '2-corinzi': ['2cor', '2 cor', '2corinzi', '2 corinzi', '2corinti', '2 corinti'],
   galati: ['gal', 'galati'], efesini: ['ef', 'efesini'], filippesi: ['fil', 'filippesi'], colossesi: ['col', 'colossesi'],
   '1-tessalonicesi': ['1ts', '1 ts', '1tessalonicesi', '1 tessalonicesi'], '2-tessalonicesi': ['2ts', '2 ts', '2tessalonicesi', '2 tessalonicesi'],
   '1-timoteo': ['1tm', '1 tm', '1timoteo', '1 timoteo'], '2-timoteo': ['2tm', '2 tm', '2timoteo', '2 timoteo'],
@@ -55,6 +57,14 @@ export const referenceAliases: Record<string, string[]> = {
   '1-giovanni': ['1gv', '1 gv', '1giovanni', '1 giovanni'], '2-giovanni': ['2gv', '2 gv', '2giovanni', '2 giovanni'], '3-giovanni': ['3gv', '3 gv', '3giovanni', '3 giovanni'],
   giuda: ['gd', 'giuda'], apocalisse: ['ap', 'apocalisse'],
 };
+
+// The reference tables retain their legacy spelling; resolve either lookup form.
+function referenceLookupSlug(slug: string) {
+  const canonical = canonicalBookSlug(slug);
+  if (canonical === '1-corinti') return '1-corinzi';
+  if (canonical === '2-corinti') return '2-corinzi';
+  return canonical;
+}
 
 export function bookIdFromSlug(slug: string) {
   return `libro-${slug}`;
@@ -69,6 +79,7 @@ export function categoryLabel(categoryId?: string) {
 }
 
 export function bookAbbreviation(slug: string, title?: string) {
+  slug = referenceLookupSlug(slug);
   if (bookAbbreviations[slug]) return bookAbbreviations[slug];
   const cleaned = (title || slug).replace(/[^A-Za-zÀ-ÿ0-9 ]/g, '').trim();
   const parts = cleaned.split(/\s+/);
@@ -82,8 +93,8 @@ export function matchReference(raw: string, books: { id: string; titolo: string;
 
   for (const book of books) {
     const slug = slugFromBookId(book.id);
-    const aliases = referenceAliases[slug] || [bookAbbreviation(slug, book.titolo).toLowerCase(), book.titolo.toLowerCase()];
-    for (const alias of aliases.sort((a, b) => b.length - a.length)) {
+    const aliases = referenceAliases[referenceLookupSlug(slug)] || [bookAbbreviation(slug, book.titolo).toLowerCase(), book.titolo.toLowerCase()];
+    for (const alias of [...aliases].sort((a, b) => b.length - a.length)) {
       const escaped = alias.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const match = normalized.match(new RegExp(`^${escaped}\\s*(\\d{1,3})(?:[,:.]\\s*\\d+)?$`, 'i'));
       if (!match) continue;
