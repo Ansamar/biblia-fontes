@@ -7,8 +7,15 @@ export const catholicCanonSlugs = [
 
 const order = new Map<string, number>(catholicCanonSlugs.map((slug, index) => [slug, index + 1]));
 
+// Normalize lookup keys only; do not rewrite persisted Sanity IDs or public URLs.
+export function canonicalBookSlug(slug: string) {
+  if (slug === '1-corinzi') return '1-corinti';
+  if (slug === '2-corinzi') return '2-corinti';
+  return slug;
+}
+
 export function canonicalBookOrder(slug: string, fallback = 999) {
-  return order.get(slug) ?? fallback;
+  return order.get(canonicalBookSlug(slug)) ?? fallback;
 }
 
 export function canonicalBookCategory(slug: string) {
