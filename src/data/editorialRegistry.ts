@@ -1,4 +1,5 @@
 import { genesisEditorial } from './genesisEditorial';
+import { canonicalBookSlug } from '../lib/canon';
 import { genesisEditorialSpecific } from './genesisEditorialSpecific';
 import { exodusEditorial } from './exodusEditorial';
 import { leviticusEditorialSpecific } from './leviticusEditorialSpecific';
@@ -85,6 +86,7 @@ function usable(value: unknown){const text=textFromUnknown(value);return Boolean
 type GenesisEditorialChapter = import('./genesisEditorial').GenesisEditorialChapter;
 function applySpecific(chapter:any,e:GenesisEditorialChapter|undefined){if(!e)return chapter;return {...chapter,sintesi:e.summary,struttura:e.structure,contestoStorico:e.context,tradizione:e.formation,analisiStoricoCritica:e.critical,testoCritico:e.textual,bibliografia:e.bibliography};}
 export function enrichEditorialChapter(slug:string,chapter:any,numero:number){
+ slug=canonicalBookSlug(slug);
  if(slug==='genesi'){const base=genesisEditorial[numero];if(!base)return chapter;const specific=genesisEditorialSpecific[numero];return {...chapter,sintesi:base.summary,struttura:base.structure,contestoStorico:specific?.context||base.context,tradizione:specific?.formation||base.formation,analisiStoricoCritica:base.critical,testoCritico:specific?.textual||base.textual,bibliografia:specific?.bibliography||base.bibliography};}
  if(slug==='esodo')return applySpecific(chapter,exodusEditorial[numero]);
  if(slug==='levitico')return applySpecific(chapter,leviticusEditorialSpecific[numero]);
@@ -137,8 +139,8 @@ export function enrichEditorialChapter(slug:string,chapter:any,numero:number){
  if(slug==='giovanni')return applySpecific(chapter,johnEditorialSpecific[numero]);
  if(slug==='atti')return applySpecific(chapter,actsEditorialSpecific[numero]);
  if(slug==='romani')return applySpecific(chapter,romansEditorialSpecific[numero]);
- if(slug==='1-corinzi')return applySpecific(chapter,firstCorinthiansEditorialSpecific[numero]);
- if(slug==='2-corinzi')return applySpecific(chapter,secondCorinthiansEditorialSpecific[numero]);
+ if(slug==='1-corinti')return applySpecific(chapter,firstCorinthiansEditorialSpecific[numero]);
+ if(slug==='2-corinti')return applySpecific(chapter,secondCorinthiansEditorialSpecific[numero]);
  if(slug==='galati')return applySpecific(chapter,galatiansEditorialSpecific[numero]);
  if(slug==='efesini')return applySpecific(chapter,ephesiansEditorialSpecific[numero]);
  if(slug==='filippesi')return applySpecific(chapter,philippiansEditorialSpecific[numero]);
@@ -161,5 +163,5 @@ export function enrichEditorialChapter(slug:string,chapter:any,numero:number){
  const profile=profiles[slug];if(!profile)return chapter;const formation=usable(chapter?.tradizione)?chapter.tradizione:usable(chapter?.redazione)?chapter.redazione:profile.formation;
  return {...chapter,contestoStorico:usable(chapter?.contestoStorico)?chapter.contestoStorico:profile.context,tradizione:formation,analisiStoricoCritica:usable(chapter?.analisiStoricoCritica)?chapter.analisiStoricoCritica:`Il capitolo va interpretato nel quadro compositivo specifico del libro. ${profile.formation}`,testoCritico:usable(chapter?.testoCritico)?chapter.testoCritico:profile.textual,bibliografia:Array.isArray(chapter?.bibliografia)&&chapter.bibliografia.length?chapter.bibliografia:profile.bibliography};
 }
-export function hasCanonicalEditorialProfile(slug:string){return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici','rut','1-samuele','2-samuele','1-re','2-re','1-cronache','2-cronache','esdra','neemia','tobia','giuditta','ester','1-maccabei','2-maccabei','giobbe','salmi','proverbi','qoelet','cantico-dei-cantici','sapienza','siracide','isaia','geremia','lamentazioni','baruc','ezechiele','daniele','osea','gioele','amos','abdia','giona','michea','naum','abacuc','sofonia','aggeo','zaccaria','malachia','matteo','marco','luca','giovanni','atti','romani','1-corinzi','2-corinzi','galati','efesini','filippesi','colossesi','1-tessalonicesi','2-tessalonicesi','1-timoteo','2-timoteo','tito','filemone','ebrei','giacomo','1-pietro','2-pietro','1-giovanni','2-giovanni','3-giovanni','giuda','apocalisse'].includes(slug)||Boolean(profiles[slug]);}
+export function hasCanonicalEditorialProfile(slug:string){slug=canonicalBookSlug(slug);return ['genesi','esodo','levitico','numeri','deuteronomio','giosue','giudici','rut','1-samuele','2-samuele','1-re','2-re','1-cronache','2-cronache','esdra','neemia','tobia','giuditta','ester','1-maccabei','2-maccabei','giobbe','salmi','proverbi','qoelet','cantico-dei-cantici','sapienza','siracide','isaia','geremia','lamentazioni','baruc','ezechiele','daniele','osea','gioele','amos','abdia','giona','michea','naum','abacuc','sofonia','aggeo','zaccaria','malachia','matteo','marco','luca','giovanni','atti','romani','1-corinti','2-corinti','galati','efesini','filippesi','colossesi','1-tessalonicesi','2-tessalonicesi','1-timoteo','2-timoteo','tito','filemone','ebrei','giacomo','1-pietro','2-pietro','1-giovanni','2-giovanni','3-giovanni','giuda','apocalisse'].includes(slug)||Boolean(profiles[slug]);}
 export const canonicalEditorialBookCount=73;
