@@ -5,7 +5,7 @@ import { fetchHistoryIndexView } from '../../src/data-access/history';
 export default async function HistoricalExplorerLanding() {
   const history = await fetchHistoryIndexView();
   return (
-    <WorkspaceFrame active="history">
+    <WorkspaceFrame active="history" routePrefix="">
       <HistoryHubSurface history={history} basePath="/historical-explorer" corpusPath="/" />
     </WorkspaceFrame>
   );
