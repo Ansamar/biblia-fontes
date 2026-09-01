@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { ChapterView } from '../data-access/chapter';
 import WorkspaceReader from './WorkspaceReader';
+import { genesisOneTextualDossiers } from './genesisTextualDossiers';
 import { bfrgGenesisPilot, claimModeLabels, confidenceLabels, familyLabels, predicateLabels, type BfrgPilotRelation } from './bfrgGenesisPilot';
 
 type Dimension = 'scrittura' | 'mondo' | 'umanita' | 'tradizione' | 'ricezione';
@@ -35,6 +36,7 @@ export default function ChapterKnowledgeSurface({ chapter, initialView = 'text' 
   const witnesses = witnessCount(chapter);
   const chapterRelations = useMemo(() => chapter.slug === 'genesi' && chapter.number <= 11 ? bfrgGenesisPilot.filter(r => r.chapter === chapter.number) : [], [chapter.slug, chapter.number]);
   const selectedRelation = chapterRelations.find(r => r.id === selectedRelationId) || chapterRelations[0] || null;
+  const textualDossiers = chapter.slug === 'genesi' && chapter.number === 1 ? genesisOneTextualDossiers : [];
 
   const relations: Array<{label:string;dimension:Dimension}> = [
     ...(chapter.context ? [{label:'Mondo storico-culturale',dimension:'mondo' as Dimension}] : []),
@@ -110,6 +112,6 @@ export default function ChapterKnowledgeSurface({ chapter, initialView = 'text' 
       <aside className="border-y border-papyrus-line py-5 xl:border xl:p-5"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-ink-faint">Orientamento</p><h3 className="mt-2 font-serif text-xl font-semibold">Che cosa sto guardando?</h3><p className="mt-3 text-sm leading-6 text-ink-soft"><strong>{chapter.bookTitle} {chapter.number}</strong>, osservato come Scrittura, realtà storico-culturale, esperienza umana, tradizione trasmessa e testo ricevuto.</p></aside>
     </section>
 
-    <section id="scrittura" className="border-t border-papyrus-line pt-7"><div className="mb-6"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-bronze">Scrittura</p><h2 className="mt-1 font-serif text-3xl font-semibold">Leggere e confrontare</h2></div>{chapter.biblicalText ? <WorkspaceReader text={chapter.biblicalText} textualNote={chapter.textual} /> : <div className="border-y border-papyrus-line py-16 text-center text-sm text-ink-faint">Il testo biblico non è ancora collegato a questo capitolo.</div>}</section>
+    <section id="scrittura" className="border-t border-papyrus-line pt-7"><div className="mb-6"><p className="font-mono text-[9px] uppercase tracking-[0.18em] text-bronze">Scrittura</p><h2 className="mt-1 font-serif text-3xl font-semibold">Leggere e confrontare</h2></div>{chapter.biblicalText ? <WorkspaceReader text={chapter.biblicalText} textualNote={chapter.textual} textualDossiers={textualDossiers} /> : <div className="border-y border-papyrus-line py-16 text-center text-sm text-ink-faint">Il testo biblico non è ancora collegato a questo capitolo.</div>}</section>
   </main>;
 }
