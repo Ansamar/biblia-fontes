@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import type { AlternateChapterNumber, AlternateSystem, BiblicalTextUnit, BiblicalVerse } from '../components/BiblicalTextReader';
+import { alignWitnessVerses } from './alignedWitnesses';
 
 type Mode = 'read' | 'compare' | 'synopsis';
 const norm = (value?: string) => (value || '').trim().toLocaleLowerCase('it-IT');
@@ -71,11 +72,38 @@ function WitnessText({ unit, compact = false }: { unit: BiblicalTextUnit; compac
   return <div dir={rtl ? 'rtl' : 'ltr'} className={rtl ? 'text-right' : ''}><WitnessHeader unit={unit} /><div className={`${compact ? 'text-[1.02rem] leading-[1.75]' : 'reading-text text-[1.12rem] leading-[1.86]'} font-serif text-ink`}>{(unit.versetti || []).map((verse,index) => <div key={verse._key || `${verse.numero}-${index}`} className="mb-4 break-words">{verse.metatesto?.testo && <p className="mb-2 text-[0.82em] italic leading-6 text-ink-faint">{verse.metatesto.testo}</p>}{verse.testo ? <p><span dir="ltr" className="mr-2 inline-block align-[0.15em] font-sans text-[0.58em] font-semibold text-bronze">{verseLabel(verse)}</span>{verse.testo}<VerseParallel verse={verse} /></p> : <p className="border-l-2 border-papyrus-line pl-3 font-sans text-sm text-ink-faint">{verse.notaEditoriale || verse.statoTestuale || `Versetto ${verseLabel(verse)} senza testo`}</p>}</div>)}</div></div>;
 }
 
+function AlignedWitnesses({ witnesses }: { witnesses: BiblicalTextUnit[] }) {
+  const rows = useMemo(() => alignWitnessVerses(witnesses), [witnesses]);
+  const columns = `72px repeat(${witnesses.length}, minmax(310px, 1fr))`;
+  const minWidth = 72 + witnesses.length * 310;
+
+  return <div className="overflow-x-auto pb-3" aria-label="Testimoni allineati per versetto">
+    <div role="table" className="border-x border-papyrus-line" style={{minWidth: `${minWidth}px`}}>
+      <div role="row" className="sticky top-0 z-10 grid border-b border-papyrus-line bg-papyrus" style={{gridTemplateColumns: columns}}>
+        <div role="columnheader" className="px-3 py-4 font-mono text-[9px] uppercase tracking-[0.12em] text-ink-faint">Vers.</div>
+        {witnesses.map((unit, index) => <div role="columnheader" key={`${name(unit)}-${index}`} className="border-l border-papyrus-line px-5 py-4"><WitnessHeader unit={unit} /></div>)}
+      </div>
+      <div className="divide-y divide-papyrus-line">
+        {rows.map((row) => <div role="row" key={row.key} className="grid items-stretch" style={{gridTemplateColumns: columns}}>
+          <div role="rowheader" className="px-3 py-5 font-mono text-[11px] font-semibold text-bronze" dir="ltr">{row.label}</div>
+          {row.verses.map((verse, index) => {
+            const unit = witnesses[index];
+            const rtl = isRtl(unit);
+            return <div role="cell" key={`${row.key}-${index}`} dir={rtl ? 'rtl' : 'ltr'} className={`border-l border-papyrus-line px-5 py-5 font-serif text-[1.02rem] leading-[1.75] text-ink ${rtl ? 'text-right' : ''}`}>
+              {verse ? <>{verse.metatesto?.testo && <p className="mb-2 text-[0.82em] italic leading-6 text-ink-faint">{verse.metatesto.testo}</p>}{verse.testo ? <p className="break-words">{verse.testo}<VerseParallel verse={verse} /></p> : <p className="font-sans text-sm text-ink-faint">{verse.notaEditoriale || verse.statoTestuale || 'Testo non disponibile'}</p>}</> : <p dir="ltr" className="font-sans text-xs italic text-ink-faint">Non presente nel testimone</p>}
+            </div>;
+          })}
+        </div>)}
+      </div>
+    </div>
+  </div>;
+}
+
 function WitnessSelect({ value, onChange, witnesses, label, disabledIndex }: { value: number; onChange: (value: number) => void; witnesses: BiblicalTextUnit[]; label: string; disabledIndex?: number }) {
   return <label className="flex items-center gap-2 text-xs text-ink-faint"><span className="font-mono text-[9px] uppercase tracking-[0.12em]">{label}</span><select value={value} onChange={(event) => onChange(Number(event.target.value))} className="min-w-0 border-0 border-b border-papyrus-line bg-transparent py-1.5 text-xs font-semibold text-ink outline-none focus:border-bronze">{witnesses.map((unit,index) => <option key={`${badge(unit)}-${name(unit)}-${index}`} value={index} disabled={index === disabledIndex}>{badge(unit)} · {name(unit)}</option>)}</select></label>;
 }
 
-export default function WorkspaceReader({ text }: { text: BiblicalTextUnit }) {
+export default function WorkspaceReader({ text, textualNote }: { text: BiblicalTextUnit; textualNote?: string }) {
   const router = useRouter(); const pathname = usePathname(); const searchParams = useSearchParams();
   const witnesses = useMemo(() => Array.isArray(text.witnesses) && text.witnesses.length ? text.witnesses : [text], [text]);
   const requestedMode = searchParams.get('reader');
@@ -107,11 +135,15 @@ export default function WorkspaceReader({ text }: { text: BiblicalTextUnit }) {
   }, [mode, primary, secondary, pathname, router, searchParams]);
 
   const modes: Array<{id: Mode; label: string; disabled?: boolean}> = [{id:'read',label:'Lettura'},{id:'compare',label:'Confronto',disabled:!canCompare},{id:'synopsis',label:'Sinossi',disabled:!canSynopsis}];
+  const comparedWitnesses = [witnesses[primary] || witnesses[0], witnesses[secondary] || witnesses[1] || witnesses[0]];
+  const alignedMode = mode === 'compare' || mode === 'synopsis';
 
   return <div className="min-w-0">
     <div className="mb-7 flex flex-col gap-4 border-y border-papyrus-line py-3 md:flex-row md:items-center md:justify-between"><div className="flex gap-5">{modes.map((item) => <button key={item.id} type="button" disabled={item.disabled} onClick={() => !item.disabled && setMode(item.id)} className={`border-b py-1.5 text-xs font-semibold ${mode === item.id ? 'border-bronze text-ink' : item.disabled ? 'border-transparent text-ink-faint/40' : 'border-transparent text-ink-faint hover:text-ink'}`}>{item.label}</button>)}</div><div className="flex flex-wrap gap-4">{mode !== 'synopsis' && <WitnessSelect value={primary} onChange={setPrimary} witnesses={witnesses} label={mode === 'compare' ? 'A' : 'Testo'} disabledIndex={mode === 'compare' ? secondary : undefined} />}{mode === 'compare' && <WitnessSelect value={secondary} onChange={setSecondary} witnesses={witnesses} label="B" disabledIndex={primary} />}{mode === 'synopsis' && <span className="text-xs text-ink-faint">{witnesses.length} tradizioni disponibili</span>}</div></div>
     {mode === 'read' && <div className="mx-auto max-w-[760px]"><WitnessText unit={witnesses[primary] || witnesses[0]} /></div>}
-    {mode === 'compare' && <div className="overflow-x-auto pb-3"><div className="grid min-w-[820px] grid-cols-2 divide-x divide-papyrus-line border-x border-papyrus-line"><div className="px-5 md:px-7"><WitnessText compact unit={witnesses[primary] || witnesses[0]} /></div><div className="px-5 md:px-7"><WitnessText compact unit={witnesses[secondary] || witnesses[1] || witnesses[0]} /></div></div></div>}
-    {mode === 'synopsis' && <div className="overflow-x-auto pb-3"><div className="grid divide-x divide-papyrus-line border-x border-papyrus-line" style={{gridTemplateColumns:`repeat(${witnesses.length}, minmax(310px, 1fr))`,minWidth:`${Math.max(930,witnesses.length*310)}px`}}>{witnesses.map((unit,index) => <div key={`${name(unit)}-${index}`} className="px-5"><WitnessText compact unit={unit} /></div>)}</div></div>}
+    {alignedMode && <aside className="mb-5 grid gap-3 border-l-2 border-bronze/40 bg-white/15 px-4 py-3 text-xs leading-5 text-ink-soft md:grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)]"><p><strong className="text-ink">Allineamento editoriale.</strong> Le righe seguono la numerazione dei versetti; un’eventuale assenza resta visibile e non sposta le corrispondenze successive.</p><p><strong className="text-ink">Come leggere le differenze.</strong> Una resa diversa non equivale automaticamente a una variante del testo: può dipendere da lingua, sintassi o scelta di traduzione.</p></aside>}
+    {mode === 'compare' && <AlignedWitnesses witnesses={comparedWitnesses} />}
+    {mode === 'synopsis' && <AlignedWitnesses witnesses={witnesses} />}
+    {alignedMode && textualNote && <details className="mt-4 border-y border-papyrus-line py-4"><summary className="cursor-pointer text-xs font-semibold text-bronze">Nota critico-testuale del capitolo</summary><p className="mt-3 max-w-4xl text-sm leading-7 text-ink-soft">{textualNote}</p></details>}
   </div>;
 }
