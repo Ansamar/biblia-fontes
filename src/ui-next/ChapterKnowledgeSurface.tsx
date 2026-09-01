@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import Link from 'next/link';
 import type { ChapterView } from '../data-access/chapter';
 import WorkspaceReader from './WorkspaceReader';
-import { genesisOneTextualDossiers } from './genesisTextualDossiers';
+import { genesisTextualDossiersByChapter } from './genesisTextualDossiers';
 import { bfrgGenesisPilot, claimModeLabels, confidenceLabels, familyLabels, predicateLabels, type BfrgPilotRelation } from './bfrgGenesisPilot';
 
 type Dimension = 'scrittura' | 'mondo' | 'umanita' | 'tradizione' | 'ricezione';
@@ -36,7 +36,7 @@ export default function ChapterKnowledgeSurface({ chapter, initialView = 'text' 
   const witnesses = witnessCount(chapter);
   const chapterRelations = useMemo(() => chapter.slug === 'genesi' && chapter.number <= 11 ? bfrgGenesisPilot.filter(r => r.chapter === chapter.number) : [], [chapter.slug, chapter.number]);
   const selectedRelation = chapterRelations.find(r => r.id === selectedRelationId) || chapterRelations[0] || null;
-  const textualDossiers = chapter.slug === 'genesi' && chapter.number === 1 ? genesisOneTextualDossiers : [];
+  const textualDossiers = chapter.slug === 'genesi' ? genesisTextualDossiersByChapter[chapter.number] || [] : [];
 
   const relations: Array<{label:string;dimension:Dimension}> = [
     ...(chapter.context ? [{label:'Mondo storico-culturale',dimension:'mondo' as Dimension}] : []),
