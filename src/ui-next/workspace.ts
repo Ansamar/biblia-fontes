@@ -10,28 +10,28 @@ export type WorkspaceContext = {
   entityId?: string;
 };
 
-export function bookHref(bookSlug: string) {
-  return `/bibbia/${bookSlug}`;
+export function bookHref(bookSlug: string, routePrefix = '/rebuild') {
+  return `${routePrefix}/bibbia/${bookSlug}`;
 }
 
-export function chapterHref(bookSlug: string, chapter: number) {
-  return `${bookHref(bookSlug)}/${chapter}`;
+export function chapterHref(bookSlug: string, chapter: number, routePrefix = '/rebuild') {
+  return `${bookHref(bookSlug, routePrefix)}/${chapter}`;
 }
 
-export function historyHref(context: WorkspaceContext) {
-  if (!context.bookSlug) return '/historical-explorer';
+export function historyHref(context: WorkspaceContext, routePrefix = '/rebuild') {
+  if (!context.bookSlug) return `${routePrefix}/historical-explorer`;
   const params = new URLSearchParams();
   if (context.chapter) params.set('chapter', String(context.chapter));
   if (context.year !== undefined) params.set('year', String(context.year));
   if (context.entityId) params.set('entity', context.entityId);
   const query = params.toString();
-  return `/historical-explorer/${context.bookSlug}${query ? `?${query}` : ''}`;
+  return `${routePrefix}/historical-explorer/${context.bookSlug}${query ? `?${query}` : ''}`;
 }
 
-export function perspectiveHref(context: WorkspaceContext, perspective: WorkspacePerspective) {
-  const base = context.bookSlug ? (context.chapter ? chapterHref(context.bookSlug, context.chapter) : bookHref(context.bookSlug)) : '/';
+export function perspectiveHref(context: WorkspaceContext, perspective: WorkspacePerspective, routePrefix = '/rebuild') {
+  const base = context.bookSlug ? (context.chapter ? chapterHref(context.bookSlug, context.chapter, routePrefix) : bookHref(context.bookSlug, routePrefix)) : routePrefix || '/';
   if (perspective === 'text') return base;
   if (perspective === 'study') return `${base}?view=study`;
   if (perspective === 'sources') return `${base}?view=sources`;
-  return historyHref(context);
+  return historyHref(context, routePrefix);
 }
