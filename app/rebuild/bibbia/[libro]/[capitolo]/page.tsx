@@ -14,6 +14,6 @@ export default async function RebuiltChapterPage({ params, searchParams }: { par
   const active = view === 'sources' ? 'sources' : view === 'study' ? 'study' : 'text';
 
   return <WorkspaceFrame context={{bookSlug: chapter.slug, bookTitle: chapter.bookTitle, chapter: chapter.number, chapterTitle: chapter.title, reference: `${chapter.abbreviation} ${chapter.number}`}} active={active} knowledgeMode>
-    <ChapterKnowledgeSurface chapter={chapter} />
+    <ChapterKnowledgeSurface key={active} chapter={chapter} initialView={active} />
   </WorkspaceFrame>;
 }

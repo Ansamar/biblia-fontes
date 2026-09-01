@@ -6,6 +6,7 @@ import HistoricalExplorerMap from '../components/HistoricalExplorerMap';
 import type { ExplorerLayer, HistoricalEntity } from '../historical-explorer/types';
 import type { HistoryView } from '../data-access/history';
 import { historicalEntityTypeLabel, historicalRelationLabel, italianizeVisibleCopy } from '../lib/italianUi';
+import { useExplorerUrlState } from '../historical-explorer/useExplorerUrlState';
 
 const layerLabels: Record<ExplorerLayer, string> = { politics: 'Poteri', places: 'Luoghi', events: 'Eventi', institutions: 'Istituzioni', texts: 'Testi', transmission: 'Trasmissione' };
 const typeToLayer: Record<HistoricalEntity['type'], ExplorerLayer> = { people: 'politics', empire: 'politics', person: 'politics', city: 'places', region: 'places', event: 'events', institution: 'institutions', practice: 'institutions', text: 'texts', redaction: 'texts', witness: 'transmission' };
@@ -30,11 +31,11 @@ function biblicalRefHref(reference: any) {
   return `/rebuild/bibbia/${reference.bookSlug}/${chapter}`;
 }
 
-export default function HistorySurface({ view, initialYear, initialEntityId }: { view: HistoryView; initialYear?: number; initialEntityId?: string }) {
+export default function HistorySurface({ view, chapter, contextualized = false, primaryEntityIds = [], initialYear, initialEntityId }: { view: HistoryView; chapter?: number; contextualized?: boolean; primaryEntityIds?: string[]; initialYear?: number; initialEntityId?: string }) {
   const { dataset } = view;
   const fallbackYear = Math.round((dataset.defaultRange[0] + dataset.defaultRange[1]) / 2);
   const clampedInitialYear = initialYear === undefined ? fallbackYear : Math.max(dataset.defaultRange[0], Math.min(dataset.defaultRange[1], Math.round(initialYear)));
-  const validInitialEntity = initialEntityId && dataset.entities.some((entity) => entity.id === initialEntityId) ? initialEntityId : dataset.entities[0]?.id || '';
+  const validInitialEntity = initialEntityId && dataset.entities.some((entity) => entity.id === initialEntityId) ? initialEntityId : primaryEntityIds[0] || dataset.entities[0]?.id || '';
   const [year, setYear] = useState(clampedInitialYear);
   const [selectedId, setSelectedId] = useState(validInitialEntity);
   const [layers, setLayers] = useState<ExplorerLayer[]>(['politics', 'places', 'events', 'institutions', 'texts']);
@@ -44,10 +45,11 @@ export default function HistorySurface({ view, initialYear, initialEntityId }: {
   const selected = dataset.entities.find((entity) => entity.id === selectedId) || dataset.entities[0];
   const scenario = dataset.scenarios?.find((item) => item.start <= year && item.end >= year);
   const toggleLayer = (layer: ExplorerLayer) => setLayers((current) => current.includes(layer) ? current.filter((item) => item !== layer) : [...current, layer]);
+  useExplorerUrlState({ year, entityId: selectedId });
 
   return <main className="mx-auto max-w-[1560px] px-4 py-6 md:px-7 md:py-8">
     <header className="grid gap-7 border-b border-papyrus-line pb-7 lg:grid-cols-[minmax(0,1fr)_340px] lg:items-end">
-      <div><p className="font-mono text-[9px] uppercase tracking-[0.2em] text-bronze">Prospettiva storica</p><h1 className="mt-2 font-serif text-4xl font-semibold md:text-5xl">{view.bookTitle} nella storia</h1><p className="mt-3 max-w-3xl text-base leading-7 text-ink-soft">{italianizeVisibleCopy(dataset.subtitle)}</p></div>
+      <div><p className="font-mono text-[9px] uppercase tracking-[0.2em] text-bronze">Prospettiva storica</p><h1 className="mt-2 font-serif text-4xl font-semibold md:text-5xl">{view.bookTitle}{chapter ? ` ${chapter}` : ''} nella storia</h1><p className="mt-3 max-w-3xl text-base leading-7 text-ink-soft">{italianizeVisibleCopy(dataset.subtitle)}</p>{chapter && !contextualized && <p className="mt-3 max-w-3xl border-l-2 border-bronze/40 pl-3 text-xs leading-5 text-ink-faint">Non risultano ancora entità collegate direttamente al capitolo {chapter}; viene mostrata la rete storica generale del libro.</p>}</div>
       <p className="border-l border-papyrus-line pl-6 text-xs leading-6 text-ink-faint">Attestazioni, ipotesi, memorie e comparanda conservano il proprio statuto. La cronologia orienta la ricerca, non trasforma il racconto in cronaca.</p>
     </header>
 
@@ -79,6 +81,6 @@ export default function HistorySurface({ view, initialYear, initialEntityId }: {
       </aside>
     </section>
 
-    <footer className="flex flex-col gap-3 py-6 text-sm sm:flex-row sm:items-center sm:justify-between"><Link href={`/rebuild/bibbia/${view.slug}`} className="text-ink-soft hover:text-ink">← {view.bookTitle}</Link><Link href="/rebuild/historical-explorer" className="text-ink-faint hover:text-ink">Cambia libro o data</Link></footer>
+    <footer className="flex flex-col gap-3 py-6 text-sm sm:flex-row sm:items-center sm:justify-between"><Link href={`/rebuild/bibbia/${view.slug}${chapter ? `/${chapter}` : ''}`} className="text-ink-soft hover:text-ink">← Torna a {view.bookTitle}{chapter ? ` ${chapter}` : ''}</Link><Link href="/rebuild/historical-explorer" className="text-ink-faint hover:text-ink">Cambia libro o data</Link></footer>
   </main>;
 }

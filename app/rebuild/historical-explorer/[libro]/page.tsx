@@ -3,6 +3,7 @@ import WorkspaceFrame from '../../../../src/ui-next/WorkspaceFrame';
 import HistorySurface from '../../../../src/ui-next/HistorySurface';
 import { fetchHistoryView } from '../../../../src/data-access/history';
 import { bookAbbreviation } from '../../../../src/lib/bibleRouting';
+import { historicalDatasetForChapter } from '../../../../src/historical-explorer/chapterContext';
 
 export default async function RebuiltHistoricalExplorerPage({
   params,
@@ -24,6 +25,14 @@ export default async function RebuiltHistoricalExplorerPage({
   const view = await fetchHistoryView(libro);
   if (!view) notFound();
   const reference = chapter ? `${bookAbbreviation(view.slug, view.bookTitle)} ${chapter}` : undefined;
+  const chapterContext = historicalDatasetForChapter(view.dataset, view.slug, chapter);
+  const contextualView: typeof view = {
+    ...view,
+    dataset: {
+      ...chapterContext.dataset,
+      scenarios: chapterContext.dataset.scenarios ?? view.dataset.scenarios,
+    },
+  };
 
-  return <WorkspaceFrame context={{bookSlug: view.slug, bookTitle: view.bookTitle, chapter, reference}} active="history"><HistorySurface view={view} initialYear={initialYear} initialEntityId={rawEntity} /></WorkspaceFrame>;
+  return <WorkspaceFrame context={{bookSlug: view.slug, bookTitle: view.bookTitle, chapter, reference}} active="history"><HistorySurface view={contextualView} chapter={chapter} contextualized={chapterContext.contextualized} primaryEntityIds={chapterContext.primaryEntityIds} initialYear={initialYear} initialEntityId={rawEntity} /></WorkspaceFrame>;
 }

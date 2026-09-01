@@ -27,8 +27,8 @@ function relationDimension(relation: BfrgPilotRelation): Dimension {
   return 'ricezione';
 }
 
-export default function ChapterKnowledgeSurface({ chapter }: { chapter: ChapterView }) {
-  const [active, setActive] = useState<Dimension>('scrittura');
+export default function ChapterKnowledgeSurface({ chapter, initialView = 'text' }: { chapter: ChapterView; initialView?: 'text' | 'study' | 'sources' }) {
+  const [active, setActive] = useState<Dimension>(initialView === 'sources' ? 'tradizione' : initialView === 'study' ? 'umanita' : 'scrittura');
   const [selectedRelationId, setSelectedRelationId] = useState<string | null>(null);
   const sourceLabel = useMemo(() => firstSourceLabel(chapter), [chapter]);
   const verses = verseCount(chapter);
